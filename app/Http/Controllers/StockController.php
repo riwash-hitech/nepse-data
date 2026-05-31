@@ -187,11 +187,68 @@ class StockController extends Controller
         // ── Broker list (cached 24 hr) ──
         $brokers = Cache::remember('chukul_broker_list', 86400, fn() => $this->scraper->fetchBrokerList());
 
+        // Build broker name lookup: broker_no => broker_name
+        $brokerMap = [];
+        foreach ($brokers as $b) {
+            $no = (string)($b['broker_no'] ?? '');
+            if ($no !== '') $brokerMap[$no] = $b['broker_name'] ?? "Broker #{$no}";
+        }
+
+        // ── Floorsheet broker activity (use latest trading date from market summary or history) ──
+        $floorDate = $marketSummary['date'] ?? (end($priceRows)['date'] ?? date('Y-m-d'));
+        $rawFloor  = Cache::remember("chukul_floor_{$symbol}_{$floorDate}", 300, fn() =>
+            $this->scraper->fetchFloorsheet($symbol, $floorDate)
+        );
+
+        // Enrich top 15 buyers + sellers with names and percentages
+        $brokerActivity = null;
+        if (!empty($rawFloor['buys'])) {
+            $totalBQ = (float)($rawFloor['total_buy_qty']    ?: 1);
+            $totalSQ = (float)($rawFloor['total_sell_qty']   ?: 1);
+            $totalBA = (float)($rawFloor['total_buy_amount'] ?: 1);
+            $totalSA = (float)($rawFloor['total_sell_amount']?: 1);
+
+            $enrichedBuys = [];
+            foreach (array_slice($rawFloor['buys'], 0, 15, true) as $bno => $data) {
+                $enrichedBuys[] = [
+                    'broker_no'   => $bno,
+                    'broker_name' => $brokerMap[(string)$bno] ?? "Broker #{$bno}",
+                    'qty'         => (float)$data['qty'],
+                    'amount'      => (float)$data['amount'],
+                    'qty_pct'     => round($data['qty'] / $totalBQ * 100, 2),
+                    'amt_pct'     => round($data['amount'] / $totalBA * 100, 2),
+                ];
+            }
+
+            $enrichedSells = [];
+            foreach (array_slice($rawFloor['sells'], 0, 15, true) as $bno => $data) {
+                $enrichedSells[] = [
+                    'broker_no'   => $bno,
+                    'broker_name' => $brokerMap[(string)$bno] ?? "Broker #{$bno}",
+                    'qty'         => (float)$data['qty'],
+                    'amount'      => (float)$data['amount'],
+                    'qty_pct'     => round($data['qty'] / $totalSQ * 100, 2),
+                    'amt_pct'     => round($data['amount'] / $totalSA * 100, 2),
+                ];
+            }
+
+            $brokerActivity = [
+                'date'              => $rawFloor['date'],
+                'rows'              => (int)$rawFloor['rows'],
+                'total_buy_qty'     => $rawFloor['total_buy_qty'],
+                'total_sell_qty'    => $rawFloor['total_sell_qty'],
+                'total_buy_amount'  => $rawFloor['total_buy_amount'],
+                'total_sell_amount' => $rawFloor['total_sell_amount'],
+                'buys'              => $enrichedBuys,
+                'sells'             => $enrichedSells,
+            ];
+        }
+
         return view('stocks.show', compact(
             'stock', 'prices', 'indicator', 'signal', 'chartData',
             'floorsheetSummary', 'volumeAnalytics', 'trend', 'brokers',
             'marketSummary', 'highLowStats', 'supportLevels', 'resistanceLevels',
-            'alphaBeta', 'varMonthly'
+            'alphaBeta', 'varMonthly', 'brokerActivity'
         ));
     }
 

@@ -324,6 +324,75 @@ class NepseScraperService
     }
 
     // ────────────────────────────────────────────────────────────────────
+    //  Floorsheet broker activity  (GET /api/data/floorsheet/?symbol=SYM&date=YYYY-MM-DD)
+    //  Returns rows: [{transaction,symbol,buyer,seller,quantity,rate,amount}]
+    //
+    //  Aggregates per buyer/seller broker number and returns:
+    //  [
+    //    'date'              => '2026-05-27',
+    //    'rows'              => (int) total transactions,
+    //    'total_buy_qty'     => float,
+    //    'total_sell_qty'    => float,
+    //    'total_buy_amount'  => float,
+    //    'total_sell_amount' => float,
+    //    'buys'  => [ brokerNo => ['qty'=>float,'amount'=>float] ],
+    //    'sells' => [ brokerNo => ['qty'=>float,'amount'=>float] ],
+    //  ]
+    // ────────────────────────────────────────────────────────────────────
+
+    public function fetchFloorsheet(string $symbol, string $date): array
+    {
+        $raw = $this->get('/api/data/floorsheet/', [
+            'symbol' => strtoupper($symbol),
+            'date'   => $date,
+        ]);
+
+        if (!is_array($raw) || empty($raw)) {
+            return [];
+        }
+
+        $buys  = [];
+        $sells = [];
+
+        foreach ($raw as $row) {
+            $buyer  = (string)($row['buyer']    ?? '');
+            $seller = (string)($row['seller']   ?? '');
+            $qty    = (float)($row['quantity']  ?? 0);
+            $amt    = (float)($row['amount']    ?? 0);
+
+            if ($buyer !== '') {
+                $buys[$buyer]['qty']    = ($buys[$buyer]['qty']    ?? 0) + $qty;
+                $buys[$buyer]['amount'] = ($buys[$buyer]['amount'] ?? 0) + $amt;
+            }
+            if ($seller !== '') {
+                $sells[$seller]['qty']    = ($sells[$seller]['qty']    ?? 0) + $qty;
+                $sells[$seller]['amount'] = ($sells[$seller]['amount'] ?? 0) + $amt;
+            }
+        }
+
+        // Sort by qty descending
+        arsort($buys);   // arsort by value works on array-of-arrays? No — use uasort
+        uasort($buys,  fn($a, $b) => $b['qty'] <=> $a['qty']);
+        uasort($sells, fn($a, $b) => $b['qty'] <=> $a['qty']);
+
+        $totalBuyQty    = array_sum(array_column($buys,  'qty'));
+        $totalSellQty   = array_sum(array_column($sells, 'qty'));
+        $totalBuyAmt    = array_sum(array_column($buys,  'amount'));
+        $totalSellAmt   = array_sum(array_column($sells, 'amount'));
+
+        return [
+            'date'              => $date,
+            'rows'              => count($raw),
+            'total_buy_qty'     => $totalBuyQty,
+            'total_sell_qty'    => $totalSellQty,
+            'total_buy_amount'  => $totalBuyAmt,
+            'total_sell_amount' => $totalSellAmt,
+            'buys'              => $buys,
+            'sells'             => $sells,
+        ];
+    }
+
+    // ────────────────────────────────────────────────────────────────────
     //  Intraday candles  (GET /api/data/newintrahistorydata/data/?symbol=SYMBOL)
     //  Response: {t, o, c, h, l, cv(current_value), vol, ca(change_amount), amt}
     // ────────────────────────────────────────────────────────────────────

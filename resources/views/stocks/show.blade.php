@@ -568,6 +568,126 @@
 </div>
 @endif
 
+{{-- ════ BROKER ACTIVITY (FLOORSHEET) ══════════════════════════════════ --}}
+@if(!empty($brokerActivity))
+@php
+  $ba      = $brokerActivity;
+  $baDate  = $ba['date'] ?? '';
+  $tBuyQ   = (float)($ba['total_buy_qty']    ?? 0);
+  $tSellQ  = (float)($ba['total_sell_qty']   ?? 0);
+  $tBuyA   = (float)($ba['total_buy_amount'] ?? 0);
+  $tSellA  = (float)($ba['total_sell_amount']?? 0);
+  $txnRows = (int)($ba['rows'] ?? 0);
+@endphp
+<div class="card">
+  {{-- Header --}}
+  <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:1rem;">
+    <div>
+      <div class="section-lbl" style="margin-bottom:.2rem;">Broker-wise Buy / Sell Activity</div>
+      <span style="font-size:.72rem;color:#64748b;">
+        {{ $baDate }} &nbsp;·&nbsp; {{ number_format($txnRows) }} transactions &nbsp;·&nbsp;
+        Total Buy: <strong style="color:#16a34a;">{{ number_format($tBuyQ) }} shares</strong> &nbsp;·&nbsp;
+        Total Sell: <strong style="color:#dc2626;">{{ number_format($tSellQ) }} shares</strong>
+      </span>
+    </div>
+    <div style="display:flex;gap:.5rem;">
+      <span style="font-size:.72rem;padding:.2rem .65rem;border-radius:9999px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;font-weight:700;">
+        Buy NPR {{ number_format($tBuyA/1e6, 2) }}M
+      </span>
+      <span style="font-size:.72rem;padding:.2rem .65rem;border-radius:9999px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;font-weight:700;">
+        Sell NPR {{ number_format($tSellA/1e6, 2) }}M
+      </span>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+    {{-- TOP BUYERS --}}
+    <div>
+      <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#16a34a;margin-bottom:.5rem;">
+        ▲ Top Buyers
+      </div>
+      <table class="w-full">
+        <thead>
+          <tr style="border-bottom:2px solid #dcfce7;">
+            <th class="text-left py-1.5" style="font-size:.63rem;color:#94a3b8;font-weight:700;text-transform:uppercase;">Broker</th>
+            <th class="text-right py-1.5 px-1" style="font-size:.63rem;color:#94a3b8;font-weight:700;text-transform:uppercase;">Qty</th>
+            <th class="text-right py-1.5 px-1" style="font-size:.63rem;color:#94a3b8;font-weight:700;text-transform:uppercase;">% of Buy</th>
+            <th class="text-right py-1.5" style="font-size:.63rem;color:#94a3b8;font-weight:700;text-transform:uppercase;">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          @foreach($ba['buys'] as $br)
+          <tr style="border-bottom:1px solid #f0fdf4;" class="hover:bg-green-50">
+            <td class="py-1.5" style="font-size:.76rem;">
+              <span class="mono font-bold" style="color:#2563eb;font-size:.7rem;">{{ $br['broker_no'] }}</span>
+              <span style="color:#374151;margin-left:.35rem;font-size:.75rem;">{{ $br['broker_name'] }}</span>
+            </td>
+            <td class="text-right py-1.5 px-1 mono font-semibold" style="font-size:.76rem;color:#16a34a;">
+              {{ number_format($br['qty']) }}
+            </td>
+            <td class="text-right py-1.5 px-1" style="font-size:.76rem;">
+              <div style="display:flex;align-items:center;justify-content:flex-end;gap:.35rem;">
+                <div style="width:40px;height:4px;border-radius:9999px;background:#dcfce7;overflow:hidden;">
+                  <div style="height:4px;border-radius:9999px;width:{{ min(100,$br['qty_pct']) }}%;background:#22c55e;"></div>
+                </div>
+                <span class="mono" style="color:#16a34a;font-weight:700;min-width:3rem;text-align:right;">{{ $br['qty_pct'] }}%</span>
+              </div>
+            </td>
+            <td class="text-right py-1.5 mono" style="font-size:.73rem;color:#64748b;">
+              {{ $br['amount'] >= 1e6 ? 'NPR '.number_format($br['amount']/1e6,2).'M' : 'NPR '.number_format($br['amount']) }}
+            </td>
+          </tr>
+          @endforeach
+        </tbody>
+      </table>
+    </div>
+
+    {{-- TOP SELLERS --}}
+    <div>
+      <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#dc2626;margin-bottom:.5rem;">
+        ▼ Top Sellers
+      </div>
+      <table class="w-full">
+        <thead>
+          <tr style="border-bottom:2px solid #fecaca;">
+            <th class="text-left py-1.5" style="font-size:.63rem;color:#94a3b8;font-weight:700;text-transform:uppercase;">Broker</th>
+            <th class="text-right py-1.5 px-1" style="font-size:.63rem;color:#94a3b8;font-weight:700;text-transform:uppercase;">Qty</th>
+            <th class="text-right py-1.5 px-1" style="font-size:.63rem;color:#94a3b8;font-weight:700;text-transform:uppercase;">% of Sell</th>
+            <th class="text-right py-1.5" style="font-size:.63rem;color:#94a3b8;font-weight:700;text-transform:uppercase;">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          @foreach($ba['sells'] as $br)
+          <tr style="border-bottom:1px solid #fef2f2;" class="hover:bg-red-50">
+            <td class="py-1.5" style="font-size:.76rem;">
+              <span class="mono font-bold" style="color:#2563eb;font-size:.7rem;">{{ $br['broker_no'] }}</span>
+              <span style="color:#374151;margin-left:.35rem;font-size:.75rem;">{{ $br['broker_name'] }}</span>
+            </td>
+            <td class="text-right py-1.5 px-1 mono font-semibold" style="font-size:.76rem;color:#dc2626;">
+              {{ number_format($br['qty']) }}
+            </td>
+            <td class="text-right py-1.5 px-1" style="font-size:.76rem;">
+              <div style="display:flex;align-items:center;justify-content:flex-end;gap:.35rem;">
+                <div style="width:40px;height:4px;border-radius:9999px;background:#fecaca;overflow:hidden;">
+                  <div style="height:4px;border-radius:9999px;width:{{ min(100,$br['qty_pct']) }}%;background:#ef4444;"></div>
+                </div>
+                <span class="mono" style="color:#dc2626;font-weight:700;min-width:3rem;text-align:right;">{{ $br['qty_pct'] }}%</span>
+              </div>
+            </td>
+            <td class="text-right py-1.5 mono" style="font-size:.73rem;color:#64748b;">
+              {{ $br['amount'] >= 1e6 ? 'NPR '.number_format($br['amount']/1e6,2).'M' : 'NPR '.number_format($br['amount']) }}
+            </td>
+          </tr>
+          @endforeach
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+@endif
+
 {{-- ════ OHLC TABLE + BROKER DIRECTORY ═══════════════════════════════════ --}}
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
@@ -608,9 +728,6 @@
       <div class="section-lbl" style="margin-bottom:0;">NEPSE Registered Brokers</div>
       <span style="font-size:.7rem;color:#94a3b8;">{{ count($brokers??[]) }} total</span>
     </div>
-    <p style="font-size:.75rem;color:#94a3b8;margin-bottom:.75rem;line-height:1.4;">
-      Per-stock broker transaction data is not available via public API. Full broker directory below.
-    </p>
     <div style="max-height:380px;overflow-y:auto;">
       <table class="w-full">
         <thead style="position:sticky;top:0;background:#fff;z-index:1;">
