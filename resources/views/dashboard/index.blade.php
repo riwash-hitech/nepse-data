@@ -77,15 +77,14 @@
 {{-- ════════════════════════════════════════════════════ --}}
 {{--  HERO                                               --}}
 {{-- ════════════════════════════════════════════════════ --}}
-<div class="relative rounded-2xl overflow-hidden mb-8"
+<div class="relative rounded-2xl overflow-hidden mb-8 p-6 sm:p-10 md:p-12"
      style="background:linear-gradient(135deg,#f8faff 0%,#eff6ff 50%,#f5f3ff 100%);
             border:1px solid #e0e7ff;
-            padding:3rem 2.5rem 2.5rem;
             box-shadow:0 4px 24px rgba(37,99,235,0.07);">
     <div class="hero-glow"></div>
 
     {{-- Top row: date + refresh --}}
-    <div class="relative flex items-center justify-between mb-6">
+    <div class="relative flex items-center justify-between mb-5 flex-wrap gap-2">
         <div class="flex items-center gap-3">
             <span class="feature-tag">
                 <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse inline-block"></span>
@@ -114,10 +113,10 @@
 
     {{-- Headline --}}
     <div class="relative mb-2">
-        <h1 class="hero-title text-4xl md:text-5xl font-bold leading-tight tracking-tight">
+        <h1 class="hero-title text-3xl sm:text-4xl md:text-5xl font-bold leading-tight tracking-tight">
             Nepal Stock Exchange
         </h1>
-        <h2 class="hero-title text-4xl md:text-5xl font-bold leading-tight tracking-tight">
+        <h2 class="hero-title text-3xl sm:text-4xl md:text-5xl font-bold leading-tight tracking-tight">
             Analytics Platform
         </h2>
     </div>

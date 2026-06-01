@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\SignalController;
 use App\Http\Controllers\ScreenerController;
+use App\Http\Controllers\TopPicksController;
 use App\Http\Controllers\WatchlistController;
 use Illuminate\Support\Facades\Route;
 
@@ -21,6 +22,10 @@ Route::get('/api/stocks/{symbol}/chart', [StockController::class, 'chartData'])-
 // ── Signals ───────────────────────────────────────────────────────────────────
 Route::get('/signals', [SignalController::class, 'index'])->name('signals.index');
 Route::get('/signals/{id}', [SignalController::class, 'show'])->name('signals.show');
+
+// ── Top Picks ─────────────────────────────────────────────────────────────────
+Route::get('/top-picks', [TopPicksController::class, 'index'])->name('top-picks.index');
+Route::post('/top-picks/refresh', [TopPicksController::class, 'refresh'])->name('top-picks.refresh');
 
 // ── Screener ──────────────────────────────────────────────────────────────────
 Route::get('/screener', [ScreenerController::class, 'index'])->name('screener.index');

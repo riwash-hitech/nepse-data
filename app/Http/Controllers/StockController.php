@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\NepseScraperService;
+use App\Services\PredictionService;
 use App\Services\SignalEngine;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -244,11 +245,16 @@ class StockController extends Controller
             ];
         }
 
+        // ── 7-Day Price Prediction ────────────────────────────────────────────
+        $prediction7d = Cache::remember("chukul_pred_{$symbol}", 1800, fn() =>
+            PredictionService::forecast($priceRows)
+        );
+
         return view('stocks.show', compact(
             'stock', 'prices', 'indicator', 'signal', 'chartData',
             'floorsheetSummary', 'volumeAnalytics', 'trend', 'brokers',
             'marketSummary', 'highLowStats', 'supportLevels', 'resistanceLevels',
-            'alphaBeta', 'varMonthly', 'brokerActivity'
+            'alphaBeta', 'varMonthly', 'brokerActivity', 'prediction7d'
         ));
     }
 

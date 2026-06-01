@@ -411,6 +411,137 @@
 </div>
 @endif
 
+{{-- ════ 7-DAY PRICE PREDICTION ══════════════════════════════════════════ --}}
+@if(!empty($prediction7d))
+<div class="card" style="overflow:hidden;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;">
+    <div>
+      <div class="section-lbl" style="margin-bottom:.2rem;">7-Day Price Prediction</div>
+      <p style="font-size:.75rem;color:#94a3b8;margin:0;">AI forecast using trend, RSI, MACD, day-of-week patterns &amp; momentum</p>
+    </div>
+    <span style="font-size:.68rem;padding:.2rem .6rem;border-radius:9999px;background:#fef9c3;color:#92400e;border:1px solid #fde68a;font-weight:600;">
+      ⚠ For educational purposes only
+    </span>
+  </div>
+
+  {{-- Timeline strip --}}
+  <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:.5rem;">
+    @foreach($prediction7d as $day)
+    @php
+      $isUp   = $day['direction'] === 'up';
+      $isDn   = $day['direction'] === 'down';
+      $bgClr  = $isUp ? '#f0fdf4' : ($isDn ? '#fef2f2' : '#f8fafc');
+      $bdClr  = $isUp ? '#bbf7d0' : ($isDn ? '#fecaca' : '#e2e8f0');
+      $txClr  = $isUp ? '#16a34a' : ($isDn ? '#dc2626' : '#64748b');
+      $arrow  = $isUp ? '▲' : ($isDn ? '▼' : '▬');
+      $label  = $isUp ? 'UP' : ($isDn ? 'DOWN' : 'SIDE');
+      $confW  = $day['confidence'];
+    @endphp
+    <div style="background:{{ $bgClr }};border:1px solid {{ $bdClr }};border-radius:.75rem;padding:.75rem .5rem;text-align:center;">
+      {{-- Day name --}}
+      <div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:.35rem;">
+        {{ \Carbon\Carbon::parse($day['date'])->format('D') }}
+      </div>
+      {{-- Date --}}
+      <div style="font-size:.68rem;color:#64748b;margin-bottom:.5rem;">
+        {{ \Carbon\Carbon::parse($day['date'])->format('d M') }}
+      </div>
+      {{-- Arrow direction --}}
+      <div style="font-size:1.5rem;color:{{ $txClr }};font-weight:800;line-height:1;margin-bottom:.25rem;">{{ $arrow }}</div>
+      {{-- UP/DOWN label --}}
+      <div style="font-size:.65rem;font-weight:800;color:{{ $txClr }};letter-spacing:.05em;margin-bottom:.5rem;">{{ $label }}</div>
+      {{-- Predicted price --}}
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:700;color:#0f172a;margin-bottom:.2rem;">
+        {{ number_format($day['predicted_price'], 2) }}
+      </div>
+      {{-- Change % --}}
+      <div style="font-size:.65rem;font-weight:600;color:{{ $txClr }};">
+        {{ $day['change_pct'] >= 0 ? '+' : '' }}{{ number_format($day['change_pct'], 2) }}%
+      </div>
+      {{-- Confidence bar --}}
+      <div style="margin:.5rem 0 .25rem;background:#e2e8f0;border-radius:9999px;height:3px;overflow:hidden;">
+        <div style="height:3px;width:{{ $confW }}%;border-radius:9999px;background:{{ $isUp ? '#22c55e' : ($isDn ? '#ef4444' : '#94a3b8') }};"></div>
+      </div>
+      <div style="font-size:.6rem;color:#94a3b8;">{{ $confW }}% conf</div>
+    </div>
+    @endforeach
+  </div>
+
+  {{-- Reason rows (expandable) --}}
+  <div style="margin-top:1rem;border-top:1px solid #f1f5f9;padding-top:.875rem;">
+    <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#64748b;margin-bottom:.625rem;">
+      Key factors driving this forecast
+    </div>
+    <div id="predReasons" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:.375rem .75rem;">
+      @foreach($prediction7d as $i => $day)
+        @foreach($day['reasons'] as $r)
+        <div style="display:flex;align-items:flex-start;gap:.4rem;font-size:.75rem;color:#374151;line-height:1.4;">
+          <span style="flex-shrink:0;font-size:.85rem;color:{{ $day['direction']==='up'?'#16a34a':($day['direction']==='down'?'#dc2626':'#94a3b8') }};">
+            {{ $day['direction']==='up' ? '▲' : ($day['direction']==='down' ? '▼' : '◆') }}
+          </span>
+          <span><strong style="color:#64748b;">{{ \Carbon\Carbon::parse($day['date'])->format('D') }}:</strong> {{ $r }}</span>
+        </div>
+        @endforeach
+      @endforeach
+    </div>
+  </div>
+
+  {{-- High/Low range table --}}
+  <div style="margin-top:.875rem;border-top:1px solid #f1f5f9;padding-top:.875rem;">
+    <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#64748b;margin-bottom:.625rem;">Predicted Daily Price Ranges</div>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:.78rem;">
+        <thead>
+          <tr style="border-bottom:1px solid #e2e8f0;">
+            <th style="text-align:left;padding:.375rem .5rem;font-size:.65rem;color:#94a3b8;text-transform:uppercase;font-weight:600;">Day</th>
+            <th style="text-align:center;padding:.375rem .5rem;font-size:.65rem;color:#94a3b8;text-transform:uppercase;font-weight:600;">Direction</th>
+            <th style="text-align:right;padding:.375rem .5rem;font-size:.65rem;color:#94a3b8;text-transform:uppercase;font-weight:600;">Predicted Low</th>
+            <th style="text-align:right;padding:.375rem .5rem;font-size:.65rem;color:#94a3b8;text-transform:uppercase;font-weight:600;">Predicted Price</th>
+            <th style="text-align:right;padding:.375rem .5rem;font-size:.65rem;color:#94a3b8;text-transform:uppercase;font-weight:600;">Predicted High</th>
+            <th style="text-align:right;padding:.375rem .5rem;font-size:.65rem;color:#94a3b8;text-transform:uppercase;font-weight:600;">Change%</th>
+            <th style="text-align:right;padding:.375rem .5rem;font-size:.65rem;color:#94a3b8;text-transform:uppercase;font-weight:600;">Confidence</th>
+          </tr>
+        </thead>
+        <tbody>
+          @foreach($prediction7d as $day)
+          @php
+            $dUp  = $day['direction'] === 'up';
+            $dDn  = $day['direction'] === 'down';
+            $dClr = $dUp ? '#16a34a' : ($dDn ? '#dc2626' : '#64748b');
+          @endphp
+          <tr style="border-bottom:1px solid #f8fafc;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+            <td style="padding:.5rem;font-weight:600;color:#0f172a;">{{ $day['day_display'] }}</td>
+            <td style="padding:.5rem;text-align:center;">
+              <span style="display:inline-flex;align-items:center;gap:.25rem;font-size:.72rem;font-weight:700;padding:.15rem .55rem;border-radius:9999px;
+                background:{{ $dUp ? '#dcfce7' : ($dDn ? '#fee2e2' : '#f1f5f9') }};
+                color:{{ $dClr }};
+                border:1px solid {{ $dUp ? '#86efac' : ($dDn ? '#fca5a5' : '#e2e8f0') }};">
+                {{ $dUp ? '▲ UP' : ($dDn ? '▼ DOWN' : '▬ SIDE') }}
+              </span>
+            </td>
+            <td class="mono" style="padding:.5rem;text-align:right;color:#dc2626;font-size:.77rem;">{{ number_format($day['predicted_low'], 2) }}</td>
+            <td class="mono" style="padding:.5rem;text-align:right;font-weight:700;color:#0f172a;font-size:.77rem;">{{ number_format($day['predicted_price'], 2) }}</td>
+            <td class="mono" style="padding:.5rem;text-align:right;color:#16a34a;font-size:.77rem;">{{ number_format($day['predicted_high'], 2) }}</td>
+            <td class="mono" style="padding:.5rem;text-align:right;font-weight:600;color:{{ $dClr }};font-size:.77rem;">
+              {{ $day['change_pct'] >= 0 ? '+' : '' }}{{ number_format($day['change_pct'], 2) }}%
+            </td>
+            <td style="padding:.5rem;text-align:right;">
+              <div style="display:flex;align-items:center;justify-content:flex-end;gap:.35rem;">
+                <div style="width:45px;height:4px;border-radius:9999px;background:#e2e8f0;overflow:hidden;">
+                  <div style="height:4px;background:{{ $dUp ? '#22c55e' : ($dDn ? '#ef4444' : '#94a3b8') }};width:{{ $day['confidence'] }}%;border-radius:9999px;"></div>
+                </div>
+                <span class="mono" style="font-size:.7rem;color:#64748b;min-width:2.5rem;text-align:right;">{{ $day['confidence'] }}%</span>
+              </div>
+            </td>
+          </tr>
+          @endforeach
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+@endif
+
 {{-- ════ PRICE CHART ══════════════════════════════════════════════════════ --}}
 <div class="card">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
