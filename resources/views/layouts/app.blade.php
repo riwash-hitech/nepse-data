@@ -120,7 +120,6 @@
 
     <div id="mainContent" style="min-height:100vh;display:flex;flex-direction:column;margin-left:0;transition:margin-left 0.26s cubic-bezier(0.4,0,0.2,1);">
 
-        @guest
         {{-- Free trial countdown banner --}}
         <div id="trialBanner" style="display:flex;align-items:center;justify-content:center;gap:.625rem;padding:.35rem 1rem;background:linear-gradient(90deg,#dc2626,#b91c1c);color:#fff;font-size:.78rem;font-weight:600;flex-wrap:wrap;">
             <span style="display:flex;align-items:center;gap:.35rem;">
@@ -132,7 +131,6 @@
             <span id="trialCountdown" style="font-family:'JetBrains Mono',monospace;font-size:.85rem;letter-spacing:.04em;background:rgba(0,0,0,.2);padding:.1rem .5rem;border-radius:.375rem;">10:00</span>
             <span style="color:rgba(255,255,255,.75);">— <a href="{{ route('login') }}" style="color:#fbbf24;font-weight:700;text-decoration:none;padding:.15rem .6rem;background:rgba(255,255,255,.15);border-radius:.375rem;border:1px solid rgba(255,255,255,.3);">⭐ Go Premium</a> for full access</span>
         </div>
-        @endguest
 
         <header style="position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;padding:0.625rem 1rem;background:rgba(255,255,255,0.96);backdrop-filter:blur(8px);border-bottom:1px solid #e2e8f0;">
             <div style="display:flex;align-items:center;gap:0.5rem;flex:1;min-width:0;">
