@@ -255,6 +255,7 @@
 @endif
 
 {{-- ════ MULTI-TIMEFRAME TREND ANALYSIS ══════════════════════════════════ --}}
+@auth
 @if($trend)
 @php
   $tfItems = [
@@ -373,6 +374,34 @@
   @endforeach
 </div>
 @endif
+@else
+{{-- Guest lock: trend analysis --}}
+<div style="position:relative;border-radius:1rem;overflow:hidden;margin-bottom:1.25rem;">
+  <div style="filter:blur(5px);user-select:none;pointer-events:none;display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;padding:.75rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:1rem;">
+    @foreach(['Very Short Term','Short Term','Mid Term','Long Term'] as $tl)
+    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:.75rem;padding:1rem;">
+      <div style="height:.6rem;background:#e2e8f0;border-radius:9999px;width:60%;margin-bottom:.5rem;"></div>
+      <div style="height:1.2rem;background:#dcfce7;border-radius:.375rem;width:80%;margin-bottom:.5rem;"></div>
+      <div style="height:.6rem;background:#e2e8f0;border-radius:9999px;width:90%;"></div>
+      <div style="height:.6rem;background:#e2e8f0;border-radius:9999px;width:70%;margin-top:.375rem;"></div>
+    </div>
+    @endforeach
+  </div>
+  <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.75rem;background:rgba(255,255,255,.72);backdrop-filter:blur(2px);border-radius:1rem;">
+    <div style="width:2.5rem;height:2.5rem;background:linear-gradient(135deg,#4f46e5,#7c3aed);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+      <svg style="width:1.1rem;height:1.1rem;color:white;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+    </div>
+    <div style="text-align:center;">
+      <div style="font-weight:700;font-size:.9375rem;color:#0f172a;margin-bottom:.25rem;">Login to view Trend Analysis</div>
+      <div style="font-size:.8125rem;color:#64748b;">Multi-timeframe signals: Very Short · Short · Mid · Long</div>
+    </div>
+    <a href="{{ route('login') }}" style="display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1.25rem;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-size:.875rem;font-weight:600;border-radius:.625rem;text-decoration:none;box-shadow:0 2px 8px rgba(79,70,229,.35);">
+      <svg style="width:.875rem;height:.875rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+      Sign in free
+    </a>
+  </div>
+</div>
+@endauth
 
 {{-- ════ INDICATORS ════════════════════════════════════════════════════════ --}}
 @if($indicator)
@@ -412,6 +441,7 @@
 @endif
 
 {{-- ════ 7-DAY PRICE PREDICTION ══════════════════════════════════════════ --}}
+@auth
 @if(!empty($prediction7d))
 <div class="card" style="overflow:hidden;">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;">
@@ -550,6 +580,37 @@
   @endauth
 </div>
 @endif
+@else
+{{-- Guest lock: prediction --}}
+<div style="position:relative;border-radius:1rem;overflow:hidden;margin-bottom:1.25rem;">
+  <div style="filter:blur(5px);user-select:none;pointer-events:none;padding:1.25rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:1rem;">
+    <div style="height:.75rem;background:#e2e8f0;border-radius:9999px;width:40%;margin-bottom:1rem;"></div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:.5rem;margin-bottom:.875rem;">
+      @foreach(range(1,7) as $_)
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:.5rem;padding:.75rem .5rem;text-align:center;">
+        <div style="height:.6rem;background:#e2e8f0;border-radius:9999px;margin-bottom:.4rem;"></div>
+        <div style="height:1rem;background:#dcfce7;border-radius:.25rem;margin-bottom:.4rem;"></div>
+        <div style="height:.6rem;background:#e2e8f0;border-radius:9999px;"></div>
+      </div>
+      @endforeach
+    </div>
+    <div style="height:.6rem;background:#e2e8f0;border-radius:9999px;width:70%;"></div>
+  </div>
+  <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.75rem;background:rgba(255,255,255,.72);backdrop-filter:blur(2px);border-radius:1rem;">
+    <div style="width:2.5rem;height:2.5rem;background:linear-gradient(135deg,#4f46e5,#7c3aed);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+      <svg style="width:1.1rem;height:1.1rem;color:white;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+    </div>
+    <div style="text-align:center;">
+      <div style="font-weight:700;font-size:.9375rem;color:#0f172a;margin-bottom:.25rem;">Login to view 7-Day Price Prediction</div>
+      <div style="font-size:.8125rem;color:#64748b;">AI forecast · Price targets · Confidence scores</div>
+    </div>
+    <a href="{{ route('login') }}" style="display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1.25rem;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-size:.875rem;font-weight:600;border-radius:.625rem;text-decoration:none;box-shadow:0 2px 8px rgba(79,70,229,.35);">
+      <svg style="width:.875rem;height:.875rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+      Sign in free
+    </a>
+  </div>
+</div>
+@endauth
 
 {{-- ════ PRICE CHART ══════════════════════════════════════════════════════ --}}
 <div class="card">
