@@ -120,6 +120,20 @@
 
     <div id="mainContent" style="min-height:100vh;display:flex;flex-direction:column;margin-left:0;transition:margin-left 0.26s cubic-bezier(0.4,0,0.2,1);">
 
+        @guest
+        {{-- Free trial countdown banner --}}
+        <div id="trialBanner" style="display:flex;align-items:center;justify-content:center;gap:.625rem;padding:.35rem 1rem;background:linear-gradient(90deg,#dc2626,#b91c1c);color:#fff;font-size:.78rem;font-weight:600;flex-wrap:wrap;">
+            <span style="display:flex;align-items:center;gap:.35rem;">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Free trial expires in
+            </span>
+            <span id="trialCountdown" style="font-family:'JetBrains Mono',monospace;font-size:.85rem;letter-spacing:.04em;background:rgba(0,0,0,.2);padding:.1rem .5rem;border-radius:.375rem;">10:00</span>
+            <span style="color:rgba(255,255,255,.75);">— <a href="{{ route('login') }}" style="color:#fbbf24;font-weight:700;text-decoration:none;padding:.15rem .6rem;background:rgba(255,255,255,.15);border-radius:.375rem;border:1px solid rgba(255,255,255,.3);">⭐ Go Premium</a> for full access</span>
+        </div>
+        @endguest
+
         <header style="position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;padding:0.625rem 1rem;background:rgba(255,255,255,0.96);backdrop-filter:blur(8px);border-bottom:1px solid #e2e8f0;">
             <div style="display:flex;align-items:center;gap:0.5rem;flex:1;min-width:0;">
                 <button id="hamburgerBtn" onclick="openSidebar()" aria-label="Open menu"
@@ -247,6 +261,23 @@
         document.addEventListener('click',function(e){
             if(!inp.contains(e.target)&&!dd.contains(e.target)) dd.style.display='none';
         });
+    })();
+
+    (function(){
+        var el=document.getElementById('trialCountdown');
+        if(!el)return;
+        var secs=600; // 10 minutes
+        function fmt(s){
+            var m=Math.floor(s/60);
+            var ss=s%60;
+            return (m<10?'0':'')+m+':'+(ss<10?'0':'')+ss;
+        }
+        el.textContent=fmt(secs);
+        setInterval(function(){
+            secs--;
+            if(secs<0) secs=599; // reset to 9:59 after 0:00
+            el.textContent=fmt(secs);
+        },1000);
     })();
     </script>
     @stack('scripts')
