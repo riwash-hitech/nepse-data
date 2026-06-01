@@ -281,84 +281,14 @@
 
     <div class="p-5 space-y-5">
 
-        {{-- ── Current price + key metrics ── --}}
-        <div class="price-grid">
-            <div class="price-cell">
+        {{-- ── Always visible: Current Price + RSI + MACD + SMA badges ── --}}
+        <div class="flex flex-wrap gap-2 items-center">
+            <div class="price-cell" style="min-width:140px;">
                 <div class="text-xs mb-1" style="color:#94a3b8;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;">Current Price</div>
                 <div class="font-extrabold" style="font-size:1.1rem;color:#0f172a;font-family:'JetBrains Mono',monospace;">
                     NPR {{ number_format($pick['current'], 2) }}
                 </div>
             </div>
-            <div class="price-cell">
-                <div class="text-xs mb-1" style="color:#94a3b8;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;">Entry Zone</div>
-                <div class="font-bold text-sm" style="color:#1d4ed8;font-family:'JetBrains Mono',monospace;">
-                    {{ number_format($pick['entry_min'], 2) }} – {{ number_format($pick['entry_max'], 2) }}
-                </div>
-            </div>
-            <div class="price-cell">
-                <div class="text-xs mb-1" style="color:#94a3b8;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;">Stop Loss</div>
-                <div class="font-bold text-sm" style="color:#dc2626;font-family:'JetBrains Mono',monospace;">
-                    NPR {{ number_format($pick['stop_loss'], 2) }}
-                    <span style="font-size:0.7rem;color:#dc2626;">(-{{ $pick['risk_pct'] }}%)</span>
-                </div>
-            </div>
-            <div class="price-cell">
-                <div class="text-xs mb-1" style="color:#94a3b8;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;">R/R Ratio</div>
-                <div class="font-extrabold text-sm" style="color:{{ $pick['rr_ratio'] >= 2 ? '#15803d' : ($pick['rr_ratio'] >= 1.5 ? '#0369a1' : '#92400e') }};">
-                    1 : {{ $pick['rr_ratio'] }}
-                </div>
-            </div>
-        </div>
-
-        {{-- ── Targets with progress bars ── --}}
-        <div>
-            <div class="text-xs font-semibold mb-3 uppercase tracking-wide" style="color:#64748b;">Price Targets</div>
-            <div class="space-y-3">
-
-                {{-- Target 1 --}}
-                <div class="flex items-center gap-3">
-                    <div class="shrink-0 w-20 text-xs font-semibold" style="color:#15803d;">
-                        T1 <span style="font-family:monospace;">{{ number_format($pick['target_1'], 0) }}</span>
-                    </div>
-                    <div class="flex-1 target-bar">
-                        <div class="target-bar-fill" style="width:{{ min(100, $pick['reward1_pct'] * 5) }}%;background:#22c55e;"></div>
-                    </div>
-                    <div class="shrink-0 text-xs font-bold" style="color:#15803d;min-width:3.5rem;text-align:right;">
-                        +{{ $pick['reward1_pct'] }}%
-                    </div>
-                </div>
-
-                {{-- Target 2 --}}
-                <div class="flex items-center gap-3">
-                    <div class="shrink-0 w-20 text-xs font-semibold" style="color:#1d4ed8;">
-                        T2 <span style="font-family:monospace;">{{ number_format($pick['target_2'], 0) }}</span>
-                    </div>
-                    <div class="flex-1 target-bar">
-                        <div class="target-bar-fill" style="width:{{ min(100, $pick['reward2_pct'] * 4) }}%;background:#3b82f6;"></div>
-                    </div>
-                    <div class="shrink-0 text-xs font-bold" style="color:#1d4ed8;min-width:3.5rem;text-align:right;">
-                        +{{ $pick['reward2_pct'] }}%
-                    </div>
-                </div>
-
-                {{-- Target 3 --}}
-                <div class="flex items-center gap-3">
-                    <div class="shrink-0 w-20 text-xs font-semibold" style="color:#7e22ce;">
-                        T3 <span style="font-family:monospace;">{{ number_format($pick['target_3'], 0) }}</span>
-                    </div>
-                    <div class="flex-1 target-bar">
-                        <div class="target-bar-fill" style="width:{{ min(100, $pick['reward3_pct'] * 3) }}%;background:#a855f7;"></div>
-                    </div>
-                    <div class="shrink-0 text-xs font-bold" style="color:#7e22ce;min-width:3.5rem;text-align:right;">
-                        +{{ $pick['reward3_pct'] }}%
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
-        {{-- ── Technical snapshot ── --}}
-        <div class="flex flex-wrap gap-2">
             @if($pick['rsi'] !== null)
             <span class="text-xs px-2.5 py-1 rounded-full font-medium"
                   style="background:#f0f9ff;border:1px solid #bae6fd;color:#0369a1;">
@@ -393,7 +323,72 @@
             @endif
         </div>
 
-        {{-- ── Why is it going up (reasons) ── --}}
+        {{-- ── Auth-gated: Entry/Stop/Targets/Reasons ── --}}
+        @auth
+        {{-- Entry zone, Stop Loss, R/R ── --}}
+        <div class="price-grid">
+            <div class="price-cell">
+                <div class="text-xs mb-1" style="color:#94a3b8;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;">Entry Zone</div>
+                <div class="font-bold text-sm" style="color:#1d4ed8;font-family:'JetBrains Mono',monospace;">
+                    {{ number_format($pick['entry_min'], 2) }} – {{ number_format($pick['entry_max'], 2) }}
+                </div>
+            </div>
+            <div class="price-cell">
+                <div class="text-xs mb-1" style="color:#94a3b8;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;">Stop Loss</div>
+                <div class="font-bold text-sm" style="color:#dc2626;font-family:'JetBrains Mono',monospace;">
+                    NPR {{ number_format($pick['stop_loss'], 2) }}
+                    <span style="font-size:0.7rem;color:#dc2626;">(-{{ $pick['risk_pct'] }}%)</span>
+                </div>
+            </div>
+            <div class="price-cell" style="grid-column:span 2;">
+                <div class="text-xs mb-1" style="color:#94a3b8;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;">R/R Ratio</div>
+                <div class="font-extrabold text-sm" style="color:{{ $pick['rr_ratio'] >= 2 ? '#15803d' : ($pick['rr_ratio'] >= 1.5 ? '#0369a1' : '#92400e') }};">
+                    1 : {{ $pick['rr_ratio'] }}
+                </div>
+            </div>
+        </div>
+
+        {{-- Targets ── --}}
+        <div>
+            <div class="text-xs font-semibold mb-3 uppercase tracking-wide" style="color:#64748b;">Price Targets</div>
+            <div class="space-y-3">
+                <div class="flex items-center gap-3">
+                    <div class="shrink-0 w-20 text-xs font-semibold" style="color:#15803d;">
+                        T1 <span style="font-family:monospace;">{{ number_format($pick['target_1'], 0) }}</span>
+                    </div>
+                    <div class="flex-1 target-bar">
+                        <div class="target-bar-fill" style="width:{{ min(100, $pick['reward1_pct'] * 5) }}%;background:#22c55e;"></div>
+                    </div>
+                    <div class="shrink-0 text-xs font-bold" style="color:#15803d;min-width:3.5rem;text-align:right;">
+                        +{{ $pick['reward1_pct'] }}%
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="shrink-0 w-20 text-xs font-semibold" style="color:#1d4ed8;">
+                        T2 <span style="font-family:monospace;">{{ number_format($pick['target_2'], 0) }}</span>
+                    </div>
+                    <div class="flex-1 target-bar">
+                        <div class="target-bar-fill" style="width:{{ min(100, $pick['reward2_pct'] * 4) }}%;background:#3b82f6;"></div>
+                    </div>
+                    <div class="shrink-0 text-xs font-bold" style="color:#1d4ed8;min-width:3.5rem;text-align:right;">
+                        +{{ $pick['reward2_pct'] }}%
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="shrink-0 w-20 text-xs font-semibold" style="color:#7e22ce;">
+                        T3 <span style="font-family:monospace;">{{ number_format($pick['target_3'], 0) }}</span>
+                    </div>
+                    <div class="flex-1 target-bar">
+                        <div class="target-bar-fill" style="width:{{ min(100, $pick['reward3_pct'] * 3) }}%;background:#a855f7;"></div>
+                    </div>
+                    <div class="shrink-0 text-xs font-bold" style="color:#7e22ce;min-width:3.5rem;text-align:right;">
+                        +{{ $pick['reward3_pct'] }}%
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Reasons ── --}}
         <div>
             <div class="text-xs font-semibold mb-2.5 uppercase tracking-wide flex items-center gap-1.5" style="color:#64748b;">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -412,7 +407,53 @@
             </div>
         </div>
 
-        {{-- ── CTA ── --}}
+        @else
+        {{-- Guest lock banner ── --}}
+        <div style="position:relative;border-radius:0.75rem;overflow:hidden;">
+            {{-- Blurred preview of locked content ── --}}
+            <div style="filter:blur(5px);user-select:none;pointer-events:none;padding:1rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:0.75rem;">
+                <div class="space-y-3">
+                    <div class="flex gap-2">
+                        <div style="height:2rem;width:30%;background:#e2e8f0;border-radius:0.5rem;"></div>
+                        <div style="height:2rem;width:30%;background:#e2e8f0;border-radius:0.5rem;"></div>
+                        <div style="height:2rem;width:30%;background:#e2e8f0;border-radius:0.5rem;"></div>
+                    </div>
+                    <div style="height:0.75rem;background:#e2e8f0;border-radius:9999px;width:100%;"></div>
+                    <div style="height:0.75rem;background:#e2e8f0;border-radius:9999px;width:80%;"></div>
+                    <div style="height:0.75rem;background:#e2e8f0;border-radius:9999px;width:90%;"></div>
+                    <div style="height:0.75rem;background:#e2e8f0;border-radius:9999px;width:70%;"></div>
+                    <div style="height:0.75rem;background:#e2e8f0;border-radius:9999px;width:85%;"></div>
+                </div>
+            </div>
+            {{-- Lock overlay ── --}}
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.75rem;background:rgba(255,255,255,0.7);backdrop-filter:blur(2px);border-radius:0.75rem;">
+                <div style="width:2.5rem;height:2.5rem;background:linear-gradient(135deg,#4f46e5,#7c3aed);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+                    <svg style="width:1.1rem;height:1.1rem;color:white;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                    </svg>
+                </div>
+                <div style="text-align:center;">
+                    <div style="font-weight:700;font-size:0.9375rem;color:#0f172a;margin-bottom:0.25rem;">
+                        Login to unlock full analysis
+                    </div>
+                    <div style="font-size:0.8125rem;color:#64748b;">
+                        Entry zone · Stop loss · Price targets · Reasons
+                    </div>
+                </div>
+                <a href="{{ route('login') }}"
+                   style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.5rem 1.25rem;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-size:0.875rem;font-weight:600;border-radius:0.625rem;text-decoration:none;box-shadow:0 2px 8px rgba(79,70,229,0.35);">
+                    <svg style="width:0.875rem;height:0.875rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                    </svg>
+                    Sign in free
+                </a>
+            </div>
+        </div>
+        @endauth
+
+        {{-- ── Score + Full Analysis CTA (always visible) ── --}}
         <div class="flex gap-3 pt-1">
             <a href="{{ route('stocks.show', $pick['symbol']) }}"
                class="btn-primary flex-1 justify-center">

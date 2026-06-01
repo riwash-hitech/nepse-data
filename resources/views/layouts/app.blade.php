@@ -78,6 +78,12 @@
                 <span>Top Picks</span>
                 <span style="margin-left:auto;font-size:0.65rem;font-weight:700;padding:0.15rem 0.45rem;border-radius:9999px;background:#dcfce7;color:#15803d;">5</span>
             </a>
+            <a href="{{ route('ipo.index') }}" class="nav-link {{ request()->routeIs('ipo.*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                IPO Results
+            </a>
             @auth
             <a href="{{ route('watchlist.index') }}" class="nav-link {{ request()->routeIs('watchlist.*') ? 'active' : '' }}">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -1,320 +1,351 @@
 @extends('layouts.app')
-@section('title', 'NEPSE Analytics')
+@section('title', 'NEPSE Analytics - Dashboard')
 
 @push('head')
 <style>
-/* ── Hero gradient ── */
-.hero-glow {
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(37,99,235,0.06) 0%, transparent 70%),
-                radial-gradient(ellipse 50% 40% at 80% 30%, rgba(124,58,237,0.04) 0%, transparent 60%);
-    pointer-events: none;
-}
-.hero-title {
-    background: linear-gradient(135deg, #0f172a 30%, #1e40af 70%, #4f46e5 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-/* ── Ticker strip ── */
 @keyframes ticker {
-    0%   { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
-.ticker-inner { display:flex; animation: ticker 40s linear infinite; width: max-content; }
-.ticker-inner:hover { animation-play-state: paused; }
-/* ── Stat card accent bars ── */
-.stat-card { position:relative; overflow:hidden; }
-.stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; border-radius:0.75rem 0.75rem 0 0; }
-.stat-card.blue::before  { background: linear-gradient(90deg,#2563eb,#60a5fa); }
-.stat-card.purple::before { background: linear-gradient(90deg,#7c3aed,#a78bfa); }
-.stat-card.green::before  { background: linear-gradient(90deg,#059669,#34d399); }
-.stat-card.orange::before { background: linear-gradient(90deg,#d97706,#fbbf24); }
-/* ── Sector pill hover ── */
-.sector-pill {
-    display:flex; align-items:center; justify-content:space-between;
-    padding: 0.75rem 1rem; border-radius:0.625rem;
-    background:#ffffff; border:1px solid #e2e8f0;
-    transition: all 0.18s; cursor:pointer; text-decoration:none;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+@keyframes fadeUp {
+  from { opacity:0;transform:translateY(12px); }
+  to   { opacity:1;transform:translateY(0); }
 }
-.sector-pill:hover { background:#eff6ff; border-color:#bfdbfe; transform:translateY(-1px); box-shadow:0 4px 12px rgba(37,99,235,0.1); }
-/* ── Stock row hover ── */
-.stock-row { transition: background 0.12s; }
-.stock-row:hover { background:#f8fafc; }
-/* ── Hero search ── */
-.hero-search {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.875rem;
-    color: #0f172a;
-    font-size: 1rem;
-    padding: 0.875rem 1rem 0.875rem 3rem;
-    width: 100%;
-    outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-}
-.hero-search:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
-}
-.hero-search::placeholder { color: #94a3b8; }
-/* ── Feature badge ── */
-.feature-tag {
-    display:inline-flex; align-items:center; gap:0.4rem;
-    padding:0.25rem 0.75rem; border-radius:9999px;
-    font-size:0.75rem; font-weight:500;
-    background:#eff6ff; color:#2563eb;
-    border:1px solid #bfdbfe;
-}
+@keyframes livePulse { 0%,100%{opacity:1;}50%{opacity:.4;} }
+.ticker-wrap  { overflow:hidden;flex:1; }
+.ticker-inner { display:flex;animation:ticker 55s linear infinite;width:max-content; }
+.ticker-inner:hover { animation-play-state:paused; }
+.fade-up    { animation:fadeUp .4s ease both; }
+.fade-d1    { animation-delay:.06s; }
+.fade-d2    { animation-delay:.13s; }
+.fade-d3    { animation-delay:.20s; }
+.fade-d4    { animation-delay:.27s; }
+.card-hover { transition:box-shadow .18s,transform .18s; }
+.card-hover:hover { box-shadow:0 8px 28px rgba(37,99,235,.12);transform:translateY(-2px); }
+.sector-row { transition:background .12s; }
+.sector-row:hover { background:#eff6ff; }
+.stock-row  { transition:background .1s; }
+.stock-row:hover  { background:#f8fafc; }
 </style>
 @endpush
 
 @section('content')
+@php
+  $activeList = collect($stockList)->filter(fn($s) => !($s['is_delisted']??false) && !($s['is_merged']??false));
+@endphp
 
-{{-- ════════════════════════════════════════════════════ --}}
-{{--  HERO                                               --}}
-{{-- ════════════════════════════════════════════════════ --}}
-<div class="relative rounded-2xl overflow-hidden mb-8 p-6 sm:p-10 md:p-12"
-     style="background:linear-gradient(135deg,#f8faff 0%,#eff6ff 50%,#f5f3ff 100%);
-            border:1px solid #e0e7ff;
-            box-shadow:0 4px 24px rgba(37,99,235,0.07);">
-    <div class="hero-glow"></div>
+{{-- ════ HERO ══════════════════════════════════════════════════════════════ --}}
+<div class="fade-up" style="border-radius:1.25rem;overflow:hidden;margin-bottom:1.75rem;
+     background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 55%,#312e81 100%);
+     position:relative;padding:2.5rem 2rem;">
 
-    {{-- Top row: date + refresh --}}
-    <div class="relative flex items-center justify-between mb-5 flex-wrap gap-2">
-        <div class="flex items-center gap-3">
-            <span class="feature-tag">
-                <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse inline-block"></span>
-                Live Data
-            </span>
-            <span style="color:#94a3b8;font-size:0.8125rem;">{{ now()->format('l, d M Y') }}</span>
-        </div>
-        <form method="POST" action="{{ route('dashboard.sync') }}">
-            @csrf
-            <button type="submit"
-                onclick="this.disabled=true;this.textContent='Refreshing…'"
-                style="font-size:0.8rem;color:#94a3b8;background:transparent;border:none;cursor:pointer;padding:0.25rem 0;transition:color 0.15s;"
-                onmouseover="this.style.color='#64748b'"
-                onmouseout="this.style.color='#94a3b8'">
-                ↻ Refresh
-            </button>
-        </form>
+  <div style="position:absolute;inset:0;opacity:.05;pointer-events:none;
+       background-image:radial-gradient(circle,#fff 1px,transparent 1px);
+       background-size:28px 28px;"></div>
+  <div style="position:absolute;top:-80px;right:-80px;width:320px;height:320px;border-radius:50%;
+       background:radial-gradient(circle,rgba(99,102,241,.3),transparent 70%);pointer-events:none;"></div>
+  <div style="position:absolute;bottom:-40px;left:8%;width:220px;height:220px;border-radius:50%;
+       background:radial-gradient(circle,rgba(59,130,246,.2),transparent 70%);pointer-events:none;"></div>
+
+  <div style="position:relative;z-index:1;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:.5rem;">
+      <div style="display:flex;align-items:center;gap:.75rem;">
+        <span style="display:inline-flex;align-items:center;gap:.4rem;background:rgba(34,197,94,.15);
+               border:1px solid rgba(34,197,94,.3);border-radius:9999px;padding:.25rem .75rem;
+               font-size:.72rem;font-weight:600;color:#86efac;">
+          <span style="width:6px;height:6px;border-radius:50%;background:#22c55e;display:inline-block;
+                 animation:livePulse 1.5s infinite;"></span>
+          Live Market Data
+        </span>
+        <span style="font-size:.78rem;color:rgba(255,255,255,.4);">{{ now()->format('D, d M Y') }}</span>
+      </div>
+      <form method="POST" action="{{ route('dashboard.sync') }}">
+        @csrf
+        <button type="submit"
+          style="font-size:.75rem;color:rgba(255,255,255,.5);background:rgba(255,255,255,.08);
+                 border:1px solid rgba(255,255,255,.12);border-radius:.5rem;padding:.3rem .75rem;
+                 cursor:pointer;transition:all .15s;"
+          onmouseover="this.style.background='rgba(255,255,255,.15)'"
+          onmouseout="this.style.background='rgba(255,255,255,.08)'"
+          onclick="this.disabled=true;this.textContent='Refreshing…'">
+          ↻ Refresh Data
+        </button>
+      </form>
     </div>
 
-    @if(session('success'))
-    <div class="relative mb-5 px-4 py-2.5 rounded-lg text-sm"
-         style="background:#f0fdf4;border:1px solid #bbf7d0;color:#16a34a;">
-        {{ session('success') }}
-    </div>
-    @endif
-
-    {{-- Headline --}}
-    <div class="relative mb-2">
-        <h1 class="hero-title text-3xl sm:text-4xl md:text-5xl font-bold leading-tight tracking-tight">
-            Nepal Stock Exchange
-        </h1>
-        <h2 class="hero-title text-3xl sm:text-4xl md:text-5xl font-bold leading-tight tracking-tight">
-            Analytics Platform
-        </h2>
-    </div>
-    <p class="relative mb-8" style="color:#64748b;font-size:1rem;max-width:38rem;">
-        Live technical analysis — RSI, MACD, Bollinger Bands, signals — fetched directly from
-        Chukul.com for every listed stock. No delays, no stale data.
+    <h1 style="font-size:clamp(1.75rem,5vw,2.875rem);font-weight:900;color:#fff;
+         line-height:1.1;letter-spacing:-.02em;margin:0 0 .75rem;">
+      Nepal Stock Exchange<br>
+      <span style="background:linear-gradient(90deg,#60a5fa,#a78bfa);
+            -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">
+        Analytics Platform
+      </span>
+    </h1>
+    <p style="font-size:.9375rem;color:rgba(255,255,255,.6);max-width:42rem;line-height:1.65;margin:0 0 2rem;">
+      Live technical analysis for every NEPSE stock — RSI, MACD, Bollinger Bands, buy/sell signals
+      and 7-day forecasts powered by real-time market data.
     </p>
 
-    {{-- Big search bar --}}
-    <div class="relative max-w-2xl">
-        <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 pointer-events-none"
-             style="color:#94a3b8;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+    {{-- Search bar (all users) --}}
+    <div style="position:relative;max-width:560px;">
+      <svg style="position:absolute;left:1rem;top:50%;transform:translateY(-50%);
+           color:rgba(255,255,255,.4);pointer-events:none;" width="18" height="18" fill="none"
+           stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+      </svg>
+      <input id="heroSearch" type="text" autocomplete="off"
+             placeholder="Search symbol or company — e.g. NABIL, NICA, Hydropower…"
+             style="width:100%;padding:.875rem 1rem .875rem 3rem;font-size:.9375rem;
+                    background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);
+                    border-radius:.875rem;color:#fff;outline:none;box-sizing:border-box;
+                    backdrop-filter:blur(8px);transition:border-color .2s,background .2s;"
+             onfocus="this.style.background='rgba(255,255,255,.16)';this.style.borderColor='rgba(129,140,248,.8)'"
+             onblur="this.style.background='rgba(255,255,255,.1)';this.style.borderColor='rgba(255,255,255,.18)'">
+      <div id="heroDropdown" style="display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;
+           border-radius:.875rem;overflow:hidden;background:#fff;border:1px solid #e2e8f0;
+           box-shadow:0 20px 60px rgba(0,0,0,.25);z-index:60;"></div>
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1.5rem;">
+      @foreach(['RSI 14','MACD 12/26','Bollinger Bands','ATR 14','Support/Resistance','Buy/Sell Signals','7-Day Forecast'] as $f)
+      <span style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);
+             border-radius:9999px;padding:.2rem .7rem;font-size:.7rem;color:rgba(255,255,255,.65);">
+        {{ $f }}
+      </span>
+      @endforeach
+    </div>
+  </div>
+</div>
+
+{{-- ════ QUICK NAV ═════════════════════════════════════════════════════════ --}}
+<div class="fade-up fade-d1" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));
+     gap:.875rem;margin-bottom:1.75rem;">
+  @php
+  $quickNav = [
+    ['route'=>'stocks.index',   'icon'=>'📈', 'label'=>'Markets',     'desc'=>$totalStocks.' stocks',    'clr'=>'#2563eb','bg'=>'#eff6ff','bd'=>'#bfdbfe', 'auth'=>false],
+    ['route'=>'screener.index', 'icon'=>'🔍', 'label'=>'Screener',    'desc'=>'Filter & screen',         'clr'=>'#7c3aed','bg'=>'#f5f3ff','bd'=>'#ddd6fe', 'auth'=>false],
+    ['route'=>'signals.index',  'icon'=>'⚡', 'label'=>'Signals',     'desc'=>'Buy/Sell alerts',         'clr'=>'#d97706','bg'=>'#fffbeb','bd'=>'#fde68a', 'auth'=>false],
+    ['route'=>'top-picks.index','icon'=>'⭐', 'label'=>'Top Picks',   'desc'=>'Best 5 uptrend stocks',   'clr'=>'#16a34a','bg'=>'#f0fdf4','bd'=>'#bbf7d0'],
+    ['route'=>'ipo.index',      'icon'=>'📋', 'label'=>'IPO Results', 'desc'=>'Check allotment',         'clr'=>'#0891b2','bg'=>'#ecfeff','bd'=>'#a5f3fc', 'auth'=>false],
+  ];
+  @endphp
+  @foreach($quickNav as $nav)
+  @if(!($nav['auth'] ?? false) || auth()->check())
+  <a href="{{ route($nav['route']) }}" class="card-hover"
+     style="display:flex;align-items:center;gap:.875rem;padding:1rem 1.125rem;
+            background:#fff;border:1px solid #e2e8f0;border-radius:.875rem;
+            text-decoration:none;box-shadow:0 1px 3px rgba(0,0,0,.04);">
+    <div style="width:40px;height:40px;border-radius:.625rem;flex-shrink:0;font-size:1.2rem;
+         background:{{ $nav['bg'] }};border:1px solid {{ $nav['bd'] }};
+         display:flex;align-items:center;justify-content:center;">
+      {{ $nav['icon'] }}
+    </div>
+    <div style="min-width:0;">
+      <div style="font-size:.875rem;font-weight:700;color:#0f172a;">{{ $nav['label'] }}</div>
+      <div style="font-size:.7rem;color:#94a3b8;margin-top:.1rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+        {{ $nav['desc'] }}
+      </div>
+    </div>
+  </a>
+  @endif
+  @endforeach
+</div> ════════════════════════════════════════════════════════════ --}}
+<div class="fade-up fade-d2" style="background:#fff;border:1px solid #e2e8f0;border-radius:.875rem;
+     overflow:hidden;margin-bottom:1.75rem;display:flex;align-items:center;">
+  <div style="flex-shrink:0;padding:.625rem 1rem;background:#0f172a;font-size:.65rem;
+       font-weight:700;color:#fff;letter-spacing:.07em;text-transform:uppercase;white-space:nowrap;">
+    NEPSE
+  </div>
+  <div class="ticker-wrap">
+    <div class="ticker-inner" style="padding:.625rem 0;">
+      @php $tickerStocks = $activeList->sortBy('symbol')->take(50); @endphp
+      @foreach($tickerStocks as $t)
+      <a href="{{ route('stocks.show', $t['symbol']) }}"
+         style="display:inline-flex;align-items:center;gap:.5rem;padding:0 1.25rem;
+                text-decoration:none;border-right:1px solid #f1f5f9;white-space:nowrap;">
+        <span style="font-weight:700;font-size:.78rem;color:#0f172a;
+               font-family:'JetBrains Mono',monospace;">{{ $t['symbol'] }}</span>
+        <span style="font-size:.7rem;color:#94a3b8;">{{ Str::limit($t['name'],15) }}</span>
+      </a>
+      @endforeach
+      @foreach($tickerStocks as $t)
+      <a href="{{ route('stocks.show', $t['symbol']) }}"
+         style="display:inline-flex;align-items:center;gap:.5rem;padding:0 1.25rem;
+                text-decoration:none;border-right:1px solid #f1f5f9;white-space:nowrap;">
+        <span style="font-weight:700;font-size:.78rem;color:#0f172a;
+               font-family:'JetBrains Mono',monospace;">{{ $t['symbol'] }}</span>
+        <span style="font-size:.7rem;color:#94a3b8;">{{ Str::limit($t['name'],15) }}</span>
+      </a>
+      @endforeach
+    </div>
+  </div>
+</div>
+
+{{-- ════ STAT CARDS ════════════════════════════════════════════════════════ --}}
+<div class="fade-up fade-d2" style="display:grid;grid-template-columns:repeat(2,1fr);
+     gap:1rem;margin-bottom:1.75rem;">
+  @php
+  $stats = [
+    ['label'=>'Listed Stocks','value'=>number_format($totalStocks),'sub'=>'Active on NEPSE',
+     'top'=>'#2563eb','ic'=>'#2563eb','ib'=>'#eff6ff',
+     'svg'=>'<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>'],
+    ['label'=>'Sectors','value'=>count($sectors),'sub'=>'Market segments',
+     'top'=>'#7c3aed','ic'=>'#7c3aed','ib'=>'#f5f3ff',
+     'svg'=>'<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>'],
+    ['label'=>'Data Source','value'=>'Live API','sub'=>'Real-time · No scraping',
+     'top'=>'#059669','ic'=>'#059669','ib'=>'#f0fdf4',
+     'svg'=>'<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>'],
+    ['label'=>'Analytics','value'=>'Real-time','sub'=>'Computed on demand',
+     'top'=>'#d97706','ic'=>'#d97706','ib'=>'#fffbeb',
+     'svg'=>'<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/>'],
+  ];
+  @endphp
+  @foreach($stats as $s)
+  <div style="background:#fff;border:1px solid #e2e8f0;border-radius:.875rem;padding:1.25rem;
+       box-shadow:0 1px 3px rgba(0,0,0,.04);position:relative;overflow:hidden;">
+    <div style="position:absolute;top:0;left:0;right:0;height:3px;
+         background:linear-gradient(90deg,{{ $s['top'] }},{{ $s['top'] }}44);
+         border-radius:.875rem .875rem 0 0;"></div>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem;">
+      <div>
+        <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+             color:#94a3b8;margin-bottom:.5rem;">{{ $s['label'] }}</div>
+        <div style="font-size:1.625rem;font-weight:800;color:#0f172a;
+             font-family:'JetBrains Mono',monospace;line-height:1;">{{ $s['value'] }}</div>
+        <div style="font-size:.72rem;color:#94a3b8;margin-top:.375rem;">{{ $s['sub'] }}</div>
+      </div>
+      <div style="width:38px;height:38px;border-radius:.625rem;flex-shrink:0;
+           background:{{ $s['ib'] }};display:flex;align-items:center;justify-content:center;">
+        <svg width="18" height="18" fill="none" stroke="{{ $s['ic'] }}" stroke-width="2" viewBox="0 0 24 24">
+          {!! $s['svg'] !!}
         </svg>
-        <input id="heroSearch" type="text"
-               placeholder="Search symbol or company — e.g. NABIL, NICA, Hydropower…"
-               autocomplete="off"
-               class="hero-search">
-        <div id="heroDropdown"
-             class="absolute left-0 right-0 mt-2 rounded-xl shadow-xl hidden z-50 overflow-hidden"
-             style="background:#ffffff;border:1px solid #e2e8f0;top:100%;">
-        </div>
+      </div>
     </div>
-
-    {{-- Feature tags --}}
-    <div class="relative flex flex-wrap gap-2 mt-5">
-        <span class="feature-tag">RSI 14</span>
-        <span class="feature-tag">MACD 12/26/9</span>
-        <span class="feature-tag">Bollinger Bands</span>
-        <span class="feature-tag">ATR 14</span>
-        <span class="feature-tag">Support &amp; Resistance</span>
-        <span class="feature-tag">Buy / Sell Signals</span>
-    </div>
+  </div>
+  @endforeach
 </div>
 
-{{-- ════════════════════════════════════════════════════ --}}
-{{--  LIVE TICKER STRIP                                  --}}
-{{-- ════════════════════════════════════════════════════ --}}
-<div class="mb-8 rounded-xl overflow-hidden"
-     style="background:#ffffff;border:1px solid #e2e8f0;">
-    <div class="overflow-hidden py-3 px-2" style="white-space:nowrap;">
-        <div class="ticker-inner">
-            @php $tickerStocks = collect($stockList)->filter(fn($s) => !($s['is_delisted']??false))->sortBy('symbol')->take(40); @endphp
-            @foreach($tickerStocks as $t)
-            <a href="{{ route('stocks.show', $t['symbol']) }}"
-               style="display:inline-flex;align-items:center;gap:0.5rem;padding:0 1.25rem;text-decoration:none;border-right:1px solid #f1f5f9;">
-                <span style="font-weight:700;font-size:0.8125rem;color:#0f172a;font-family:'JetBrains Mono',monospace;">{{ $t['symbol'] }}</span>
-                <span style="font-size:0.75rem;color:#94a3b8;">{{ Str::limit($t['name'],18) }}</span>
-            </a>
-            @endforeach
-            @foreach($tickerStocks as $t)
-            <a href="{{ route('stocks.show', $t['symbol']) }}"
-               style="display:inline-flex;align-items:center;gap:0.5rem;padding:0 1.25rem;text-decoration:none;border-right:1px solid #f1f5f9;">
-                <span style="font-weight:700;font-size:0.8125rem;color:#0f172a;font-family:'JetBrains Mono',monospace;">{{ $t['symbol'] }}</span>
-                <span style="font-size:0.75rem;color:#94a3b8;">{{ Str::limit($t['name'],18) }}</span>
-            </a>
-            @endforeach
-        </div>
+{{-- ════ SECTORS + STOCK LIST ══════════════════════════════════════════════ --}}
+<div class="fade-up fade-d3" style="display:grid;grid-template-columns:1fr;
+     gap:1.25rem;margin-bottom:1.75rem;">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;">
+
+  {{-- Sectors --}}
+  <div style="background:#fff;border:1px solid #e2e8f0;border-radius:.875rem;
+       overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04);">
+    <div style="display:flex;align-items:center;justify-content:space-between;
+         padding:1rem 1.25rem;border-bottom:1px solid #f1f5f9;">
+      <div>
+        <div style="font-size:.875rem;font-weight:700;color:#0f172a;">Market Sectors</div>
+        <div style="font-size:.7rem;color:#94a3b8;margin-top:.1rem;">{{ $sectorStats->count() }} segments</div>
+      </div>
+      <a href="{{ route('stocks.index') }}" style="font-size:.72rem;color:#2563eb;text-decoration:none;
+         padding:.25rem .6rem;border-radius:.375rem;background:#eff6ff;border:1px solid #bfdbfe;">
+        All stocks →
+      </a>
     </div>
+    @php
+    $sectorColors = ['#2563eb','#7c3aed','#059669','#d97706','#0891b2','#dc2626','#4f46e5','#0d9488','#b45309','#6d28d9','#065f46','#9f1239'];
+    $maxCount = $sectorStats->first()['count'] ?? 1;
+    @endphp
+    @foreach($sectorStats->take(12) as $i => $sec)
+    @php $clr = $sectorColors[$i % count($sectorColors)]; @endphp
+    <a href="{{ route('stocks.index', ['sector' => $sec['name']]) }}"
+       class="sector-row"
+       style="display:flex;align-items:center;gap:.875rem;padding:.65rem 1.25rem;
+              border-bottom:1px solid #f8fafc;text-decoration:none;">
+      <div style="width:8px;height:8px;border-radius:50%;background:{{ $clr }};flex-shrink:0;"></div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:.8rem;color:#374151;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+          {{ $sec['name'] }}
+        </div>
+        <div style="height:3px;background:#f1f5f9;border-radius:9999px;overflow:hidden;margin-top:.25rem;">
+          <div style="height:3px;width:{{ round($sec['count']/$maxCount*100) }}%;
+               background:{{ $clr }};border-radius:9999px;opacity:.5;"></div>
+        </div>
+      </div>
+      <span style="font-size:.75rem;font-weight:700;font-family:'JetBrains Mono',monospace;
+             color:{{ $clr }};min-width:2rem;text-align:right;">{{ $sec['count'] }}</span>
+    </a>
+    @endforeach
+  </div>
+
+  {{-- Stock list --}}
+  <div style="background:#fff;border:1px solid #e2e8f0;border-radius:.875rem;
+       overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04);">
+    <div style="display:flex;align-items:center;justify-content:space-between;
+         padding:1rem 1.25rem;border-bottom:1px solid #f1f5f9;">
+      <div>
+        <div style="font-size:.875rem;font-weight:700;color:#0f172a;">Listed Companies</div>
+        <div style="font-size:.7rem;color:#94a3b8;margin-top:.1rem;">{{ number_format($totalStocks) }} active stocks</div>
+      </div>
+      <a href="{{ route('stocks.index') }}" style="font-size:.72rem;color:#2563eb;text-decoration:none;
+         padding:.25rem .6rem;border-radius:.375rem;background:#eff6ff;border:1px solid #bfdbfe;">
+        View all →
+      </a>
+    </div>
+    @foreach($activeList->sortBy('symbol')->take(15) as $s)
+    <a href="{{ route('stocks.show', $s['symbol']) }}"
+       class="stock-row"
+       style="display:flex;align-items:center;gap:.875rem;padding:.625rem 1.25rem;
+              border-bottom:1px solid #f8fafc;text-decoration:none;">
+      <div style="width:38px;height:38px;border-radius:.625rem;flex-shrink:0;
+           background:linear-gradient(135deg,#eff6ff,#e0e7ff);
+           display:flex;align-items:center;justify-content:center;">
+        <span style="font-size:.6rem;font-weight:800;color:#2563eb;
+               font-family:'JetBrains Mono',monospace;letter-spacing:-.02em;">
+          {{ Str::limit($s['symbol'],4) }}
+        </span>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:.8rem;font-weight:600;color:#0f172a;
+             overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+          {{ Str::limit($s['name'], 28) }}
+        </div>
+        @if($s['sector'])
+        <div style="font-size:.68rem;color:#94a3b8;margin-top:.1rem;">{{ $s['sector'] }}</div>
+        @endif
+      </div>
+      <span style="font-size:.68rem;color:#2563eb;background:#eff6ff;border:1px solid #bfdbfe;
+             border-radius:9999px;padding:.2rem .55rem;flex-shrink:0;">→</span>
+    </a>
+    @endforeach
+  </div>
+
+  </div>
 </div>
 
-{{-- ════════════════════════════════════════════════════ --}}
-{{--  STAT CARDS                                         --}}
-{{-- ════════════════════════════════════════════════════ --}}
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-    <div class="stat-card blue glass p-5">
-        <div style="color:#2563eb;font-size:0.7rem;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;margin-bottom:0.75rem;">Listed Stocks</div>
-        <div style="font-size:2rem;font-weight:800;font-family:'JetBrains Mono',monospace;color:#0f172a;line-height:1;">{{ number_format($totalStocks) }}</div>
-        <div style="font-size:0.75rem;color:#94a3b8;margin-top:0.5rem;">Active on NEPSE</div>
+{{-- ════ HOW IT WORKS ══════════════════════════════════════════════════════ --}}
+<div class="fade-up fade-d4" style="background:#fff;border:1px solid #e2e8f0;border-radius:.875rem;
+     padding:1.5rem;margin-bottom:1rem;box-shadow:0 1px 3px rgba(0,0,0,.04);">
+  <div style="text-align:center;margin-bottom:1.375rem;">
+    <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
+         color:#94a3b8;margin-bottom:.35rem;">GET STARTED IN 3 STEPS</div>
+    <div style="font-size:1.0625rem;font-weight:700;color:#0f172a;">How it works</div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(195px,1fr));gap:1rem;">
+    @php
+    $steps = [
+      ['n'=>'1','emoji'=>'🔍','title'=>'Search any stock','desc'=>'Type a symbol or company name. 674+ NEPSE-listed companies available instantly.','clr'=>'#2563eb','bg'=>'#eff6ff','bd'=>'#bfdbfe22'],
+      ['n'=>'2','emoji'=>'⚡','title'=>'Live analysis','desc'=>'RSI, MACD, Bollinger Bands computed in real-time from live NEPSE market data.','clr'=>'#7c3aed','bg'=>'#f5f3ff','bd'=>'#ddd6fe22'],
+      ['n'=>'3','emoji'=>'📊','title'=>'Signal + levels','desc'=>'BUY/SELL/HOLD signal with confidence score, entry range, stop-loss and price targets.','clr'=>'#16a34a','bg'=>'#f0fdf4','bd'=>'#bbf7d022'],
+      ['n'=>'4','emoji'=>'🔮','title'=>'7-Day forecast','desc'=>'Next 7 trading days predicted using momentum, RSI, MACD and day-of-week historical patterns.','clr'=>'#d97706','bg'=>'#fffbeb','bd'=>'#fde68a22'],
+    ];
+    @endphp
+    @foreach($steps as $step)
+    <div style="padding:1.125rem;border-radius:.75rem;background:{{ $step['bg'] }};border:1px solid {{ $step['bd'] }};">
+      <div style="display:flex;align-items:center;gap:.625rem;margin-bottom:.625rem;">
+        <div style="width:26px;height:26px;border-radius:50%;background:{{ $step['clr'] }};
+             display:flex;align-items:center;justify-content:center;
+             font-size:.7rem;font-weight:800;color:#fff;flex-shrink:0;">{{ $step['n'] }}</div>
+        <span style="font-size:1.2rem;">{{ $step['emoji'] }}</span>
+      </div>
+      <div style="font-size:.875rem;font-weight:700;color:#0f172a;margin-bottom:.375rem;">{{ $step['title'] }}</div>
+      <div style="font-size:.775rem;color:#64748b;line-height:1.6;">{{ $step['desc'] }}</div>
     </div>
-    <div class="stat-card purple glass p-5">
-        <div style="color:#7c3aed;font-size:0.7rem;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;margin-bottom:0.75rem;">Sectors</div>
-        <div style="font-size:2rem;font-weight:800;font-family:'JetBrains Mono',monospace;color:#0f172a;line-height:1;">{{ count($sectors) }}</div>
-        <div style="font-size:0.75rem;color:#94a3b8;margin-top:0.5rem;">Market segments</div>
-    </div>
-    <div class="stat-card green glass p-5">
-        <div style="color:#059669;font-size:0.7rem;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;margin-bottom:0.75rem;">Data Source</div>
-        <div style="font-size:1.25rem;font-weight:700;color:#0f172a;line-height:1.3;margin-top:0.2rem;">Chukul.com</div>
-        <div style="font-size:0.75rem;color:#94a3b8;margin-top:0.5rem;">Live API · No scraping</div>
-    </div>
-    <div class="stat-card orange glass p-5">
-        <div style="color:#d97706;font-size:0.7rem;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;margin-bottom:0.75rem;">Analytics</div>
-        <div style="font-size:1.25rem;font-weight:700;color:#0f172a;line-height:1.3;margin-top:0.2rem;">Real-time</div>
-        <div style="font-size:0.75rem;color:#94a3b8;margin-top:0.5rem;">Computed on demand</div>
-    </div>
-</div>
-
-{{-- ════════════════════════════════════════════════════ --}}
-{{--  SECTORS + STOCK PREVIEW SPLIT                      --}}
-{{-- ════════════════════════════════════════════════════ --}}
-<div class="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8">
-
-    {{-- Sector list --}}
-    <div class="lg:col-span-2">
-        <div class="flex items-center justify-between mb-4">
-            <h2 style="font-size:0.9375rem;font-weight:700;color:#0f172a;">Sectors</h2>
-            <a href="{{ route('stocks.index') }}" style="font-size:0.8rem;color:#2563eb;text-decoration:none;">Browse all →</a>
-        </div>
-        <div class="space-y-2">
-            @foreach($sectorStats->take(10) as $sec)
-            <a href="{{ route('stocks.index', ['sector' => $sec['name']]) }}"
-               class="sector-pill">
-                <span style="font-size:0.875rem;font-weight:500;color:#1e293b;max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                    {{ $sec['name'] }}
-                </span>
-                <span style="font-size:0.8125rem;font-weight:700;font-family:'JetBrains Mono',monospace;
-                             color:#2563eb;background:#eff6ff;padding:0.2rem 0.6rem;border-radius:0.375rem;border:1px solid #bfdbfe;">
-                    {{ $sec['count'] }}
-                </span>
-            </a>
-            @endforeach
-            @if($sectorStats->count() > 10)
-            <a href="{{ route('stocks.index') }}" class="sector-pill" style="justify-content:center;">
-                <span style="font-size:0.8rem;color:#64748b;">+ {{ $sectorStats->count() - 10 }} more sectors</span>
-            </a>
-            @endif
-        </div>
-    </div>
-
-    {{-- Stock list --}}
-    <div class="lg:col-span-3">
-        <div class="flex items-center justify-between mb-4">
-            <h2 style="font-size:0.9375rem;font-weight:700;color:#0f172a;">Listed Companies</h2>
-            <a href="{{ route('stocks.index') }}" style="font-size:0.8rem;color:#2563eb;text-decoration:none;">
-                View all {{ number_format($totalStocks) }} →
-            </a>
-        </div>
-        <div class="glass overflow-hidden" style="border-radius:0.875rem;">
-            <div style="padding:0.5rem 1rem;background:#f8fafc;border-bottom:1px solid #e2e8f0;">
-                <div style="display:grid;grid-template-columns:5.5rem 1fr auto;gap:0.75rem;
-                            font-size:0.7rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:#94a3b8;">
-                    <span>Symbol</span><span>Company</span><span>Action</span>
-                </div>
-            </div>
-            @foreach(collect($stockList)->filter(fn($s) => !($s['is_delisted']??false) && !($s['is_merged']??false))->sortBy('symbol')->take(12) as $s)
-            <a href="{{ route('stocks.show', $s['symbol']) }}"
-               class="stock-row"
-               style="display:grid;grid-template-columns:5.5rem 1fr auto;gap:0.75rem;align-items:center;
-                      padding:0.75rem 1rem;border-bottom:1px solid #f1f5f9;text-decoration:none;">
-                <span style="font-weight:700;font-size:0.875rem;color:#0f172a;font-family:'JetBrains Mono',monospace;">{{ $s['symbol'] }}</span>
-                <div>
-                    <div style="font-size:0.8125rem;color:#374151;line-height:1.3;">{{ Str::limit($s['name'], 28) }}</div>
-                    @if($s['sector'])
-                    <div style="font-size:0.7rem;color:#94a3b8;margin-top:0.15rem;">{{ $s['sector'] }}</div>
-                    @endif
-                </div>
-                <span style="font-size:0.7rem;padding:0.2rem 0.65rem;border-radius:9999px;white-space:nowrap;
-                             background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;">
-                    Analyse →
-                </span>
-            </a>
-            @endforeach
-        </div>
-    </div>
-</div>
-
-{{-- ════════════════════════════════════════════════════ --}}
-{{--  HOW IT WORKS                                       --}}
-{{-- ════════════════════════════════════════════════════ --}}
-<h2 style="font-size:0.9375rem;font-weight:700;color:#0f172a;margin-bottom:1rem;">How it works</h2>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-    <div class="glass p-5">
-        <div style="width:2.5rem;height:2.5rem;border-radius:0.625rem;background:#eff6ff;
-                    display:flex;align-items:center;justify-content:center;margin-bottom:0.875rem;">
-            <svg width="18" height="18" fill="none" stroke="#2563eb" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-            </svg>
-        </div>
-        <div style="font-weight:600;color:#0f172a;margin-bottom:0.375rem;font-size:0.9375rem;">1. Search any stock</div>
-        <div style="font-size:0.8125rem;color:#64748b;line-height:1.6;">
-            Type a symbol or company name. 674+ NEPSE-listed companies available instantly.
-        </div>
-    </div>
-    <div class="glass p-5">
-        <div style="width:2.5rem;height:2.5rem;border-radius:0.625rem;background:#f5f3ff;
-                    display:flex;align-items:center;justify-content:center;margin-bottom:0.875rem;">
-            <svg width="18" height="18" fill="none" stroke="#7c3aed" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-            </svg>
-        </div>
-        <div style="font-weight:600;color:#0f172a;margin-bottom:0.375rem;font-size:0.9375rem;">2. Live analysis</div>
-        <div style="font-size:0.8125rem;color:#64748b;line-height:1.6;">
-            Price history fetched from Chukul.com. RSI, MACD, Bollinger Bands calculated in real-time — no stale data.
-        </div>
-    </div>
-    <div class="glass p-5">
-        <div style="width:2.5rem;height:2.5rem;border-radius:0.625rem;background:#f0fdf4;
-                    display:flex;align-items:center;justify-content:center;margin-bottom:0.875rem;">
-            <svg width="18" height="18" fill="none" stroke="#16a34a" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-        </div>
-        <div style="font-weight:600;color:#0f172a;margin-bottom:0.375rem;font-size:0.9375rem;">3. Signal + levels</div>
-        <div style="font-size:0.8125rem;color:#64748b;line-height:1.6;">
-            BUY / SELL / HOLD signal with confidence score, entry range, stop-loss and price targets.
-        </div>
-    </div>
+    @endforeach
+  </div>
 </div>
 
 @endsection
@@ -326,47 +357,35 @@ const heroDropdown = document.getElementById('heroDropdown');
 let heroTimer;
 
 heroSearch?.addEventListener('input', function () {
-    clearTimeout(heroTimer);
-    const q = this.value.trim();
-    if (q.length < 1) { heroDropdown.classList.add('hidden'); return; }
-    heroTimer = setTimeout(() => {
-        fetch(`/api/search?q=${encodeURIComponent(q)}`)
-            .then(r => r.json())
-            .then(data => {
-                if (!data.length) { heroDropdown.classList.add('hidden'); return; }
-                heroDropdown.innerHTML = data.map(s => `
-                    <a href="${s.url}"
-                       style="display:flex;align-items:center;justify-content:space-between;
-                              padding:0.75rem 1.25rem;border-bottom:1px solid #f1f5f9;
-                              text-decoration:none;transition:background 0.1s;"
-                       onmouseover="this.style.background='#f8fafc'"
-                       onmouseout="this.style.background='transparent'">
-                        <div>
-                            <span style="font-weight:700;color:#0f172a;font-size:0.9375rem;font-family:'JetBrains Mono',monospace;">${s.symbol}</span>
-                            <span style="font-size:0.8125rem;color:#64748b;margin-left:0.75rem;">${s.name}</span>
-                        </div>
-                        <span style="font-size:0.75rem;color:#2563eb;padding:0.2rem 0.6rem;border-radius:9999px;
-                                     background:#eff6ff;border:1px solid #bfdbfe;">
-                            Analyse →
-                        </span>
-                    </a>`).join('');
-                heroDropdown.classList.remove('hidden');
-            });
-    }, 220);
+  clearTimeout(heroTimer);
+  const q = this.value.trim();
+  if (q.length < 1) { heroDropdown.style.display = 'none'; return; }
+  heroTimer = setTimeout(() => {
+    fetch('/api/search?q=' + encodeURIComponent(q))
+      .then(r => r.json())
+      .then(data => {
+        if (!data.length) { heroDropdown.style.display = 'none'; return; }
+        heroDropdown.innerHTML = data.map(s =>
+          '<a href="' + s.url + '" style="display:flex;align-items:center;justify-content:space-between;' +
+          'padding:.75rem 1.25rem;border-bottom:1px solid #f1f5f9;text-decoration:none;" ' +
+          'onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'transparent\'">' +
+          '<div><span style="font-weight:700;color:#0f172a;font-size:.875rem;font-family:monospace;">' + s.symbol + '</span>' +
+          '<span style="font-size:.8rem;color:#64748b;margin-left:.75rem;">' + s.name + '</span></div>' +
+          '<span style="font-size:.7rem;color:#2563eb;padding:.2rem .6rem;border-radius:9999px;background:#eff6ff;border:1px solid #bfdbfe;">Analyse →</span>' +
+          '</a>'
+        ).join('');
+        heroDropdown.style.display = 'block';
+      });
+  }, 220);
 });
 
 document.addEventListener('click', e => {
-    if (!heroSearch?.contains(e.target) && !heroDropdown?.contains(e.target))
-        heroDropdown?.classList.add('hidden');
+  if (!heroSearch?.contains(e.target) && !heroDropdown?.contains(e.target))
+    heroDropdown.style.display = 'none';
 });
 
 heroSearch?.addEventListener('keydown', e => {
-    if (e.key === 'Enter') {
-        const first = heroDropdown.querySelector('a');
-        if (first) first.click();
-    }
+  if (e.key === 'Enter') { const a = heroDropdown.querySelector('a'); if (a) a.click(); }
 });
 </script>
 @endpush
-
-

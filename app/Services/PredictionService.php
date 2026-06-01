@@ -89,7 +89,7 @@ class PredictionService
 
             $dayName    = $startDate->format('l');
             $dateStr    = $startDate->format('Y-m-d');
-            $dayDisplay = $startDate->format('D, d M');
+            $dayDisplay = 'Day ' . ($dayCount + 1);
 
             // ── Composite score: positive = bullish ──────────────────────────
             $score   = 0;

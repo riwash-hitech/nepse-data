@@ -438,13 +438,9 @@
       $confW  = $day['confidence'];
     @endphp
     <div style="background:{{ $bgClr }};border:1px solid {{ $bdClr }};border-radius:.75rem;padding:.75rem .5rem;text-align:center;">
-      {{-- Day name --}}
-      <div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:.35rem;">
-        {{ \Carbon\Carbon::parse($day['date'])->format('D') }}
-      </div>
-      {{-- Date --}}
-      <div style="font-size:.68rem;color:#64748b;margin-bottom:.5rem;">
-        {{ \Carbon\Carbon::parse($day['date'])->format('d M') }}
+      {{-- Day label --}}
+      <div style="font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin-bottom:.6rem;">
+        {{ $day['day_display'] }}
       </div>
       {{-- Arrow direction --}}
       <div style="font-size:1.5rem;color:{{ $txClr }};font-weight:800;line-height:1;margin-bottom:.25rem;">{{ $arrow }}</div>
@@ -479,14 +475,15 @@
           <span style="flex-shrink:0;font-size:.85rem;color:{{ $day['direction']==='up'?'#16a34a':($day['direction']==='down'?'#dc2626':'#94a3b8') }};">
             {{ $day['direction']==='up' ? '▲' : ($day['direction']==='down' ? '▼' : '◆') }}
           </span>
-          <span><strong style="color:#64748b;">{{ \Carbon\Carbon::parse($day['date'])->format('D') }}:</strong> {{ $r }}</span>
+          <span><strong style="color:#64748b;">{{ $day['day_display'] }}:</strong> {{ $r }}</span>
         </div>
         @endforeach
       @endforeach
     </div>
   </div>
 
-  {{-- High/Low range table --}}
+  {{-- High/Low range table — auth only --}}
+  @auth
   <div style="margin-top:.875rem;border-top:1px solid #f1f5f9;padding-top:.875rem;">
     <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#64748b;margin-bottom:.625rem;">Predicted Daily Price Ranges</div>
     <div style="overflow-x:auto;">
@@ -539,6 +536,18 @@
       </table>
     </div>
   </div>
+  @else
+  <div style="margin-top:.875rem;border-top:1px solid #f1f5f9;padding-top:.875rem;">
+    <a href="{{ route('login') }}" style="display:flex;align-items:center;justify-content:center;gap:.625rem;
+       padding:.875rem;border-radius:.75rem;background:#f8fafc;border:1.5px dashed #e2e8f0;
+       text-decoration:none;color:#64748b;font-size:.82rem;">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+      </svg>
+      <span><strong style="color:#2563eb;">Login</strong> to view detailed daily price ranges</span>
+    </a>
+  </div>
+  @endauth
 </div>
 @endif
 
@@ -559,7 +568,7 @@
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
   <div class="card">
-    <div class="section-lbl">Support &amp; Resistance <span style="font-weight:400;font-size:.65rem;">(Chukul pivot data)</span></div>
+    <div class="section-lbl">Support &amp; Resistance</div>
     <div class="grid grid-cols-2 gap-3">
       <div>
         <div style="font-size:.72rem;font-weight:700;color:#16a34a;margin-bottom:.5rem;">▲ Support</div>
