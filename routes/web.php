@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
-use App\Http\Controllers\{DashboardController, IpoController, ProfileController, ScreenerController, SignalController, StockController, TopPicksController, WatchlistController};
+use App\Http\Controllers\{DashboardController, IpoController, OutlookController, ProfileController, ScreenerController, SignalController, StockController, TopPicksController, WatchlistController};
 
 // ── Main Dashboard ────────────────────────────────────────────────────────────
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
@@ -28,6 +28,10 @@ Route::post('/ipo/refresh', [IpoController::class, 'refreshCompanies'])->name('i
 
 // ── Screener ──────────────────────────────────────────────────────────────────
 Route::get('/screener', [ScreenerController::class, 'index'])->name('screener.index');
+
+// ── 30-Day Outlook (public) ──────────────────────────────────────────────────
+Route::get('/outlook', [OutlookController::class, 'index'])->name('outlook.index');
+Route::post('/outlook/refresh', [OutlookController::class, 'refresh'])->name('outlook.refresh');
 
 // ── Auth-protected ────────────────────────────────────────────────────────────
 Route::middleware('auth')->group(function () {
