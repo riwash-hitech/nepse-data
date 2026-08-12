@@ -639,7 +639,7 @@
             <span style="font-size:.65rem;color:#94a3b8;">{{ \Carbon\Carbon::parse($sl['date'])->format('d M') }}</span>
             <span class="mono" style="font-size:.875rem;font-weight:700;color:#16a34a;">{{ number_format($sl['low'],2) }}</span>
           </div>
-          <div style="font-size:.68rem;color:#64748b;">Close: {{ number_format($sl['close'],2) }}</div>
+          <div style="font-size:.68rem;color:#64748b;">Close: {{ number_format($sl['close'] ?? 0,2) }}</div>
         </div>
         @empty
         <div style="font-size:.8rem;color:#94a3b8;padding:.5rem 0;">No support data</div>
@@ -653,7 +653,7 @@
             <span style="font-size:.65rem;color:#94a3b8;">{{ \Carbon\Carbon::parse($rl['date'])->format('d M') }}</span>
             <span class="mono" style="font-size:.875rem;font-weight:700;color:#dc2626;">{{ number_format($rl['high'],2) }}</span>
           </div>
-          <div style="font-size:.68rem;color:#64748b;">Close: {{ number_format($rl['close'],2) }}</div>
+          <div style="font-size:.68rem;color:#64748b;">Close: {{ number_format($rl['close'] ?? 0,2) }}</div>
         </div>
         @empty
         <div style="font-size:.8rem;color:#94a3b8;padding:.5rem 0;">No resistance data</div>
