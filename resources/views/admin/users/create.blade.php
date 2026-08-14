@@ -55,7 +55,7 @@
                     <option value="{{ \App\Models\User::ROLE_ADMIN }}" {{ old('role_id') == \App\Models\User::ROLE_ADMIN ? 'selected' : '' }}>Admin</option>
                 </select>
             </div>
-            <button type="submit" class="btn-primary">Create User</button>
+            <button type="submit" class="btn-primary" style="margin-top:0.5rem;">Create User</button>
         </form>
     </div>
 </div>
