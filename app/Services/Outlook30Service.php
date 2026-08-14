@@ -118,9 +118,13 @@ class Outlook30Service
         $expectedReturnPct = round(($targetPrice - $currentClose) / $currentClose * 100, 2);
 
         // ── Confidence score: trend reliability (R²) discounted by band width and damping ──
+        // NEPSE stocks are inherently volatile, so a wide confidence band is normal, not
+        // a red flag — the penalty here is intentionally mild so it doesn't swamp the R²
+        // signal (an earlier, harsher penalty was crushing genuinely good trend fits like
+        // a real +4% mover down to single-digit confidence, producing false negatives).
         $bandWidthPct = $currentClose > 0 ? (($targetHigh - $targetLow) / $currentClose * 100) : 100;
         $confidence = 90 * $r2 * $dampFactor;
-        $confidence -= min(30, $bandWidthPct * 0.5); // wider band = less confident
+        $confidence -= min(15, $bandWidthPct * 0.15);
         $confidence = (int) round(max(10, min(95, $confidence)));
 
         $direction = $expectedReturnPct > 1.5 ? 'up' : ($expectedReturnPct < -1.5 ? 'down' : 'neutral');

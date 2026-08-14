@@ -6,12 +6,18 @@ use App\Services\NepseScraperService;
 use App\Services\Outlook30Service;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class OutlookController extends Controller
 {
     private const CACHE_KEY = 'outlook_30d_v1';
     private const MIN_AVG_VOLUME = 500; // filter out illiquid/untradeable stocks
-    private const MIN_CONFIDENCE = 35;
+    // NEPSE stocks are volatile enough that even genuine trends rarely score
+    // above ~25-30 on this confidence scale — 35 was screening out every
+    // single stock, including real movers. 20 keeps out pure-noise fits
+    // (confidence sits at the floor of 10 when R² is near zero) while still
+    // admitting fits with a real, if imperfect, signal.
+    private const MIN_CONFIDENCE = 20;
 
     public function __construct(private readonly NepseScraperService $scraper) {}
 
@@ -37,6 +43,47 @@ class OutlookController extends Controller
         Cache::put(self::CACHE_KEY . '_at', now()->toDateTimeString(), 3600);
 
         return redirect()->route('outlook.index')->with('success', 'Generated top 1-month return predictions for ' . count($outlook) . ' stocks.');
+    }
+
+    public function export(): StreamedResponse
+    {
+        $outlook = Cache::get(self::CACHE_KEY, []);
+
+        $filename = 'top-1-month-return-' . now()->format('Y-m-d_His') . '.csv';
+
+        $headers = [
+            'Content-Type'        => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ];
+
+        return response()->streamDownload(function () use ($outlook) {
+            $out = fopen('php://output', 'w');
+            // UTF-8 BOM so Excel doesn't mangle special characters
+            fwrite($out, "\xEF\xBB\xBF");
+
+            fputcsv($out, [
+                'Rank', 'Symbol', 'Name', 'Sector', 'Current Price', '30D Target',
+                'Target Low', 'Target High', 'Predicted Return %', 'Confidence %', 'R-Squared',
+            ]);
+
+            foreach ($outlook as $i => $o) {
+                fputcsv($out, [
+                    $i + 1,
+                    $o['symbol'],
+                    $o['name'],
+                    $o['sector'],
+                    $o['current_price'],
+                    $o['target_price'],
+                    $o['target_low'],
+                    $o['target_high'],
+                    $o['expected_return_pct'],
+                    $o['confidence'],
+                    $o['r_squared'],
+                ]);
+            }
+
+            fclose($out);
+        }, $filename, $headers);
     }
 
     private function computeOutlook(): array

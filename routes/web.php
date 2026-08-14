@@ -31,10 +31,6 @@ Route::post('/ipo/refresh', [IpoController::class, 'refreshCompanies'])->name('i
 // ── Screener ──────────────────────────────────────────────────────────────────
 Route::get('/screener', [ScreenerController::class, 'index'])->name('screener.index');
 
-// ── 30-Day Outlook (public) ──────────────────────────────────────────────────
-Route::get('/outlook', [OutlookController::class, 'index'])->name('outlook.index');
-Route::post('/outlook/generate', [OutlookController::class, 'generate'])->name('outlook.generate');
-
 // ── Auth-protected ────────────────────────────────────────────────────────────
 Route::middleware(['auth', 'no-cache'])->group(function () {
     Route::get('/watchlist', [WatchlistController::class, 'index'])->name('watchlist.index');
@@ -65,6 +61,10 @@ Route::middleware(['auth', 'no-cache'])->group(function () {
         });
 
         Route::post('/admin/sync-stocks', [SyncController::class, 'run'])->name('admin.sync-stocks');
+
+        Route::get('/outlook', [OutlookController::class, 'index'])->name('outlook.index');
+        Route::post('/outlook/generate', [OutlookController::class, 'generate'])->name('outlook.generate');
+        Route::get('/outlook/export', [OutlookController::class, 'export'])->name('outlook.export');
     });
 });
 
