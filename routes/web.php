@@ -33,7 +33,7 @@ Route::get('/screener', [ScreenerController::class, 'index'])->name('screener.in
 
 // ── 30-Day Outlook (public) ──────────────────────────────────────────────────
 Route::get('/outlook', [OutlookController::class, 'index'])->name('outlook.index');
-Route::post('/outlook/refresh', [OutlookController::class, 'refresh'])->name('outlook.refresh');
+Route::post('/outlook/generate', [OutlookController::class, 'generate'])->name('outlook.generate');
 
 // ── Auth-protected ────────────────────────────────────────────────────────────
 Route::middleware(['auth', 'no-cache'])->group(function () {

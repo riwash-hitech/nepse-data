@@ -17,18 +17,26 @@ class OutlookController extends Controller
 
     public function index()
     {
-        // Cached for 1 hour — each stock analysis hits the Chukul API
-        $outlook = Cache::remember(self::CACHE_KEY, 3600, function () {
-            return $this->computeOutlook();
-        });
+        // Not auto-computed — the admin/user explicitly clicks Generate,
+        // since scanning ~200 stocks against the live API takes a while.
+        $outlook = Cache::get(self::CACHE_KEY);
+        $generatedAtRaw = Cache::get(self::CACHE_KEY . '_at');
+        $generatedAt = $generatedAtRaw ? \Carbon\Carbon::parse($generatedAtRaw) : null;
 
-        return view('outlook.index', compact('outlook'));
+        return view('outlook.index', [
+            'outlook'      => $outlook,
+            'generatedAt'  => $generatedAt,
+        ]);
     }
 
-    public function refresh()
+    public function generate()
     {
-        Cache::forget(self::CACHE_KEY);
-        return redirect()->route('outlook.index')->with('success', '30-day outlook refreshed.');
+        $outlook = $this->computeOutlook();
+
+        Cache::put(self::CACHE_KEY, $outlook, 3600);
+        Cache::put(self::CACHE_KEY . '_at', now()->toDateTimeString(), 3600);
+
+        return redirect()->route('outlook.index')->with('success', 'Generated top 1-month return predictions for ' . count($outlook) . ' stocks.');
     }
 
     private function computeOutlook(): array
@@ -53,9 +61,11 @@ class OutlookController extends Controller
             }
         }
 
-        // Rank by confidence-weighted expected return — a highly confident +8%
-        // trend beats a coin-flip +25% one.
-        usort($ranked, fn($a, $b) => $b['rank_score'] <=> $a['rank_score']);
+        // Rank purely by predicted 1-month return (highest first) — the
+        // confidence bar in analyseStock() already screens out unreliable
+        // trend fits, so this surfaces the biggest predicted gainers among
+        // stocks that already cleared that bar.
+        usort($ranked, fn($a, $b) => $b['expected_return_pct'] <=> $a['expected_return_pct']);
 
         return array_slice($ranked, 0, 30);
     }
@@ -78,10 +88,9 @@ class OutlookController extends Controller
         }
 
         return array_merge($projection, [
-            'symbol'     => $symbol,
-            'name'       => $name,
-            'sector'     => $sector,
-            'rank_score' => $projection['expected_return_pct'] * ($projection['confidence'] / 100),
+            'symbol' => $symbol,
+            'name'   => $name,
+            'sector' => $sector,
         ]);
     }
 }
