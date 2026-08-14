@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\NepseScraperService;
+use App\Services\Outlook30Service;
 use App\Services\PredictionService;
 use App\Services\SignalEngine;
 use Illuminate\Http\Request;
@@ -250,11 +251,16 @@ class StockController extends Controller
             PredictionService::forecast($priceRows)
         );
 
+        // ── 30-Day Outlook — will this stock likely gain or lose over the next month? ──
+        $prediction30d = Cache::remember("chukul_outlook30_{$symbol}", 1800, fn() =>
+            Outlook30Service::project($priceRows)
+        );
+
         return view('stocks.show', compact(
             'stock', 'prices', 'indicator', 'signal', 'chartData',
             'floorsheetSummary', 'volumeAnalytics', 'trend', 'brokers',
             'marketSummary', 'highLowStats', 'supportLevels', 'resistanceLevels',
-            'alphaBeta', 'varMonthly', 'brokerActivity', 'prediction7d'
+            'alphaBeta', 'varMonthly', 'brokerActivity', 'prediction7d', 'prediction30d'
         ));
     }
 

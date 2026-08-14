@@ -612,6 +612,86 @@
 </div>
 @endauth
 
+{{-- ════ 30-DAY OUTLOOK — PROFIT OR LOSS? ═══════════════════════════════════ --}}
+@auth
+@if(!empty($prediction30d))
+@php
+  $p30Up   = $prediction30d['direction'] === 'up';
+  $p30Down = $prediction30d['direction'] === 'down';
+  $p30Clr  = $p30Up ? '#16a34a' : ($p30Down ? '#dc2626' : '#64748b');
+  $p30Bg   = $p30Up ? '#f0fdf4' : ($p30Down ? '#fef2f2' : '#f8fafc');
+  $p30Bd   = $p30Up ? '#bbf7d0' : ($p30Down ? '#fecaca' : '#e2e8f0');
+  $p30Label = $p30Up ? '▲ PROFIT LIKELY' : ($p30Down ? '▼ LOSS LIKELY' : '▬ SIDEWAYS');
+@endphp
+<div class="card" style="overflow:hidden;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;">
+    <div>
+      <div class="section-lbl" style="margin-bottom:.2rem;">30-Day Outlook — Profit or Loss?</div>
+      <p style="font-size:.75rem;color:#94a3b8;margin:0;">Trend-based projection of where this stock is likely headed over the next month</p>
+    </div>
+    <span style="font-size:.68rem;padding:.2rem .6rem;border-radius:9999px;background:#fef9c3;color:#92400e;border:1px solid #fde68a;font-weight:600;">
+      ⚠ Statistical projection, not a guarantee
+    </span>
+  </div>
+
+  <div style="background:{{ $p30Bg }};border:1px solid {{ $p30Bd }};border-radius:.75rem;padding:1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+    <div>
+      <div style="font-size:.9rem;font-weight:800;color:{{ $p30Clr }};letter-spacing:.03em;margin-bottom:.35rem;">{{ $p30Label }}</div>
+      <div style="font-size:.75rem;color:#64748b;">
+        Current <strong class="mono" style="color:#0f172a;">{{ number_format($prediction30d['current_price'], 2) }}</strong>
+        → 30-day target <strong class="mono" style="color:{{ $p30Clr }};">{{ number_format($prediction30d['target_price'], 2) }}</strong>
+      </div>
+      <div style="font-size:.7rem;color:#94a3b8;margin-top:.2rem;">
+        Likely range: <span class="mono">{{ number_format($prediction30d['target_low'], 2) }} – {{ number_format($prediction30d['target_high'], 2) }}</span>
+      </div>
+    </div>
+    <div style="text-align:right;">
+      <div class="mono" style="font-size:1.6rem;font-weight:800;color:{{ $p30Clr }};line-height:1;">
+        {{ $prediction30d['expected_return_pct'] >= 0 ? '+' : '' }}{{ number_format($prediction30d['expected_return_pct'], 1) }}%
+      </div>
+      <div style="font-size:.68rem;color:#94a3b8;margin-top:.25rem;">predicted 30-day return</div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:1.5rem;margin-top:.875rem;flex-wrap:wrap;">
+    <div>
+      <div style="font-size:.65rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;">Confidence</div>
+      <div style="display:flex;align-items:center;gap:.4rem;margin-top:.2rem;">
+        <div style="width:60px;height:5px;border-radius:9999px;background:#e2e8f0;overflow:hidden;">
+          <div style="height:5px;border-radius:9999px;width:{{ $prediction30d['confidence'] }}%;background:{{ $p30Clr }};"></div>
+        </div>
+        <span class="mono" style="font-size:.78rem;font-weight:700;color:#0f172a;">{{ $prediction30d['confidence'] }}%</span>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:.65rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;">Trend fit (R²)</div>
+      <div class="mono" style="font-size:.78rem;font-weight:700;color:#0f172a;margin-top:.2rem;">{{ $prediction30d['r_squared'] }}</div>
+    </div>
+    @if($prediction30d['rsi'] !== null)
+    <div>
+      <div style="font-size:.65rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;">RSI (14)</div>
+      <div class="mono" style="font-size:.78rem;font-weight:700;color:#0f172a;margin-top:.2rem;">{{ $prediction30d['rsi'] }}</div>
+    </div>
+    @endif
+  </div>
+
+  @if(!empty($prediction30d['reasons']))
+  <div style="margin-top:.875rem;border-top:1px solid #f1f5f9;padding-top:.75rem;">
+    <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#64748b;margin-bottom:.5rem;">Why this projection</div>
+    <div style="display:flex;flex-direction:column;gap:.35rem;">
+      @foreach($prediction30d['reasons'] as $r)
+      <div style="display:flex;align-items:flex-start;gap:.4rem;font-size:.78rem;color:#374151;line-height:1.4;">
+        <span style="flex-shrink:0;">{{ $r['icon'] }}</span>
+        <span>{{ $r['text'] }}</span>
+      </div>
+      @endforeach
+    </div>
+  </div>
+  @endif
+</div>
+@endif
+@endauth
+
 {{-- ════ PRICE CHART ══════════════════════════════════════════════════════ --}}
 <div class="card">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
