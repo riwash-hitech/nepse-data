@@ -208,6 +208,18 @@
                 </div>
             </div>
             <div style="display:flex;align-items:center;gap:0.75rem;flex-shrink:0;margin-left:0.75rem;">
+                @auth
+                @if(auth()->user()->isAdmin())
+                <form method="POST" action="{{ route('admin.sync-stocks') }}">
+                    @csrf
+                    <button type="submit"
+                            onclick="this.disabled=true;this.innerText='Syncing…';this.form.submit();return false;"
+                            style="display:flex;align-items:center;gap:0.4rem;padding:0.375rem 0.75rem;font-size:0.8125rem;font-weight:500;border-radius:0.5rem;border:1px solid #e2e8f0;background:#f8fafc;color:#334155;cursor:pointer;white-space:nowrap;">
+                        ↻ Sync
+                    </button>
+                </form>
+                @endif
+                @endauth
                 <span id="marketTime" style="font-size:0.75rem;font-family:'JetBrains Mono',monospace;color:#94a3b8;white-space:nowrap;"></span>
                 @if(isset($summary) && $summary)
                 <div style="display:flex;align-items:center;gap:0.375rem;font-size:0.8125rem;">

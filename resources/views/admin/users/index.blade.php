@@ -4,9 +4,18 @@
 @section('content')
 <div class="space-y-5">
 
-    <div class="flex items-center justify-between">
+    <div class="flex items-center justify-between flex-wrap gap-3">
         <h1 class="text-2xl font-bold" style="color:#0f172a;">👤 User Management</h1>
-        <a href="{{ route('admin.users.create') }}" class="btn-primary">+ Create User</a>
+        <div class="flex items-center gap-2">
+            <form method="POST" action="{{ route('admin.sync-stocks') }}">
+                @csrf
+                <button type="submit" class="btn-ghost"
+                        onclick="this.disabled=true;this.innerText='Syncing…';this.form.submit();return false;">
+                    ↻ Sync Stock Data
+                </button>
+            </form>
+            <a href="{{ route('admin.users.create') }}" class="btn-primary">+ Create User</a>
+        </div>
     </div>
 
     @if(session('error'))

@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\{DashboardController, IpoController, OutlookController, PortfolioController, ProfileController, ScreenerController, SignalController, StockController, TopPicksController, WatchlistController};
 use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\Admin\SyncController;
 
 // ── Main Dashboard ────────────────────────────────────────────────────────────
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
@@ -55,11 +56,15 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    Route::middleware('admin')->prefix('admin/users')->name('admin.users.')->group(function () {
-        Route::get('/', [UserManagementController::class, 'index'])->name('index');
-        Route::get('/create', [UserManagementController::class, 'create'])->name('create');
-        Route::post('/', [UserManagementController::class, 'store'])->name('store');
-        Route::delete('/{user}', [UserManagementController::class, 'destroy'])->name('destroy');
+    Route::middleware('admin')->group(function () {
+        Route::prefix('admin/users')->name('admin.users.')->group(function () {
+            Route::get('/', [UserManagementController::class, 'index'])->name('index');
+            Route::get('/create', [UserManagementController::class, 'create'])->name('create');
+            Route::post('/', [UserManagementController::class, 'store'])->name('store');
+            Route::delete('/{user}', [UserManagementController::class, 'destroy'])->name('destroy');
+        });
+
+        Route::post('/admin/sync-stocks', [SyncController::class, 'run'])->name('admin.sync-stocks');
     });
 });
 
