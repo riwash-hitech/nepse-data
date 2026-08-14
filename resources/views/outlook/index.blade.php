@@ -55,9 +55,14 @@
     @else
 
     <div class="glass overflow-hidden">
-        <div class="px-4 py-3 border-b text-sm flex items-center justify-between" style="border-color:#e2e8f0;color:#64748b;">
+        <div class="px-4 py-3 border-b text-sm flex items-center justify-between flex-wrap gap-2" style="border-color:#e2e8f0;color:#64748b;">
             <span>{{ count($outlook) }} stocks predicted to clear the confidence bar for a reliable 30-day trend</span>
-            <span class="text-xs">Ranked by predicted return — highest first</span>
+            <div class="flex items-center gap-3">
+                <span class="text-xs">Ranked by predicted return — highest first</span>
+                <a href="{{ route('outlook.export') }}" class="btn-ghost text-xs" style="padding:0.375rem 0.75rem;">
+                    ⬇ Export to Excel
+                </a>
+            </div>
         </div>
         <div style="overflow-x:auto;">
         <table class="w-full text-sm">
