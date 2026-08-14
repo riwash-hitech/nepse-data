@@ -51,46 +51,45 @@
             </thead>
             <tbody>
                 @foreach($watchlist as $w)
-                @php $p = $w->stock->latestPrice; $sig = $w->stock->latestSignal; @endphp
                 <tr style="border-bottom:1px solid #f1f5f9;" class="hover:bg-slate-50 transition-colors">
                     <td class="px-4 py-3">
-                        <a href="{{ route('stocks.show', $w->stock->symbol) }}"
+                        <a href="{{ route('stocks.show', $w['symbol']) }}"
                            class="font-bold hover:text-blue-600 transition-colors" style="color:#0f172a;">
-                            {{ $w->stock->symbol }}
+                            {{ $w['symbol'] }}
                         </a>
-                        <div class="text-xs mt-0.5" style="color:#94a3b8;">{{ Str::limit($w->stock->name, 28) }}</div>
+                        <div class="text-xs mt-0.5" style="color:#94a3b8;">{{ Str::limit($w['name'], 28) }}</div>
                     </td>
-                    <td class="text-right font-mono px-4 py-3" style="color:#0f172a;">{{ $p ? number_format($p->close, 2) : '—' }}</td>
-                    <td class="text-right font-mono px-4 py-3 {{ $p && $p->change_percent >= 0 ? 'change-pos' : 'change-neg' }}">
-                        {{ $p ? ($p->change_percent >= 0 ? '+' : '') . number_format($p->change_percent, 2) . '%' : '—' }}
+                    <td class="text-right font-mono px-4 py-3" style="color:#0f172a;">{{ $w['ltp'] !== null ? number_format($w['ltp'], 2) : '—' }}</td>
+                    <td class="text-right font-mono px-4 py-3 {{ $w['change_percent'] !== null && $w['change_percent'] >= 0 ? 'change-pos' : 'change-neg' }}">
+                        {{ $w['change_percent'] !== null ? ($w['change_percent'] >= 0 ? '+' : '') . number_format($w['change_percent'], 2) . '%' : '—' }}
                     </td>
                     <td class="text-center px-4 py-3">
-                        @if($sig)
-                            @if($sig->signal_type === 'BUY')   <span class="badge-buy">BUY</span>
-                            @elseif($sig->signal_type === 'SELL') <span class="badge-sell">SELL</span>
+                        @if($w['signal_type'])
+                            @if($w['signal_type'] === 'BUY')   <span class="badge-buy">BUY</span>
+                            @elseif($w['signal_type'] === 'SELL') <span class="badge-sell">SELL</span>
                             @else <span class="badge-hold">HOLD</span>
                             @endif
                         @else <span style="color:#cbd5e1;">—</span>
                         @endif
                     </td>
                     <td class="text-right px-4 py-3">
-                        @if($sig)
+                        @if($w['signal_type'])
                         <div class="flex items-center justify-end gap-2">
                             <div class="w-16 rounded-full h-1.5" style="background:#e2e8f0;">
                                 <div class="h-1.5 rounded-full"
-                                     style="width:{{ $sig->confidence }}%;background:{{ $sig->signal_type === 'BUY' ? '#22c55e' : ($sig->signal_type === 'SELL' ? '#ef4444' : '#eab308') }};"></div>
+                                     style="width:{{ $w['confidence'] }}%;background:{{ $w['signal_type'] === 'BUY' ? '#22c55e' : ($w['signal_type'] === 'SELL' ? '#ef4444' : '#eab308') }};"></div>
                             </div>
-                            <span class="text-xs font-mono" style="color:#64748b;">{{ $sig->confidence }}%</span>
+                            <span class="text-xs font-mono" style="color:#64748b;">{{ $w['confidence'] }}%</span>
                         </div>
                         @else <span style="color:#cbd5e1;">—</span>
                         @endif
                     </td>
                     <td class="text-center px-4 py-3">
                         <div class="flex items-center justify-center gap-2">
-                            <a href="{{ route('stocks.show', $w->stock->symbol) }}"
+                            <a href="{{ route('stocks.show', $w['symbol']) }}"
                                class="text-xs px-3 py-1 rounded-md"
                                style="background:#eff6ff;color:#2563eb;">View</a>
-                            <form method="POST" action="{{ route('watchlist.destroy', $w->stock_id) }}" class="inline">
+                            <form method="POST" action="{{ route('watchlist.destroy', $w['stock_id']) }}" class="inline">
                                 @csrf @method('DELETE')
                                 <button type="submit"
                                         onclick="return confirm('Remove from watchlist?')"
