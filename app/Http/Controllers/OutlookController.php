@@ -87,6 +87,14 @@ class OutlookController extends Controller
             return null;
         }
 
+        // Only surface stocks actually predicted to gain — this page is a
+        // profit-picker, not a "least-bad" ranking. A negative projection
+        // just means we skip it here (the Screener/Signals pages are where
+        // downtrend/SELL analysis belongs).
+        if ($projection['expected_return_pct'] <= 0) {
+            return null;
+        }
+
         return array_merge($projection, [
             'symbol' => $symbol,
             'name'   => $name,

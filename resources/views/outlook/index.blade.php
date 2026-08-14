@@ -8,8 +8,8 @@
         <div>
             <h1 class="text-2xl font-bold" style="color:#0f172a;">🚀 Top 1-Month Return Prediction</h1>
             <p class="text-sm mt-1" style="color:#64748b;">
-                Stocks predicted to give the highest return over the next 30 days, based on a trend fit
-                over recent price history. Ranked highest predicted return first.
+                Stocks predicted to gain over the next 30 days, based on a trend fit over recent price
+                history. Only stocks with a positive predicted return are listed — ranked highest first.
             </p>
         </div>
         <div class="flex flex-col items-start sm:items-end gap-1 shrink-0">
@@ -27,7 +27,7 @@
         </div>
     </div>
 
-    @if(empty($outlook))
+    @if(is_null($outlook))
     <div class="glass p-10 text-center">
         <div class="text-4xl mb-4">📊</div>
         <div class="font-semibold text-lg mb-2" style="color:#0f172a;">No prediction generated yet</div>
@@ -37,6 +37,19 @@
         </div>
         <div class="text-xs" style="color:#94a3b8;">
             This scans ~200 stocks against the live market API, so it can take up to a minute.
+        </div>
+    </div>
+    @elseif(empty($outlook))
+    <div class="glass p-10 text-center">
+        <div class="text-4xl mb-4">📉</div>
+        <div class="font-semibold text-lg mb-2" style="color:#0f172a;">No stocks are currently predicted to gain</div>
+        <div class="text-sm mb-2" style="color:#64748b;">
+            The market trend data right now doesn't show any stock with a reliable, positive 30-day
+            trend — every candidate that cleared the confidence bar is trending down.
+        </div>
+        <div class="text-xs" style="color:#94a3b8;">
+            This isn't an error — it reflects a broadly weak/declining market. Try again later, or check
+            the <a href="{{ route('screener.index') }}" style="color:#2563eb;">Screener</a> for individual stock signals.
         </div>
     </div>
     @else
