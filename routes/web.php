@@ -36,7 +36,7 @@ Route::get('/outlook', [OutlookController::class, 'index'])->name('outlook.index
 Route::post('/outlook/refresh', [OutlookController::class, 'refresh'])->name('outlook.refresh');
 
 // ── Auth-protected ────────────────────────────────────────────────────────────
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'no-cache'])->group(function () {
     Route::get('/watchlist', [WatchlistController::class, 'index'])->name('watchlist.index');
     Route::post('/watchlist', [WatchlistController::class, 'store'])->name('watchlist.store');
     Route::delete('/watchlist/{stock}', [WatchlistController::class, 'destroy'])->name('watchlist.destroy');
