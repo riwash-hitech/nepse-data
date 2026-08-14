@@ -9,11 +9,6 @@ use Illuminate\Support\Facades\Auth;
 
 class WatchlistController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
-
     public function index()
     {
         $watchlist = Watchlist::with(['stock.latestPrice', 'stock.latestSignal'])

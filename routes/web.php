@@ -2,7 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 
-use App\Http\Controllers\{DashboardController, IpoController, OutlookController, ProfileController, ScreenerController, SignalController, StockController, TopPicksController, WatchlistController};
+use App\Http\Controllers\{DashboardController, IpoController, OutlookController, PortfolioController, ProfileController, ScreenerController, SignalController, StockController, TopPicksController, WatchlistController};
+use App\Http\Controllers\Admin\UserManagementController;
 
 // ── Main Dashboard ────────────────────────────────────────────────────────────
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
@@ -39,9 +40,27 @@ Route::middleware('auth')->group(function () {
     Route::post('/watchlist', [WatchlistController::class, 'store'])->name('watchlist.store');
     Route::delete('/watchlist/{stock}', [WatchlistController::class, 'destroy'])->name('watchlist.destroy');
 
+    Route::get('/api/portfolio/stocks', [PortfolioController::class, 'searchStocks'])->name('portfolio.search');
+    Route::prefix('portfolio')->name('portfolio.')->group(function () {
+        Route::get('/', [PortfolioController::class, 'overview'])->name('overview');
+        Route::get('/holdings', [PortfolioController::class, 'holdings'])->name('holdings');
+        Route::get('/profit-loss', [PortfolioController::class, 'profitLoss'])->name('profit-loss');
+        Route::get('/realized', [PortfolioController::class, 'realized'])->name('realized');
+        Route::get('/adjust', [PortfolioController::class, 'adjustForm'])->name('adjust');
+        Route::post('/adjust', [PortfolioController::class, 'adjustStore'])->name('adjust.store');
+        Route::get('/transactions', [PortfolioController::class, 'transactions'])->name('transactions');
+    });
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::middleware('admin')->prefix('admin/users')->name('admin.users.')->group(function () {
+        Route::get('/', [UserManagementController::class, 'index'])->name('index');
+        Route::get('/create', [UserManagementController::class, 'create'])->name('create');
+        Route::post('/', [UserManagementController::class, 'store'])->name('store');
+        Route::delete('/{user}', [UserManagementController::class, 'destroy'])->name('destroy');
+    });
 });
 
 require __DIR__.'/auth.php';

@@ -11,6 +11,15 @@
         #sidebar { transition: transform 0.26s cubic-bezier(0.4,0,0.2,1); }
         #sidebarOverlay { display:none;position:fixed;inset:0;z-index:40;background:rgba(0,0,0,0.45); }
         .nav-link.active { color:#2563eb;background:#eff6ff;border:1px solid #bfdbfe; }
+        .nav-group summary { list-style:none; cursor:pointer; }
+        .nav-group summary::-webkit-details-marker { display:none; }
+        .nav-group summary::marker { content:''; }
+        .nav-group .chevron { transition: transform 0.15s; }
+        .nav-group[open] .chevron { transform: rotate(180deg); }
+        .nav-sublink { display:flex; align-items:center; gap:0.625rem; padding:0.5rem 0.75rem 0.5rem 1.75rem; border-radius:0.5rem; color:#64748b; font-size:0.8125rem; font-weight:500; transition:all 0.15s; text-decoration:none; }
+        .nav-sublink:hover { color:#0f172a; background:#f1f5f9; }
+        .nav-sublink.active { color:#2563eb; background:#eff6ff; font-weight:600; }
+        .nav-sublink .dot { width:5px; height:5px; border-radius:9999px; background:currentColor; opacity:0.5; flex-shrink:0; }
     </style>
 </head>
 <body style="background:#f5f7fa;color:#0f172a;font-family:Inter,sans-serif;margin:0;padding:0;">
@@ -91,12 +100,49 @@
                 IPO Results
             </a>
             @auth
-            <a href="{{ route('watchlist.index') }}" class="nav-link {{ request()->routeIs('watchlist.*') ? 'active' : '' }}">
+            @php $portfolioGroupActive = request()->routeIs('portfolio.*') || request()->routeIs('watchlist.*'); @endphp
+            <details class="nav-group" {{ $portfolioGroupActive ? 'open' : '' }}>
+                <summary class="nav-link {{ $portfolioGroupActive ? 'active' : '' }}">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v7a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
+                    </svg>
+                    <span>My Portfolio</span>
+                    <svg class="chevron w-3.5 h-3.5" style="margin-left:auto;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </summary>
+                <div style="margin-top:0.125rem;">
+                    <a href="{{ route('portfolio.overview') }}" class="nav-sublink {{ request()->routeIs('portfolio.overview') ? 'active' : '' }}">
+                        <span class="dot"></span> Portfolio Overview
+                    </a>
+                    <a href="{{ route('portfolio.holdings') }}" class="nav-sublink {{ request()->routeIs('portfolio.holdings') ? 'active' : '' }}">
+                        <span class="dot"></span> My Holdings
+                    </a>
+                    <a href="{{ route('portfolio.profit-loss') }}" class="nav-sublink {{ request()->routeIs('portfolio.profit-loss') ? 'active' : '' }}">
+                        <span class="dot"></span> Net Profit/Loss
+                    </a>
+                    <a href="{{ route('portfolio.realized') }}" class="nav-sublink {{ request()->routeIs('portfolio.realized') ? 'active' : '' }}">
+                        <span class="dot"></span> Realized Profit/Loss
+                    </a>
+                    <a href="{{ route('portfolio.adjust') }}" class="nav-sublink {{ request()->routeIs('portfolio.adjust') ? 'active' : '' }}">
+                        <span class="dot"></span> Adjust Holdings
+                    </a>
+                    <a href="{{ route('portfolio.transactions') }}" class="nav-sublink {{ request()->routeIs('portfolio.transactions') ? 'active' : '' }}">
+                        <span class="dot"></span> Transaction History
+                    </a>
+                    <a href="{{ route('watchlist.index') }}" class="nav-sublink {{ request()->routeIs('watchlist.*') ? 'active' : '' }}">
+                        <span class="dot"></span> Watchlist
+                    </a>
+                </div>
+            </details>
+            @if(auth()->user()->isAdmin())
+            <a href="{{ route('admin.users.index') }}" class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-2.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-4-4"/>
                 </svg>
-                Watchlist
+                User Management
             </a>
+            @endif
             @endauth
         </nav>
 
