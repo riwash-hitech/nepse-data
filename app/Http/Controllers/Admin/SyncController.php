@@ -14,6 +14,11 @@ class SyncController extends Controller
 
     public function run()
     {
+        $check = $this->scraper->testConnection();
+        if (!$check['ok']) {
+            return back()->with('error', "Sync failed — {$check['message']}");
+        }
+
         $sectors = $this->scraper->syncSectors();
         $stocks  = $this->scraper->syncStocks();
 

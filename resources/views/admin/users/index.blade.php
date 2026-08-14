@@ -6,23 +6,8 @@
 
     <div class="flex items-center justify-between flex-wrap gap-3">
         <h1 class="text-2xl font-bold" style="color:#0f172a;">👤 User Management</h1>
-        <div class="flex items-center gap-2">
-            <form method="POST" action="{{ route('admin.sync-stocks') }}">
-                @csrf
-                <button type="submit" class="btn-ghost"
-                        onclick="this.disabled=true;this.innerText='Syncing…';this.form.submit();return false;">
-                    ↻ Sync Stock Data
-                </button>
-            </form>
-            <a href="{{ route('admin.users.create') }}" class="btn-primary">+ Create User</a>
-        </div>
+        <a href="{{ route('admin.users.create') }}" class="btn-primary">+ Create User</a>
     </div>
-
-    @if(session('error'))
-    <div class="px-4 py-3 rounded-lg text-sm" style="background:#fef2f2;border:1px solid #fecaca;color:#dc2626;">
-        {{ session('error') }}
-    </div>
-    @endif
 
     <div class="glass overflow-hidden">
         <div style="overflow-x:auto;">

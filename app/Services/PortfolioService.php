@@ -6,6 +6,7 @@ use App\Models\PortfolioHolding;
 use App\Models\PortfolioTransaction;
 use App\Models\Stock;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -19,6 +20,10 @@ use Illuminate\Validation\ValidationException;
  */
 class PortfolioService
 {
+    public function __construct(private readonly NepseScraperService $scraper)
+    {
+    }
+
     public static function applyTransaction(
         User $user,
         Stock $stock,
@@ -74,7 +79,7 @@ class PortfolioService
      * Net worth = market value here (no brokerage/SEBON/DP commission
      * modeling in this pass — that data isn't available yet).
      */
-    private static function valuedHoldings(User $user): array
+    private function valuedHoldings(User $user): array
     {
         $holdings = $user->portfolioHoldings()
             ->with(['stock.latestPrice', 'stock.sector'])
@@ -84,9 +89,26 @@ class PortfolioService
         return $holdings->map(function (PortfolioHolding $h) {
             $stock = $h->stock;
             $avgCost = (float) $h->avg_cost;
-            $price = $stock->latestPrice;
-            $ltp = $price ? (float) $price->close : $avgCost;
-            $dayChange = $price ? (float) $price->change : 0.0;
+
+            $live = $this->liveQuote($stock->symbol);
+            $localPrice = $stock->latestPrice;
+
+            if ($live !== null) {
+                $ltp = $live['close'];
+                $dayChange = $live['change'];
+                $changePercent = $live['change_percent'];
+                $hasLivePrice = true;
+            } elseif ($localPrice) {
+                $ltp = (float) $localPrice->close;
+                $dayChange = (float) $localPrice->change;
+                $changePercent = (float) $localPrice->change_percent;
+                $hasLivePrice = false;
+            } else {
+                $ltp = $avgCost;
+                $dayChange = 0.0;
+                $changePercent = 0.0;
+                $hasLivePrice = false;
+            }
 
             $investment = $h->quantity * $avgCost;
             $marketValue = $h->quantity * $ltp;
@@ -100,19 +122,42 @@ class PortfolioService
                 'quantity'         => $h->quantity,
                 'avg_cost'         => $avgCost,
                 'ltp'              => $ltp,
-                'change_percent'   => $price ? (float) $price->change_percent : 0.0,
+                'change_percent'   => $changePercent,
                 'investment'       => $investment,
                 'market_value'     => $marketValue,
                 'day_gain_loss'    => $h->quantity * $dayChange,
                 'unrealized_gain'  => $marketValue - $investment,
-                'has_live_price'   => $price !== null,
+                'has_live_price'   => $hasLivePrice,
             ];
         })->values()->all();
     }
 
+    /**
+     * Live LTP/change straight from Chukul, cached 5 min per symbol (same
+     * cache key/TTL StockController uses, so a visit to the stock page
+     * keeps this warm too). Falls back to the local stock_prices snapshot
+     * — and ultimately avg_cost — if the live source has nothing.
+     */
+    private function liveQuote(string $symbol): ?array
+    {
+        $summary = Cache::remember("chukul_summary_{$symbol}", 300, fn() =>
+            $this->scraper->fetchMarketSummary($symbol)
+        );
+
+        if (empty($summary) || !isset($summary['close'])) {
+            return null;
+        }
+
+        return [
+            'close'          => (float) $summary['close'],
+            'change'         => (float) ($summary['point_change'] ?? 0),
+            'change_percent' => (float) ($summary['percentage_change'] ?? 0),
+        ];
+    }
+
     public function overview(User $user): array
     {
-        $rows = self::valuedHoldings($user);
+        $rows = $this->valuedHoldings($user);
 
         $investment  = array_sum(array_column($rows, 'investment'));
         $marketValue = array_sum(array_column($rows, 'market_value'));
@@ -150,7 +195,7 @@ class PortfolioService
 
     public function holdingsTable(User $user, array $filters = []): array
     {
-        $rows = self::valuedHoldings($user);
+        $rows = $this->valuedHoldings($user);
 
         if (!empty($filters['sector'])) {
             $rows = array_filter($rows, fn($r) => $r['sector'] === $filters['sector']);

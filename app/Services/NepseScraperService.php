@@ -587,6 +587,39 @@ class NepseScraperService
     }
 
     // ────────────────────────────────────────────────────────────────────
+    //  Connectivity diagnostic — bypasses the swallow-all-errors get()
+    //  helper so admins can see the real cause of a sync failure
+    //  (DNS/firewall block, timeout, Chukul-side HTTP error) without
+    //  needing server/log access.
+    // ────────────────────────────────────────────────────────────────────
+
+    public function testConnection(): array
+    {
+        try {
+            $response = $this->client->get('/api/sector/');
+            $status   = $response->getStatusCode();
+            $body     = $response->getBody()->getContents();
+            json_decode($body, true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                return [
+                    'ok'      => false,
+                    'message' => "Reached chukul.com (HTTP {$status}) but the response wasn't valid JSON — it may be an anti-bot/challenge page. First 200 chars: " . substr($body, 0, 200),
+                ];
+            }
+
+            return ['ok' => true, 'message' => "Connected successfully (HTTP {$status})."];
+        } catch (\GuzzleHttp\Exception\ConnectException $e) {
+            return ['ok' => false, 'message' => "Could not connect to chukul.com — likely blocked by a firewall or DNS failure on this server. Detail: " . $e->getMessage()];
+        } catch (\GuzzleHttp\Exception\ClientException|\GuzzleHttp\Exception\ServerException $e) {
+            $code = $e->getResponse()->getStatusCode();
+            return ['ok' => false, 'message' => "chukul.com responded with HTTP {$code} — this server's IP may be rate-limited or blocked by Chukul. Detail: " . $e->getMessage()];
+        } catch (\Throwable $e) {
+            return ['ok' => false, 'message' => 'Unexpected error: ' . $e->getMessage()];
+        }
+    }
+
+    // ────────────────────────────────────────────────────────────────────
     //  HTTP helper
     // ────────────────────────────────────────────────────────────────────
 
