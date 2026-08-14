@@ -16,7 +16,7 @@
             <form method="POST" action="{{ route('outlook.generate') }}">
                 @csrf
                 <button type="submit"
-                    onclick="this.disabled=true;this.innerHTML='Generating… (can take a minute)';this.form.submit();return false;"
+                    onclick="this.disabled=true;this.innerHTML='Generating…';this.form.submit();return false;"
                     class="btn-primary text-sm">
                     ⚡ Generate 1-Month Prediction
                 </button>
@@ -36,7 +36,8 @@
             by predicted return over the next 30 days.
         </div>
         <div class="text-xs" style="color:#94a3b8;">
-            This scans ~200 stocks against the live market API, so it can take up to a minute.
+            This scans ~200 stocks against the live market API — usually a few seconds, longer if
+            none of them are already cached from recent browsing.
         </div>
     </div>
     @elseif(empty($outlook))
