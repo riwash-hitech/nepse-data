@@ -13,7 +13,7 @@ class AppConfig {
   ///   flutter run --dart-define=APP_ENV=production    (live nepse.riwash.com backend)
   static const _envName = String.fromEnvironment(
     'APP_ENV',
-    defaultValue: 'test',
+    defaultValue: 'production',
   );
 
   static AppEnvironment get environment {

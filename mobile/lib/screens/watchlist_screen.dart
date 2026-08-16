@@ -131,11 +131,33 @@ class _WatchlistRow extends StatelessWidget {
 
   const _WatchlistRow({required this.data, required this.onTap, required this.onRemove});
 
+  double? _num(dynamic v) => v == null ? null : double.tryParse(v.toString());
+  String _fmt(dynamic v) {
+    final n = _num(v);
+    return n == null ? '—' : n.toStringAsFixed(2);
+  }
+
+  String _fmtVolume(dynamic v) {
+    final n = _num(v);
+    if (n == null) return '—';
+    if (n >= 1000000) return '${(n / 1000000).toStringAsFixed(2)}M';
+    if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)}K';
+    return n.toStringAsFixed(0);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final changePct = double.tryParse('${data['change_percent'] ?? 0}') ?? 0;
+    final changePct = _num(data['change_percent']) ?? 0;
     final isUp = changePct >= 0;
     final color = isUp ? AppColors.up : AppColors.down;
+
+    final signalType = data['signal_type']?.toString();
+    final confidence = _num(data['confidence']);
+    final signalColor = signalType == 'BUY'
+        ? AppColors.up
+        : signalType == 'SELL'
+            ? AppColors.down
+            : AppColors.textSecondary;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -152,56 +174,103 @@ class _WatchlistRow extends StatelessWidget {
           onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.all(14),
-            child: Row(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  margin: const EdgeInsets.only(top: 6, right: 10),
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(data['symbol'] ?? '',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textPrimary)),
-                      const SizedBox(height: 2),
-                      Text(data['name'] ?? '',
-                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis),
-                    ],
-                  ),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      data['ltp'] != null ? (data['ltp'] as num).toStringAsFixed(2) : '—',
-                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: AppColors.textPrimary),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(data['symbol'] ?? '',
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textPrimary)),
+                          const SizedBox(height: 2),
+                          Text(data['name'] ?? '',
+                              style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 2),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Icon(isUp ? Icons.arrow_upward : Icons.arrow_downward, size: 12, color: color),
-                        Text('${changePct.abs().toStringAsFixed(2)}%', style: TextStyle(color: color, fontSize: 12)),
+                        Text(_fmt(data['ltp']), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: AppColors.textPrimary)),
+                        const SizedBox(height: 2),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(isUp ? Icons.arrow_upward : Icons.arrow_downward, size: 12, color: color),
+                            Text('${changePct.abs().toStringAsFixed(2)}%', style: TextStyle(color: color, fontSize: 12)),
+                          ],
+                        ),
                       ],
+                    ),
+                    IconButton(
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                      icon: const Icon(Icons.close, size: 16, color: AppColors.textSecondary),
+                      onPressed: onRemove,
                     ),
                   ],
                 ),
-                IconButton(
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                  icon: const Icon(Icons.close, size: 16, color: AppColors.textSecondary),
-                  onPressed: onRemove,
+                if (signalType != null) ...[
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                        decoration: BoxDecoration(color: signalColor.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(20)),
+                        child: Text(signalType, style: TextStyle(color: signalColor, fontSize: 11, fontWeight: FontWeight.bold)),
+                      ),
+                      if (confidence != null) ...[
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: LinearProgressIndicator(
+                              value: (confidence / 100).clamp(0, 1),
+                              minHeight: 6,
+                              backgroundColor: AppColors.border,
+                              valueColor: AlwaysStoppedAnimation(signalColor),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text('${confidence.toStringAsFixed(0)}%', style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                      ],
+                    ],
+                  ),
+                ],
+                const SizedBox(height: 10),
+                const Divider(height: 1),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    _stat('High', _fmt(data['high'])),
+                    _stat('Low', _fmt(data['low'])),
+                    _stat('Volume', _fmtVolume(data['volume'])),
+                  ],
                 ),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _stat(String label, String value) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+          const SizedBox(height: 2),
+          Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+        ],
       ),
     );
   }

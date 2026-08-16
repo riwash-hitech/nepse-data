@@ -57,6 +57,55 @@ class AuthProvider extends ChangeNotifier {
       _error = e.message;
       notifyListeners();
       return false;
+    } catch (_) {
+      // Defense in depth: an unexpected error shape (e.g. a malformed
+      // response) should never leave the caller's "signing in..." spinner
+      // stuck forever with no feedback.
+      _error = 'Something went wrong. Please try again.';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> register(String email, String password, String passwordConfirmation) async {
+    _error = null;
+    try {
+      final res = await _api.post('/register', {
+        'email': email,
+        'password': password,
+        'password_confirmation': passwordConfirmation,
+      });
+      await _api.setToken(res['token']);
+      _authed = true;
+      _name = res['user']['name'];
+      _email = res['user']['email'];
+      _isAdmin = res['user']['is_admin'] ?? false;
+      notifyListeners();
+      return true;
+    } on ApiException catch (e) {
+      _error = e.message;
+      notifyListeners();
+      return false;
+    } catch (_) {
+      _error = 'Something went wrong. Please try again.';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> forgotPassword(String email) async {
+    _error = null;
+    try {
+      await _api.post('/forgot-password', {'email': email});
+      return true;
+    } on ApiException catch (e) {
+      _error = e.message;
+      notifyListeners();
+      return false;
+    } catch (_) {
+      _error = 'Something went wrong. Please try again.';
+      notifyListeners();
+      return false;
     }
   }
 

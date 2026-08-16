@@ -94,8 +94,31 @@ class MarketController extends Controller
         $marketSummary  = Cache::remember("chukul_summary_{$symbol}", 300, fn() => $this->scraper->fetchMarketSummary($symbol));
         $highLowStats   = Cache::remember("chukul_hl_{$symbol}", 1800, fn() => $this->scraper->fetchHighLowStats($symbol));
         $liveIndicators = Cache::remember("chukul_ind_{$symbol}", 1800, fn() => $this->scraper->fetchLiveIndicators($symbol));
+        $supportLevels    = Cache::remember("chukul_sup_{$symbol}", 1800, fn() => $this->scraper->fetchSupportLevels($symbol));
+        $resistanceLevels = Cache::remember("chukul_res_{$symbol}", 1800, fn() => $this->scraper->fetchResistanceLevels($symbol));
+        $alphaBeta  = Cache::remember("chukul_ab_{$symbol}",  3600, fn() => $this->scraper->fetchAlphaBeta($symbol));
+        $varMonthly = Cache::remember("chukul_var_{$symbol}", 3600, fn() => $this->scraper->fetchVarMonthly($symbol));
 
         $analytics = $this->signalEngine->analyzeFromData($priceRows);
+
+        // ── Volume analytics from last 20 candles (buy/sell pressure) ──
+        $last20   = array_slice($priceRows, -20);
+        $totalVol = array_sum(array_column($last20, 'volume')) ?: 1;
+        $bullRows = array_values(array_filter($last20, fn($p) => (float) $p['close'] > (float) $p['open']));
+        $bearRows = array_values(array_filter($last20, fn($p) => (float) $p['close'] < (float) $p['open']));
+        $buyVol   = array_sum(array_column($bullRows, 'volume'));
+        $sellVol  = array_sum(array_column($bearRows, 'volume'));
+        $volumeAnalytics = [
+            'buy_candles'  => count($bullRows),
+            'sell_candles' => count($bearRows),
+            'neutral'      => count($last20) - count($bullRows) - count($bearRows),
+            'buy_vol'      => $buyVol,
+            'sell_vol'     => $sellVol,
+            'buy_pct'      => round($buyVol / $totalVol * 100, 1),
+            'sell_pct'     => round($sellVol / $totalVol * 100, 1),
+            'avg_volume'   => (int) round(array_sum(array_column($last20, 'volume')) / max(count($last20), 1)),
+            'last_volume'  => (int) end($priceRows)['volume'],
+        ];
 
         $stockList = Cache::remember('chukul_stock_list', 3600, fn() => $this->scraper->fetchStockList());
         $info      = collect($stockList)->firstWhere('symbol', $symbol) ?? [];
@@ -109,16 +132,21 @@ class MarketController extends Controller
         $prediction30d = Cache::remember("chukul_outlook30_{$symbol}", 1800, fn() => Outlook30Service::project($priceRows));
 
         return response()->json([
-            'symbol'         => $symbol,
-            'name'           => $info['name'] ?? $symbol,
-            'sector'         => $info['sector'] ?? null,
-            'market_summary' => $marketSummary,
-            'high_low'       => $highLowStats,
-            'indicator'      => $indicator,
-            'signal'         => $analytics['signal'] ?? null,
-            'trend'          => $analytics['trend'] ?? null,
-            'prediction_7d'  => $prediction7d,
-            'prediction_30d' => $prediction30d,
+            'symbol'            => $symbol,
+            'name'              => $info['name'] ?? $symbol,
+            'sector'            => $info['sector'] ?? null,
+            'market_summary'    => $marketSummary,
+            'high_low'          => $highLowStats,
+            'indicator'         => $indicator,
+            'signal'            => $analytics['signal'] ?? null,
+            'trend'             => $analytics['trend'] ?? null,
+            'prediction_7d'     => $prediction7d,
+            'prediction_30d'    => $prediction30d,
+            'support_levels'    => $supportLevels,
+            'resistance_levels' => $resistanceLevels,
+            'alpha_beta'        => $alphaBeta,
+            'var_monthly'       => $varMonthly,
+            'volume_analytics'  => $volumeAnalytics,
         ]);
     }
 

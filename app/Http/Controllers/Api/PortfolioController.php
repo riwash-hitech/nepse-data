@@ -13,10 +13,31 @@ class PortfolioController extends Controller
     {
     }
 
+    private function slimRow(array $r): array
+    {
+        return [
+            'symbol'          => $r['symbol'],
+            'name'            => $r['name'],
+            'sector'          => $r['sector'],
+            'quantity'        => $r['quantity'],
+            'avg_cost'        => round($r['avg_cost'], 4),
+            'ltp'             => round($r['ltp'], 2),
+            'day_high'        => $r['day_high'] !== null ? round($r['day_high'], 2) : null,
+            'day_low'         => $r['day_low'] !== null ? round($r['day_low'], 2) : null,
+            'volume'          => $r['volume'],
+            'change_percent'  => round($r['change_percent'], 2),
+            'investment'      => round($r['investment'], 2),
+            'market_value'    => round($r['market_value'], 2),
+            'day_gain_loss'   => round($r['day_gain_loss'], 2),
+            'unrealized_gain' => round($r['unrealized_gain'], 2),
+        ];
+    }
+
     public function overview(Request $request)
     {
         $data = $this->portfolio->overview($request->user());
         unset($data['holdings']); // raw Eloquent models with stock relation — trim for API
+        $data['top_holdings'] = collect($data['top_holdings'])->map(fn($r) => $this->slimRow($r))->values();
 
         return response()->json($data);
     }
@@ -25,20 +46,7 @@ class PortfolioController extends Controller
     {
         $filters = $request->only(['sector', 'search', 'movement']);
         $data = $this->portfolio->holdingsTable($request->user(), $filters);
-
-        $data['rows'] = collect($data['rows'])->map(fn($r) => [
-            'symbol'          => $r['symbol'],
-            'name'            => $r['name'],
-            'sector'          => $r['sector'],
-            'quantity'        => $r['quantity'],
-            'avg_cost'        => round($r['avg_cost'], 4),
-            'ltp'             => round($r['ltp'], 2),
-            'change_percent'  => round($r['change_percent'], 2),
-            'investment'      => round($r['investment'], 2),
-            'market_value'    => round($r['market_value'], 2),
-            'day_gain_loss'   => round($r['day_gain_loss'], 2),
-            'unrealized_gain' => round($r['unrealized_gain'], 2),
-        ])->values();
+        $data['rows'] = collect($data['rows'])->map(fn($r) => $this->slimRow($r))->values();
 
         return response()->json($data);
     }

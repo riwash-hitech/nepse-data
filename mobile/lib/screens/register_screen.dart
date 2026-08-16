@@ -4,54 +4,49 @@ import '../services/auth_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/auth_card.dart';
 import '../widgets/auth_field.dart';
-import 'register_screen.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
+  final _confirmCtrl = TextEditingController();
   bool _submitting = false;
   bool _obscure = true;
+  bool _obscureConfirm = true;
 
   @override
   void dispose() {
     _emailCtrl.dispose();
     _passCtrl.dispose();
+    _confirmCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
-    setState(() => _submitting = true);
-    final ok = await context.read<AuthProvider>().login(_emailCtrl.text.trim(), _passCtrl.text);
-    if (mounted) setState(() => _submitting = false);
-    if (!ok && mounted) {
-      final err = context.read<AuthProvider>().error ?? 'Login failed';
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
-    }
-  }
-
-  Future<void> _forgotPassword() async {
-    final email = _emailCtrl.text.trim();
-    if (email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter your email above first, then tap Forgot Password?.')),
-      );
+    if (_passCtrl.text != _confirmCtrl.text) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Passwords do not match.')));
       return;
     }
-    final ok = await context.read<AuthProvider>().forgotPassword(email);
-    if (!mounted) return;
-    if (ok) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('If that email is registered, a reset link has been sent.')),
-      );
-    } else {
-      final err = context.read<AuthProvider>().error ?? 'Something went wrong.';
+    if (_passCtrl.text.length < 8) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password must be at least 8 characters.')));
+      return;
+    }
+
+    setState(() => _submitting = true);
+    final ok = await context.read<AuthProvider>().register(
+          _emailCtrl.text.trim(),
+          _passCtrl.text,
+          _confirmCtrl.text,
+        );
+    if (mounted) setState(() => _submitting = false);
+    if (!ok && mounted) {
+      final err = context.read<AuthProvider>().error ?? 'Registration failed';
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
     }
   }
@@ -61,8 +56,8 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       body: SafeArea(
         child: AuthCard(
-          title: 'Welcome Back',
-          subtitle: 'Secure access to your high-performance portfolio.',
+          title: 'Create Account',
+          subtitle: 'Join Riwash Money to track your NEPSE portfolio.',
           children: [
             AuthField(
               label: 'EMAIL ADDRESS',
@@ -76,19 +71,24 @@ class _LoginScreenState extends State<LoginScreen> {
               label: 'PASSWORD',
               controller: _passCtrl,
               icon: Icons.lock_outline,
-              hint: '••••••••',
+              hint: 'At least 8 characters',
               obscureText: _obscure,
-              onSubmitted: (_) => _submit(),
               suffixIcon: IconButton(
                 icon: Icon(_obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 19, color: AppColors.textSecondary),
                 onPressed: () => setState(() => _obscure = !_obscure),
               ),
-              labelTrailing: GestureDetector(
-                onTap: _forgotPassword,
-                child: const Text(
-                  'Forgot Password?',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.accent),
-                ),
+            ),
+            const SizedBox(height: 18),
+            AuthField(
+              label: 'CONFIRM PASSWORD',
+              controller: _confirmCtrl,
+              icon: Icons.lock_outline,
+              hint: 'Re-enter password',
+              obscureText: _obscureConfirm,
+              onSubmitted: (_) => _submit(),
+              suffixIcon: IconButton(
+                icon: Icon(_obscureConfirm ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 19, color: AppColors.textSecondary),
+                onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
               ),
             ),
             const SizedBox(height: 26),
@@ -100,7 +100,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   : const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text('SECURE LOGIN', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 0.5)),
+                        Text('CREATE ACCOUNT', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 0.5)),
                         SizedBox(width: 8),
                         Icon(Icons.arrow_forward, size: 18),
                       ],
@@ -113,10 +113,10 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Wrap(
                 alignment: WrapAlignment.center,
                 children: [
-                  const Text("Don't have an account? ", style: TextStyle(color: AppColors.textSecondary)),
+                  const Text('Already have an account? ', style: TextStyle(color: AppColors.textSecondary)),
                   GestureDetector(
-                    onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RegisterScreen())),
-                    child: const Text('SIGN UP', style: TextStyle(color: AppColors.accent, fontWeight: FontWeight.bold)),
+                    onTap: () => Navigator.of(context).pop(),
+                    child: const Text('LOG IN', style: TextStyle(color: AppColors.accent, fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),

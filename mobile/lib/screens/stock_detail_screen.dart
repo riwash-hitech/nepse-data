@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_client.dart';
 import '../theme/app_theme.dart';
+import '../widgets/price_chart.dart';
 
 class StockDetailScreen extends StatefulWidget {
   final String symbol;
@@ -89,6 +90,12 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
     final signal = d['signal'] as Map?;
     final indicator = d['indicator'] as Map?;
     final pred30 = d['prediction_30d'] as Map?;
+    final highLow = d['high_low'] as Map?;
+    final supportLevels = (d['support_levels'] as List?) ?? [];
+    final resistanceLevels = (d['resistance_levels'] as List?) ?? [];
+    final alphaBeta = d['alpha_beta'] as Map?;
+    final varMonthly = d['var_monthly'] as Map?;
+    final volumeAnalytics = d['volume_analytics'] as Map?;
 
     final close = _num(summary?['close']);
     final change = _num(summary?['point_change']);
@@ -124,8 +131,10 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
         ),
         const SizedBox(height: 20),
 
+        PriceChart(symbol: widget.symbol),
+
         if (signal != null) _card('Signal', [
-          _row('Signal', signal['signal_type']?.toString() ?? '—'),
+          _row('Signal', signal['signal_type']?.toString() ?? '—', valueColor: _signalColor(signal['signal_type']?.toString())),
           _row('Confidence', '${signal['confidence'] ?? '—'}%'),
         ]),
 
@@ -133,6 +142,47 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
           _row('RSI (14)', _fmt(indicator['rsi_14'])),
           if (indicator['sma_20'] != null) _row('SMA 20', _fmt(indicator['sma_20'])),
           if (indicator['sma_50'] != null) _row('SMA 50', _fmt(indicator['sma_50'])),
+        ]),
+
+        if (volumeAnalytics != null) _buildVolumeCard(volumeAnalytics),
+
+        if (highLow != null && highLow.isNotEmpty) _card('52-Week Range', [
+          _row('52W High', _fmt(highLow['weeks_high_52'])),
+          _row('52W Low', _fmt(highLow['weeks_low_52'])),
+          _row('120-Day Avg', _fmt(highLow['days_avg_120'])),
+          _row('180-Day Avg', _fmt(highLow['days_avg_180'])),
+          _row('50-Day Avg Volume', _fmtInt(highLow['days_avg_volume_50'])),
+        ]),
+
+        if (supportLevels.isNotEmpty || resistanceLevels.isNotEmpty) _card('Support & Resistance', [
+          if (supportLevels.isNotEmpty) ...[
+            const Text('Support', style: TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 4),
+            ...supportLevels.map((s) => _row(s['date']?.toString() ?? '', _fmt(s['low']))),
+            const SizedBox(height: 10),
+          ],
+          if (resistanceLevels.isNotEmpty) ...[
+            const Text('Resistance', style: TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 4),
+            ...resistanceLevels.map((r) => _row(r['date']?.toString() ?? '', _fmt(r['high']))),
+          ],
+        ]),
+
+        if (alphaBeta != null && alphaBeta.isNotEmpty) _card('Alpha / Beta (vs NEPSE)', [
+          _row('Beta (1M)', _fmt(alphaBeta['beta_1_months'])),
+          _row('Alpha (1M)', _fmt(alphaBeta['alpha_1_months'])),
+          _row('Beta (3M)', _fmt(alphaBeta['beta_3_months'])),
+          _row('Alpha (3M)', _fmt(alphaBeta['alpha_3_months'])),
+          _row('Beta (12M)', _fmt(alphaBeta['beta_12_months'])),
+          _row('Alpha (12M)', _fmt(alphaBeta['alpha_12_months'])),
+        ]),
+
+        if (varMonthly != null && varMonthly.isNotEmpty) _card('Value at Risk (Monthly)', [
+          _row('VaR 90%', '${_fmt(varMonthly['var_90_cf'])}%'),
+          _row('VaR 95%', '${_fmt(varMonthly['var_95_cf'])}%'),
+          _row('VaR 99%', '${_fmt(varMonthly['var_99_cf'])}%'),
+          _row('Std. Deviation', '${_fmt(varMonthly['std_deviation_monthly'])}%'),
+          _row('Mean Return', '${_fmt(varMonthly['mean_return_month'])}%'),
         ]),
 
         if (pred30 != null && pred30.isNotEmpty) _buildOutlookCard(pred30),
@@ -179,6 +229,31 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
     ]);
   }
 
+  Widget _buildVolumeCard(Map v) {
+    final buyPct = _num(v['buy_pct']) ?? 0;
+    final sellPct = _num(v['sell_pct']) ?? 0;
+
+    return _card('Volume Analytics (Last 20 Candles)', [
+      Row(
+        children: [
+          Expanded(
+            flex: buyPct.round().clamp(1, 100),
+            child: Container(height: 10, decoration: const BoxDecoration(color: AppColors.up, borderRadius: BorderRadius.horizontal(left: Radius.circular(6)))),
+          ),
+          Expanded(
+            flex: sellPct.round().clamp(1, 100),
+            child: Container(height: 10, decoration: const BoxDecoration(color: AppColors.down, borderRadius: BorderRadius.horizontal(right: Radius.circular(6)))),
+          ),
+        ],
+      ),
+      const SizedBox(height: 10),
+      _row('Buy Pressure', '${buyPct.toStringAsFixed(1)}% (${v['buy_candles']} candles)'),
+      _row('Sell Pressure', '${sellPct.toStringAsFixed(1)}% (${v['sell_candles']} candles)'),
+      _row('Avg Volume', _fmtInt(v['avg_volume'])),
+      _row('Last Volume', _fmtInt(v['last_volume'])),
+    ]);
+  }
+
   Widget _card(String title, List<Widget> children) {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
@@ -199,20 +274,37 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
     );
   }
 
-  Widget _row(String label, String value) {
+  Widget _row(String label, String value, {Color? valueColor}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: const TextStyle(color: AppColors.textSecondary)),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
+          Text(value, style: TextStyle(fontWeight: FontWeight.w600, color: valueColor ?? AppColors.textPrimary)),
         ],
       ),
     );
   }
 
+  Color? _signalColor(String? signalType) {
+    switch (signalType) {
+      case 'BUY':
+        return AppColors.up;
+      case 'SELL':
+        return AppColors.down;
+      default:
+        return null;
+    }
+  }
+
   double? _num(dynamic v) => v == null ? null : double.tryParse(v.toString());
+  String _fmtInt(dynamic v) {
+    final n = _num(v);
+    if (n == null) return '—';
+    return n.toStringAsFixed(0).replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (m) => ',');
+  }
+
   String _fmt(dynamic v) {
     final n = _num(v);
     return n == null ? '—' : n.toStringAsFixed(2);

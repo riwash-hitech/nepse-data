@@ -124,45 +124,26 @@ class HoldingsTabState extends State<HoldingsTab> with AutomaticKeepAliveClientM
     }
     return RefreshIndicator(
       onRefresh: load,
-      child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        itemCount: rows.length + 1,
-        separatorBuilder: (_, i) => const Divider(height: 1),
-        itemBuilder: (context, i) {
-          if (i == rows.length) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Total', style: TextStyle(fontWeight: FontWeight.bold)),
-                  Text(_fmt(d['market_value']), style: const TextStyle(fontWeight: FontWeight.bold)),
-                ],
-              ),
-            );
-          }
-          final r = rows[i];
-          final changePct = _num(r['change_percent']) ?? 0;
-          final gain = _num(r['unrealized_gain']) ?? 0;
-          final isUp = changePct >= 0;
-          return ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(r['symbol'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text('${r['quantity']} @ avg ${_fmt(r['avg_cost'])}  ·  LTP ${_fmt(r['ltp'])} (${isUp ? '+' : ''}${changePct.toStringAsFixed(2)}%)'),
-            trailing: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+        children: [
+          ...rows.map((r) => _HoldingCard(
+                data: r,
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => StockDetailScreen(symbol: r['symbol'])),
+                ),
+              )),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(_fmt(r['market_value']), style: const TextStyle(fontWeight: FontWeight.w600)),
-                Text('${gain >= 0 ? '+' : ''}${_fmt(r['unrealized_gain'])}',
-                    style: TextStyle(fontSize: 12, color: gain >= 0 ? AppColors.up : AppColors.down)),
+                const Text('Total', style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(_fmt(d['market_value']), style: const TextStyle(fontWeight: FontWeight.bold)),
               ],
             ),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => StockDetailScreen(symbol: r['symbol'])),
-            ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }
@@ -171,5 +152,110 @@ class HoldingsTabState extends State<HoldingsTab> with AutomaticKeepAliveClientM
   String _fmt(dynamic v) {
     final n = _num(v);
     return n == null ? '—' : n.toStringAsFixed(2);
+  }
+}
+
+class _HoldingCard extends StatelessWidget {
+  final Map data;
+  final VoidCallback onTap;
+
+  const _HoldingCard({required this.data, required this.onTap});
+
+  double? _num(dynamic v) => v == null ? null : double.tryParse(v.toString());
+  String _fmt(dynamic v) {
+    final n = _num(v);
+    return n == null ? '—' : n.toStringAsFixed(2);
+  }
+
+  String _fmtVolume(dynamic v) {
+    final n = _num(v);
+    if (n == null) return '—';
+    if (n >= 1000000) return '${(n / 1000000).toStringAsFixed(2)}M';
+    if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)}K';
+    return n.toStringAsFixed(0);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final changePct = _num(data['change_percent']) ?? 0;
+    final gain = _num(data['unrealized_gain']) ?? 0;
+    final isUp = changePct >= 0;
+    final changeColor = isUp ? AppColors.up : AppColors.down;
+    final gainColor = gain >= 0 ? AppColors.up : AppColors.down;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(10),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(data['symbol'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textPrimary)),
+                          const SizedBox(height: 2),
+                          Text('${data['quantity']} @ avg ${_fmt(data['avg_cost'])}',
+                              style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(_fmt(data['market_value']), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: AppColors.textPrimary)),
+                        const SizedBox(height: 2),
+                        Text('${gain >= 0 ? '+' : ''}${_fmt(data['unrealized_gain'])}',
+                            style: TextStyle(fontSize: 12, color: gainColor, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                const Divider(height: 1),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    _stat('LTP', _fmt(data['ltp']), valueColor: AppColors.textPrimary),
+                    _stat('Change', '${isUp ? '+' : ''}${changePct.toStringAsFixed(2)}%', valueColor: changeColor),
+                    _stat('High', _fmt(data['day_high'])),
+                    _stat('Low', _fmt(data['day_low'])),
+                    _stat('Volume', _fmtVolume(data['volume'])),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _stat(String label, String value, {Color valueColor = AppColors.textPrimary}) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+          const SizedBox(height: 2),
+          Text(value, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: valueColor)),
+        ],
+      ),
+    );
   }
 }

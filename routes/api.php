@@ -9,6 +9,8 @@ use App\Http\Controllers\Api\WatchlistController;
 
 // ── Public ──────────────────────────────────────────────────────────────────
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 
 Route::get('/markets', [MarketController::class, 'index']);
 Route::get('/markets/search', [MarketController::class, 'search']);

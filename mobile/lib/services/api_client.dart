@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show kDebugMode, debugPrint;
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/app_config.dart';
@@ -92,18 +94,60 @@ class ApiClient {
     throw ApiException(message, res.statusCode);
   }
 
+  static const _timeout = Duration(seconds: 20);
+
+  /// Every request logs "→ METHOD url", then either "← 200 METHOD url (123ms)"
+  /// or "✗ METHOD url failed: <reason> (123ms)" — visible in the `flutter run`
+  /// debug console. Only active in debug builds (never in release).
+  void _log(String message) {
+    if (kDebugMode) debugPrint('[API] $message');
+  }
+
+  /// Wraps a raw http call so a stalled connection can't hang the UI
+  /// forever, and so every failure mode (timeout, DNS/TLS/socket errors,
+  /// malformed responses) surfaces as a catchable [ApiException] instead of
+  /// an uncaught exception that leaves a "Signing in..." spinner stuck.
+  Future<http.Response> _send(String method, Uri uri, Future<http.Response> Function() request) async {
+    _log('→ $method $uri');
+    final stopwatch = Stopwatch()..start();
+    try {
+      final res = await request().timeout(_timeout);
+      _log('← ${res.statusCode} $method $uri (${stopwatch.elapsedMilliseconds}ms)');
+      return res;
+    } on TimeoutException {
+      _log('✗ $method $uri timed out after ${stopwatch.elapsedMilliseconds}ms');
+      throw ApiException('Could not reach the server — request timed out. Check your connection and try again.');
+    } on http.ClientException catch (e) {
+      _log('✗ $method $uri failed: ${e.message} (${stopwatch.elapsedMilliseconds}ms)');
+      throw ApiException('Could not connect to the server: ${e.message}');
+    } on FormatException catch (e) {
+      _log('✗ $method $uri returned unparseable response: $e (${stopwatch.elapsedMilliseconds}ms)');
+      throw ApiException('The server returned an unexpected response.');
+    } catch (e) {
+      // Any other connection-level failure (DNS, TLS/socket errors — the
+      // exact exception types differ between web and native platforms, so
+      // this is a deliberately broad catch-all rather than importing
+      // dart:io, which would break the web build).
+      _log('✗ $method $uri failed: $e (${stopwatch.elapsedMilliseconds}ms)');
+      throw ApiException('Could not reach the server. Check your internet connection and try again.');
+    }
+  }
+
   Future<dynamic> get(String path, [Map<String, dynamic>? query]) async {
-    final res = await http.get(_uri(path, query), headers: _headers);
+    final uri = _uri(path, query);
+    final res = await _send('GET', uri, () => http.get(uri, headers: _headers));
     return _decode(res);
   }
 
   Future<dynamic> post(String path, [Map<String, dynamic>? body]) async {
-    final res = await http.post(_uri(path), headers: _headers, body: jsonEncode(body ?? {}));
+    final uri = _uri(path);
+    final res = await _send('POST', uri, () => http.post(uri, headers: _headers, body: jsonEncode(body ?? {})));
     return _decode(res);
   }
 
   Future<dynamic> delete(String path) async {
-    final res = await http.delete(_uri(path), headers: _headers);
+    final uri = _uri(path);
+    final res = await _send('DELETE', uri, () => http.delete(uri, headers: _headers));
     return _decode(res);
   }
 }

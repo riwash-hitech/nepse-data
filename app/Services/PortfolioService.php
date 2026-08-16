@@ -97,16 +97,25 @@ class PortfolioService
                 $ltp = $live['close'];
                 $dayChange = $live['change'];
                 $changePercent = $live['change_percent'];
+                $dayHigh = $live['high'];
+                $dayLow = $live['low'];
+                $volume = $live['volume'];
                 $hasLivePrice = true;
             } elseif ($localPrice) {
                 $ltp = (float) $localPrice->close;
                 $dayChange = (float) $localPrice->change;
                 $changePercent = (float) $localPrice->change_percent;
+                $dayHigh = (float) $localPrice->high;
+                $dayLow = (float) $localPrice->low;
+                $volume = (int) $localPrice->volume;
                 $hasLivePrice = false;
             } else {
                 $ltp = $avgCost;
                 $dayChange = 0.0;
                 $changePercent = 0.0;
+                $dayHigh = null;
+                $dayLow = null;
+                $volume = null;
                 $hasLivePrice = false;
             }
 
@@ -122,6 +131,9 @@ class PortfolioService
                 'quantity'         => $h->quantity,
                 'avg_cost'         => $avgCost,
                 'ltp'              => $ltp,
+                'day_high'         => $dayHigh,
+                'day_low'          => $dayLow,
+                'volume'           => $volume,
                 'change_percent'   => $changePercent,
                 'investment'       => $investment,
                 'market_value'     => $marketValue,
@@ -152,6 +164,9 @@ class PortfolioService
             'close'          => (float) $summary['close'],
             'change'         => (float) ($summary['point_change'] ?? 0),
             'change_percent' => (float) ($summary['percentage_change'] ?? 0),
+            'high'           => (float) ($summary['high'] ?? $summary['close']),
+            'low'            => (float) ($summary['low'] ?? $summary['close']),
+            'volume'         => (int) ($summary['volume'] ?? 0),
         ];
     }
 
