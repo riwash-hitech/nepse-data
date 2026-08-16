@@ -86,6 +86,7 @@ class NepseScraperService
             return [];
         }
         return array_map(fn($s) => [
+            'id'     => $s['id'] ?? null,
             'name'   => $s['name'] ?? '',
             'symbol' => $s['symbol'] ?? '',
             'active' => $s['active'] ?? true,
@@ -249,6 +250,39 @@ class NepseScraperService
         $raw = $this->get('/api/data/v2/market-summary/bysymbol/', ['symbol' => strtoupper($symbol)]);
         if (is_array($raw) && !empty($raw[0])) return $raw[0];
         return [];
+    }
+
+    // ────────────────────────────────────────────────────────────────────
+    //  Bulk market summary — every actively-traded symbol's today's quote
+    //  in ONE call (no query params), for live gainers/losers/turnover
+    //  ranking. Same per-symbol shape as fetchMarketSummary() above.
+    // ────────────────────────────────────────────────────────────────────
+
+    public function fetchBulkMarketSummary(): array
+    {
+        $raw = $this->get('/api/data/v2/market-summary/');
+        if (!is_array($raw)) return [];
+
+        return array_values(array_filter($raw, fn($s) => !empty($s['symbol'])));
+    }
+
+    /**
+     * Latest close + change for a NEPSE-family index symbol (NEPSE, SENSIND,
+     * FLOATIND, SENSFLTIND, ...) via the same adjusted-history endpoint used
+     * for stocks — Chukul treats indices as regular symbols there.
+     */
+    public function fetchIndexQuote(string $symbol): ?array
+    {
+        $rows = $this->fetchHistoricalPrices($symbol, 14);
+        if (empty($rows)) return null;
+
+        $last = end($rows);
+        return [
+            'symbol'         => $symbol,
+            'close'          => (float) $last['close'],
+            'change'         => (float) $last['change'],
+            'change_percent' => (float) $last['change_percent'],
+        ];
     }
 
     // ────────────────────────────────────────────────────────────────────
