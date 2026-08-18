@@ -72,6 +72,12 @@ class AuthController extends Controller
             ]);
         }
 
+        if ($user->isBlocked()) {
+            throw ValidationException::withMessages([
+                'email' => ['Your account has been blocked. Contact support if you believe this is a mistake.'],
+            ]);
+        }
+
         $token = $user->createToken('nepse-mobile')->plainTextToken;
 
         return response()->json([

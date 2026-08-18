@@ -17,6 +17,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin'    => \App\Http\Middleware\EnsureUserIsAdmin::class,
             'no-cache' => \App\Http\Middleware\PreventPageCaching::class,
         ]);
+
+        $middleware->web(append: [\App\Http\Middleware\EnsureUserIsNotBlocked::class]);
+        $middleware->api(append: [\App\Http\Middleware\EnsureUserIsNotBlocked::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

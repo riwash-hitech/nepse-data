@@ -33,23 +33,54 @@
                     <td class="px-4 py-3" style="color:#475569;">{{ $u->email }}</td>
                     <td class="text-center px-4 py-3">
                         @if($u->isAdmin())
-                        <span class="text-xs px-2.5 py-1 rounded-full font-semibold" style="background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe;">Admin</span>
+                        <span class="text-xs px-2.5 py-1 rounded-full font-semibold" style="background:#DCFCE7;color:#14532D;border:1px solid #bbf7d0;">Admin</span>
                         @else
                         <span class="text-xs px-2.5 py-1 rounded-full font-semibold" style="background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;">User</span>
+                        @endif
+                        @if($u->isBlocked())
+                        <span class="text-xs px-2.5 py-1 rounded-full font-semibold" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;">Blocked</span>
                         @endif
                     </td>
                     <td class="px-4 py-3" style="color:#64748b;">{{ $u->created_at->format('d M Y') }}</td>
                     <td class="text-center px-4 py-3">
                         @if($u->id !== auth()->id())
-                        <form method="POST" action="{{ route('admin.users.destroy', $u) }}" class="inline">
-                            @csrf @method('DELETE')
-                            <button type="submit"
-                                    onclick="return confirm('Delete {{ $u->name }}?')"
-                                    class="text-xs px-3 py-1 rounded-md transition-colors"
-                                    style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;">
-                                Delete
-                            </button>
-                        </form>
+                        <div class="flex items-center justify-center gap-1.5 flex-wrap">
+                            <form method="POST" action="{{ route('admin.users.force-logout', $u) }}" class="inline">
+                                @csrf
+                                <button type="submit"
+                                        onclick="return confirm('Log {{ $u->name }} out of all devices?')"
+                                        class="text-xs px-3 py-1 rounded-md transition-colors"
+                                        style="background:#fffbeb;color:#b45309;border:1px solid #fde68a;">
+                                    Logout
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ route('admin.users.toggle-block', $u) }}" class="inline">
+                                @csrf
+                                @if($u->isBlocked())
+                                <button type="submit"
+                                        class="text-xs px-3 py-1 rounded-md transition-colors"
+                                        style="background:#DCFCE7;color:#14532D;border:1px solid #bbf7d0;">
+                                    Unblock
+                                </button>
+                                @else
+                                <button type="submit"
+                                        onclick="return confirm('Block {{ $u->name }}? They will be logged out immediately.')"
+                                        class="text-xs px-3 py-1 rounded-md transition-colors"
+                                        style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;">
+                                    Block
+                                </button>
+                                @endif
+                            </form>
+                            <form method="POST" action="{{ route('admin.users.destroy', $u) }}" class="inline">
+                                @csrf @method('DELETE')
+                                <button type="submit"
+                                        onclick="return confirm('Delete {{ $u->name }}?')"
+                                        class="text-xs px-3 py-1 rounded-md transition-colors"
+                                        style="background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;">
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
                         @else
                         <span style="color:#cbd5e1;">—</span>
                         @endif

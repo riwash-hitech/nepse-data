@@ -63,6 +63,8 @@ Route::middleware(['auth', 'no-cache'])->group(function () {
             Route::get('/create', [UserManagementController::class, 'create'])->name('create');
             Route::post('/', [UserManagementController::class, 'store'])->name('store');
             Route::delete('/{user}', [UserManagementController::class, 'destroy'])->name('destroy');
+            Route::post('/{user}/toggle-block', [UserManagementController::class, 'toggleBlock'])->name('toggle-block');
+            Route::post('/{user}/force-logout', [UserManagementController::class, 'forceLogout'])->name('force-logout');
         });
 
         Route::post('/admin/sync-stocks', [SyncController::class, 'run'])->name('admin.sync-stocks');
