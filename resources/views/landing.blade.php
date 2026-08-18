@@ -211,6 +211,8 @@
             .ticker{justify-content:flex-start;}
             .ticker .idx-side{gap:1.5rem;}
             .ticker .idx-side .item{text-align:left;}
+            .plans{grid-template-columns:1fr;max-width:380px;margin:0 auto;}
+            .plan.featured{order:-1;}
         }
         @media(max-width:560px){
             .features{grid-template-columns:1fr;}
