@@ -21,9 +21,9 @@
 .fade-d3    { animation-delay:.20s; }
 .fade-d4    { animation-delay:.27s; }
 .card-hover { transition:box-shadow .18s,transform .18s; }
-.card-hover:hover { box-shadow:0 8px 28px rgba(37,99,235,.12);transform:translateY(-2px); }
+.card-hover:hover { box-shadow:0 8px 28px rgba(20,83,45,.14);transform:translateY(-2px); }
 .sector-row { transition:background .12s; }
-.sector-row:hover { background:#eff6ff; }
+.sector-row:hover { background:#f0fdf4; }
 .stock-row  { transition:background .1s; }
 .stock-row:hover  { background:#f8fafc; }
 </style>
@@ -36,16 +36,16 @@
 
 {{-- ════ HERO ══════════════════════════════════════════════════════════════ --}}
 <div class="fade-up" style="border-radius:1.25rem;overflow:hidden;margin-bottom:1.75rem;
-     background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 55%,#312e81 100%);
+     background:linear-gradient(135deg,#0f172a 0%,#14532D 55%,#166534 100%);
      position:relative;padding:2.5rem 2rem;">
 
   <div style="position:absolute;inset:0;opacity:.05;pointer-events:none;
        background-image:radial-gradient(circle,#fff 1px,transparent 1px);
        background-size:28px 28px;"></div>
   <div style="position:absolute;top:-80px;right:-80px;width:320px;height:320px;border-radius:50%;
-       background:radial-gradient(circle,rgba(99,102,241,.3),transparent 70%);pointer-events:none;"></div>
+       background:radial-gradient(circle,rgba(34,197,94,.3),transparent 70%);pointer-events:none;"></div>
   <div style="position:absolute;bottom:-40px;left:8%;width:220px;height:220px;border-radius:50%;
-       background:radial-gradient(circle,rgba(59,130,246,.2),transparent 70%);pointer-events:none;"></div>
+       background:radial-gradient(circle,rgba(22,163,74,.2),transparent 70%);pointer-events:none;"></div>
 
   <div style="position:relative;z-index:1;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:.5rem;">
@@ -76,7 +76,7 @@
     <h1 style="font-size:clamp(1.75rem,5vw,2.875rem);font-weight:900;color:#fff;
          line-height:1.1;letter-spacing:-.02em;margin:0 0 .75rem;">
       Nepal Stock Exchange<br>
-      <span style="background:linear-gradient(90deg,#60a5fa,#a78bfa);
+      <span style="background:linear-gradient(90deg,#4ade80,#86efac);
             -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">
         Analytics Platform
       </span>
@@ -100,7 +100,7 @@
                     background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);
                     border-radius:.875rem;color:#fff;outline:none;box-sizing:border-box;
                     backdrop-filter:blur(8px);transition:border-color .2s,background .2s;"
-             onfocus="this.style.background='rgba(255,255,255,.16)';this.style.borderColor='rgba(129,140,248,.8)'"
+             onfocus="this.style.background='rgba(255,255,255,.16)';this.style.borderColor='rgba(34,197,94,.8)'"
              onblur="this.style.background='rgba(255,255,255,.1)';this.style.borderColor='rgba(255,255,255,.18)'">
       <div id="heroDropdown" style="display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;
            border-radius:.875rem;overflow:hidden;background:#fff;border:1px solid #e2e8f0;
@@ -123,7 +123,7 @@
      gap:.875rem;margin-bottom:1.75rem;">
   @php
   $quickNav = [
-    ['route'=>'stocks.index',   'icon'=>'📈', 'label'=>'Markets',     'desc'=>$totalStocks.' stocks',    'clr'=>'#2563eb','bg'=>'#eff6ff','bd'=>'#bfdbfe', 'auth'=>false],
+    ['route'=>'stocks.index',   'icon'=>'📈', 'label'=>'Markets',     'desc'=>$totalStocks.' stocks',    'clr'=>'#14532D','bg'=>'#DCFCE7','bd'=>'#bbf7d0', 'auth'=>false],
     ['route'=>'screener.index', 'icon'=>'🔍', 'label'=>'Screener',    'desc'=>'Filter & screen',         'clr'=>'#7c3aed','bg'=>'#f5f3ff','bd'=>'#ddd6fe', 'auth'=>false],
     ['route'=>'signals.index',  'icon'=>'⚡', 'label'=>'Signals',     'desc'=>'Buy/Sell alerts',         'clr'=>'#d97706','bg'=>'#fffbeb','bd'=>'#fde68a', 'auth'=>false],
     ['route'=>'top-picks.index','icon'=>'⭐', 'label'=>'Top Picks',   'desc'=>'Best 5 uptrend stocks',   'clr'=>'#16a34a','bg'=>'#f0fdf4','bd'=>'#bbf7d0'],
@@ -188,7 +188,7 @@
   @php
   $stats = [
     ['label'=>'Listed Stocks','value'=>number_format($totalStocks),'sub'=>'Active on NEPSE',
-     'top'=>'#2563eb','ic'=>'#2563eb','ib'=>'#eff6ff',
+     'top'=>'#14532D','ic'=>'#14532D','ib'=>'#DCFCE7',
      'svg'=>'<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>'],
     ['label'=>'Sectors','value'=>count($sectors),'sub'=>'Market segments',
      'top'=>'#7c3aed','ic'=>'#7c3aed','ib'=>'#f5f3ff',
@@ -240,8 +240,8 @@
         <div style="font-size:.875rem;font-weight:700;color:#0f172a;">Market Sectors</div>
         <div style="font-size:.7rem;color:#94a3b8;margin-top:.1rem;">{{ $sectorStats->count() }} segments</div>
       </div>
-      <a href="{{ route('stocks.index') }}" style="font-size:.72rem;color:#2563eb;text-decoration:none;
-         padding:.25rem .6rem;border-radius:.375rem;background:#eff6ff;border:1px solid #bfdbfe;">
+      <a href="{{ route('stocks.index') }}" style="font-size:.72rem;color:#14532D;text-decoration:none;
+         padding:.25rem .6rem;border-radius:.375rem;background:#DCFCE7;border:1px solid #bbf7d0;">
         All stocks →
       </a>
     </div>
@@ -280,8 +280,8 @@
         <div style="font-size:.875rem;font-weight:700;color:#0f172a;">Listed Companies</div>
         <div style="font-size:.7rem;color:#94a3b8;margin-top:.1rem;">{{ number_format($totalStocks) }} active stocks</div>
       </div>
-      <a href="{{ route('stocks.index') }}" style="font-size:.72rem;color:#2563eb;text-decoration:none;
-         padding:.25rem .6rem;border-radius:.375rem;background:#eff6ff;border:1px solid #bfdbfe;">
+      <a href="{{ route('stocks.index') }}" style="font-size:.72rem;color:#14532D;text-decoration:none;
+         padding:.25rem .6rem;border-radius:.375rem;background:#DCFCE7;border:1px solid #bbf7d0;">
         View all →
       </a>
     </div>
@@ -291,9 +291,9 @@
        style="display:flex;align-items:center;gap:.875rem;padding:.625rem 1.25rem;
               border-bottom:1px solid #f8fafc;text-decoration:none;">
       <div style="width:38px;height:38px;border-radius:.625rem;flex-shrink:0;
-           background:linear-gradient(135deg,#eff6ff,#e0e7ff);
+           background:linear-gradient(135deg,#DCFCE7,#bbf7d0);
            display:flex;align-items:center;justify-content:center;">
-        <span style="font-size:.6rem;font-weight:800;color:#2563eb;
+        <span style="font-size:.6rem;font-weight:800;color:#14532D;
                font-family:'JetBrains Mono',monospace;letter-spacing:-.02em;">
           {{ Str::limit($s['symbol'],4) }}
         </span>
@@ -307,7 +307,7 @@
         <div style="font-size:.68rem;color:#94a3b8;margin-top:.1rem;">{{ $s['sector'] }}</div>
         @endif
       </div>
-      <span style="font-size:.68rem;color:#2563eb;background:#eff6ff;border:1px solid #bfdbfe;
+      <span style="font-size:.68rem;color:#14532D;background:#DCFCE7;border:1px solid #bbf7d0;
              border-radius:9999px;padding:.2rem .55rem;flex-shrink:0;">→</span>
     </a>
     @endforeach
@@ -327,7 +327,7 @@
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(195px,1fr));gap:1rem;">
     @php
     $steps = [
-      ['n'=>'1','emoji'=>'🔍','title'=>'Search any stock','desc'=>'Type a symbol or company name. 674+ NEPSE-listed companies available instantly.','clr'=>'#2563eb','bg'=>'#eff6ff','bd'=>'#bfdbfe22'],
+      ['n'=>'1','emoji'=>'🔍','title'=>'Search any stock','desc'=>'Type a symbol or company name. 674+ NEPSE-listed companies available instantly.','clr'=>'#14532D','bg'=>'#DCFCE7','bd'=>'#bbf7d022'],
       ['n'=>'2','emoji'=>'⚡','title'=>'Live analysis','desc'=>'RSI, MACD, Bollinger Bands computed in real-time from live NEPSE market data.','clr'=>'#7c3aed','bg'=>'#f5f3ff','bd'=>'#ddd6fe22'],
       ['n'=>'3','emoji'=>'📊','title'=>'Signal + levels','desc'=>'BUY/SELL/HOLD signal with confidence score, entry range, stop-loss and price targets.','clr'=>'#16a34a','bg'=>'#f0fdf4','bd'=>'#bbf7d022'],
       ['n'=>'4','emoji'=>'🔮','title'=>'7-Day forecast','desc'=>'Next 7 trading days predicted using momentum, RSI, MACD and day-of-week historical patterns.','clr'=>'#d97706','bg'=>'#fffbeb','bd'=>'#fde68a22'],
@@ -371,7 +371,7 @@ heroSearch?.addEventListener('input', function () {
           'onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'transparent\'">' +
           '<div><span style="font-weight:700;color:#0f172a;font-size:.875rem;font-family:monospace;">' + s.symbol + '</span>' +
           '<span style="font-size:.8rem;color:#64748b;margin-left:.75rem;">' + s.name + '</span></div>' +
-          '<span style="font-size:.7rem;color:#2563eb;padding:.2rem .6rem;border-radius:9999px;background:#eff6ff;border:1px solid #bfdbfe;">Analyse →</span>' +
+          '<span style="font-size:.7rem;color:#14532D;padding:.2rem .6rem;border-radius:9999px;background:#DCFCE7;border:1px solid #bbf7d0;">Analyse →</span>' +
           '</a>'
         ).join('');
         heroDropdown.style.display = 'block';
