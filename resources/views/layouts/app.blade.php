@@ -179,6 +179,26 @@
 
     <div id="mainContent" style="min-height:100vh;display:flex;flex-direction:column;margin-left:0;transition:margin-left 0.26s cubic-bezier(0.4,0,0.2,1);">
 
+        {{-- Invest/acquire this platform banner --}}
+        <div id="investBanner" style="display:flex;align-items:center;justify-content:center;gap:.6rem;padding:.45rem 2.5rem;background:linear-gradient(90deg,#14532D,#166534);color:#fff;font-size:.8rem;font-weight:600;flex-wrap:wrap;position:relative;">
+            <span style="display:flex;align-items:center;gap:.4rem;">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V6m0 8v2m9-4a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Interested in investing in or acquiring this platform?
+            </span>
+            <a href="https://riwash.com" target="_blank" rel="noopener"
+               style="color:#fff;font-weight:700;text-decoration:none;padding:.2rem .7rem;background:rgba(255,255,255,.18);border-radius:.375rem;border:1px solid rgba(255,255,255,.35);">
+                Contact riwash.com
+            </a>
+            <button onclick="document.getElementById('investBanner').style.display='none'" aria-label="Dismiss"
+                    style="position:absolute;right:.6rem;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,.8);cursor:pointer;padding:.25rem;">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
         {{-- Free trial countdown banner --}}
         <div id="trialBanner" style="display:flex;align-items:center;justify-content:center;gap:.625rem;padding:.35rem 1rem;background:linear-gradient(90deg,#dc2626,#b91c1c);color:#fff;font-size:.78rem;font-weight:600;flex-wrap:wrap;">
             <span style="display:flex;align-items:center;gap:.35rem;">

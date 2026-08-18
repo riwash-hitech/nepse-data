@@ -1,10 +1,29 @@
 <?php
 
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\{DashboardController, IpoController, OutlookController, PortfolioController, ProfileController, ScreenerController, SignalController, StockController, TopPicksController, WatchlistController};
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\SyncController;
+
+// ── URL-triggered cron (for hosts without SSH/real cron access) ─────────────
+// Point an external "hit this URL every minute" service (cron-job.org,
+// EasyCron, cPanel's own cron-via-URL, etc.) at this exact URL — it runs
+// the same Laravel scheduler that `php artisan schedule:run` would, so the
+// nepse:scrape / nepse:signals / live-price jobs in routes/console.php stay
+// on their configured cadence. The token comes from CRON_SECRET in .env —
+// anyone who doesn't know it just gets a 404.
+Route::get('/cron/{token}', function (string $token) {
+    if (!config('app.cron_secret') || !hash_equals(config('app.cron_secret'), $token)) {
+        abort(404);
+    }
+
+    Artisan::call('schedule:run');
+
+    return response(Artisan::output() ?: "Scheduler ran at " . now()->toDateTimeString() . ".\n", 200)
+        ->header('Content-Type', 'text/plain');
+})->where('token', '[A-Za-z0-9]+');
 
 // ── Public marketing page ──────────────────────────────────────────────────────
 // Shown to everyone, logged in or not — logged-in users reach the dashboard

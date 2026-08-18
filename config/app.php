@@ -123,4 +123,17 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Cron secret
+    |--------------------------------------------------------------------------
+    |
+    | Used by the URL-triggered cron endpoint (see routes/web.php, `/cron/{token}`)
+    | for hosts without SSH/real cron access — an external service hits that
+    | URL every minute to run the Laravel scheduler.
+    |
+    */
+
+    'cron_secret' => env('CRON_SECRET'),
+
 ];
