@@ -193,13 +193,17 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                     </svg>
                 </button>
-                <div style="position:relative;max-width:280px;width:100%;">
-                    <svg style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:#94a3b8;pointer-events:none;" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div style="position:relative;max-width:200px;width:100%;">
+                    <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#94a3b8;pointer-events:none;" width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                     </svg>
                     <input id="globalSearch" type="text" placeholder="Search stocks…" autocomplete="off"
-                           style="width:100%;padding:0.5rem 0.75rem 0.5rem 2rem;font-size:0.875rem;border-radius:0.5rem;outline:none;background:#f1f5f9;border:1px solid #e2e8f0;color:#0f172a;box-sizing:border-box;">
-                    <div id="searchDropdown" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:60;border-radius:0.625rem;overflow:hidden;background:#fff;border:1px solid #e2e8f0;box-shadow:0 8px 24px rgba(0,0,0,0.1);"></div>
+                           style="width:100%;padding:0.4rem 0.6rem 0.4rem 1.85rem;font-size:0.8rem;border-radius:9999px;
+                                  outline:none;background:#f8fafc;border:1px solid #e2e8f0;color:#0f172a;
+                                  box-sizing:border-box;transition:border-color .15s,background .15s,box-shadow .15s;"
+                           onfocus="this.style.borderColor='#16A34A';this.style.background='#fff';this.style.boxShadow='0 0 0 3px rgba(22,163,74,.12)'"
+                           onblur="this.style.borderColor='#e2e8f0';this.style.background='#f8fafc';this.style.boxShadow='none'">
+                    <div id="searchDropdown" style="display:none;position:absolute;top:calc(100% + 6px);left:0;width:320px;z-index:60;border-radius:0.75rem;overflow:hidden;background:#fff;border:1px solid #e2e8f0;box-shadow:0 12px 32px rgba(0,0,0,0.12);"></div>
                 </div>
             </div>
             <div style="display:flex;align-items:center;gap:0.75rem;flex-shrink:0;margin-left:0.75rem;">
@@ -244,10 +248,13 @@
             @yield('content')
         </main>
 
-        <footer style="padding:1.25rem 1rem 1.5rem;">
-            <div style="display:flex;gap:.75rem;align-items:flex-start;font-size:.78rem;color:#7f1d1d;
+        <div id="disclaimerPopup" style="position:fixed;left:0;right:0;bottom:0;z-index:45;
+             padding:0 1rem 1rem;transform:translateY(0);transition:transform .3s ease,opacity .3s ease;
+             display:flex;justify-content:center;">
+            <div style="position:relative;display:flex;gap:.75rem;align-items:flex-start;font-size:.78rem;color:#7f1d1d;
                  line-height:1.6;background:#fef2f2;border:1px solid #fecaca;border-left:4px solid #dc2626;
-                 border-radius:.75rem;padding:.875rem 1.125rem;max-width:960px;">
+                 border-radius:.75rem;padding:.875rem 2.5rem .875rem 1.125rem;max-width:820px;width:100%;
+                 box-shadow:0 12px 32px rgba(0,0,0,.12);">
                 <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
                      style="flex-shrink:0;margin-top:.1rem;color:#dc2626;">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
@@ -258,8 +265,30 @@
                     <strong style="color:#b91c1c;font-weight:700;">not investment advice or a recommendation to trade</strong>.
                     Do your own research and consult a licensed advisor before making any investment decision.
                 </p>
+                <button onclick="dismissDisclaimer()" aria-label="Dismiss"
+                        style="position:absolute;top:.6rem;right:.6rem;width:22px;height:22px;border:none;
+                               background:rgba(220,38,38,.1);color:#b91c1c;border-radius:9999px;cursor:pointer;
+                               display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
             </div>
-        </footer>
+        </div>
+        <script>
+            (function() {
+                if (sessionStorage.getItem('disclaimerDismissed') === '1') {
+                    document.getElementById('disclaimerPopup').style.display = 'none';
+                }
+            })();
+            function dismissDisclaimer() {
+                var el = document.getElementById('disclaimerPopup');
+                el.style.transform = 'translateY(120%)';
+                el.style.opacity = '0';
+                sessionStorage.setItem('disclaimerDismissed', '1');
+                setTimeout(function() { el.style.display = 'none'; }, 300);
+            }
+        </script>
     </div>
 
     <script>

@@ -2,7 +2,9 @@
 @section('title', 'NEPSE Analytics - Dashboard')
 
 @push('head')
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
 <style>
+.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 20; vertical-align:middle; }
 @keyframes ticker {
   0%   { transform: translateX(0); }
   100% { transform: translateX(-50%); }
@@ -123,10 +125,14 @@
 <div class="fade-up" style="background:#fff;border:1px solid #e2e8f0;border-radius:1rem;
      padding:1.5rem;margin-bottom:1.75rem;box-shadow:0 1px 3px rgba(0,0,0,.04);">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:.5rem;">
-    <div style="font-size:1rem;font-weight:700;color:#0f172a;">💼 Your Portfolio</div>
+    <div style="display:flex;align-items:center;gap:.5rem;font-size:1rem;font-weight:700;color:#0f172a;">
+      <span class="material-symbols-outlined" style="color:#416550;font-size:20px;">business_center</span>
+      Your Portfolio
+    </div>
     <a href="{{ route('portfolio.overview') }}" style="font-size:.75rem;color:#14532D;text-decoration:none;
-       padding:.3rem .75rem;border-radius:.5rem;background:#DCFCE7;border:1px solid #bbf7d0;font-weight:600;">
-      Full Portfolio →
+       padding:.3rem .75rem;border-radius:.5rem;background:#DCFCE7;border:1px solid #bbf7d0;font-weight:600;
+       display:inline-flex;align-items:center;gap:.25rem;">
+      Full Portfolio <span class="material-symbols-outlined" style="font-size:16px;">arrow_forward</span>
     </a>
   </div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;">
@@ -164,11 +170,11 @@
      gap:.875rem;margin-bottom:1.75rem;">
   @php
   $quickNav = [
-    ['route'=>'stocks.index',   'icon'=>'📈', 'label'=>'Markets',     'desc'=>$totalStocks.' stocks',    'clr'=>'#14532D','bg'=>'#DCFCE7','bd'=>'#bbf7d0', 'auth'=>false],
-    ['route'=>'screener.index', 'icon'=>'🔍', 'label'=>'Screener',    'desc'=>'Filter & screen',         'clr'=>'#7c3aed','bg'=>'#f5f3ff','bd'=>'#ddd6fe', 'auth'=>false],
-    ['route'=>'signals.index',  'icon'=>'⚡', 'label'=>'Signals',     'desc'=>'Buy/Sell alerts',         'clr'=>'#d97706','bg'=>'#fffbeb','bd'=>'#fde68a', 'auth'=>false],
-    ['route'=>'top-picks.index','icon'=>'⭐', 'label'=>'Top Picks',   'desc'=>'Best 5 uptrend stocks',   'clr'=>'#16a34a','bg'=>'#f0fdf4','bd'=>'#bbf7d0'],
-    ['route'=>'ipo.index',      'icon'=>'📋', 'label'=>'IPO Results', 'desc'=>'Check allotment',         'clr'=>'#0891b2','bg'=>'#ecfeff','bd'=>'#a5f3fc', 'auth'=>false],
+    ['route'=>'stocks.index',   'icon'=>'monitoring', 'label'=>'Markets',     'desc'=>$totalStocks.' stocks',    'clr'=>'#14532D','bg'=>'#DCFCE7','bd'=>'#bbf7d0', 'auth'=>false],
+    ['route'=>'screener.index', 'icon'=>'filter_alt',  'label'=>'Screener',    'desc'=>'Filter & screen',         'clr'=>'#4f46e5','bg'=>'#eef2ff','bd'=>'#c7d2fe', 'auth'=>false],
+    ['route'=>'signals.index',  'icon'=>'bolt',        'label'=>'Signals',     'desc'=>'Buy/Sell alerts',         'clr'=>'#ea580c','bg'=>'#fff7ed','bd'=>'#fed7aa', 'auth'=>false],
+    ['route'=>'top-picks.index','icon'=>'star',        'label'=>'Top Picks',   'desc'=>'Best 5 uptrend stocks',   'clr'=>'#16a34a','bg'=>'#f0fdf4','bd'=>'#bbf7d0'],
+    ['route'=>'ipo.index',      'icon'=>'assignment',  'label'=>'IPO Results', 'desc'=>'Check allotment',         'clr'=>'#2563eb','bg'=>'#eff6ff','bd'=>'#bfdbfe', 'auth'=>false],
   ];
   @endphp
   @foreach($quickNav as $nav)
@@ -177,10 +183,10 @@
      style="display:flex;align-items:center;gap:.875rem;padding:1rem 1.125rem;
             background:#fff;border:1px solid #e2e8f0;border-radius:.875rem;
             text-decoration:none;box-shadow:0 1px 3px rgba(0,0,0,.04);">
-    <div style="width:40px;height:40px;border-radius:.625rem;flex-shrink:0;font-size:1.2rem;
-         background:{{ $nav['bg'] }};border:1px solid {{ $nav['bd'] }};
+    <div style="width:40px;height:40px;border-radius:.625rem;flex-shrink:0;
+         background:{{ $nav['bg'] }};border:1px solid {{ $nav['bd'] }};color:{{ $nav['clr'] }};
          display:flex;align-items:center;justify-content:center;">
-      {{ $nav['icon'] }}
+      <span class="material-symbols-outlined" style="font-size:20px;">{{ $nav['icon'] }}</span>
     </div>
     <div style="min-width:0;">
       <div style="font-size:.875rem;font-weight:700;color:#0f172a;">{{ $nav['label'] }}</div>
@@ -191,7 +197,9 @@
   </a>
   @endif
   @endforeach
-</div> ════════════════════════════════════════════════════════════ --}}
+</div>
+
+{{-- ════ LIVE TICKER ═══════════════════════════════════════════════════════ --}}
 <div class="fade-up fade-d2" style="background:#fff;border:1px solid #e2e8f0;border-radius:.875rem;
      overflow:hidden;margin-bottom:1.75rem;display:flex;align-items:center;">
   <div style="flex-shrink:0;padding:.625rem 1rem;background:#0f172a;font-size:.65rem;
