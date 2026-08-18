@@ -6,8 +6,13 @@ use App\Http\Controllers\{DashboardController, IpoController, OutlookController,
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\SyncController;
 
+// ── Public marketing page ──────────────────────────────────────────────────────
+Route::get('/', function (DashboardController $dashboard) {
+    return auth()->check() ? redirect()->route('dashboard') : $dashboard->landing();
+})->name('landing');
+
 // ── Main Dashboard ────────────────────────────────────────────────────────────
-Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 Route::post('/sync-market', [DashboardController::class, 'syncLive'])->name('dashboard.sync');
 
 // ── Stocks / Markets ──────────────────────────────────────────────────────────

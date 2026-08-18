@@ -3,38 +3,45 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login — NEPSE Analytics</title>
+  <title>Log in — Riwash Money</title>
+  <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
   @vite(['resources/css/app.css', 'resources/js/app.js'])
   <style>
+    :root{
+        --brand:#14532D; --accent:#16A34A; --accent-dim:#DCFCE7;
+        --bg:#F3F6F4; --surface:#FFFFFF; --border:#E1E8E3;
+        --text:#10171A; --text-2:#6B7684;
+    }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       min-height: 100vh;
-      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 55%, #312e81 100%);
+      background: var(--bg);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: 'Inter', system-ui, sans-serif;
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
       position: relative;
       overflow: hidden;
+      padding: 1.5rem;
     }
     body::before {
       content: '';
       position: absolute;
       inset: 0;
-      background-image: radial-gradient(circle, rgba(255,255,255,.06) 1px, transparent 1px);
+      background-image: radial-gradient(circle, rgba(20,83,45,.06) 1px, transparent 1px);
       background-size: 28px 28px;
       pointer-events: none;
     }
     .blob1 {
       position: absolute; top: -100px; right: -100px;
       width: 400px; height: 400px; border-radius: 50%;
-      background: radial-gradient(circle, rgba(99,102,241,.3), transparent 70%);
+      background: radial-gradient(circle, rgba(22,163,74,.16), transparent 70%);
       pointer-events: none;
     }
     .blob2 {
       position: absolute; bottom: -80px; left: -80px;
       width: 320px; height: 320px; border-radius: 50%;
-      background: radial-gradient(circle, rgba(59,130,246,.2), transparent 70%);
+      background: radial-gradient(circle, rgba(20,83,45,.12), transparent 70%);
       pointer-events: none;
     }
     @keyframes fadeUp {
@@ -43,86 +50,84 @@
     }
     .card {
       position: relative; z-index: 1;
-      background: rgba(255, 255, 255, 0.97);
+      background: var(--surface);
+      border: 1px solid var(--border);
       border-radius: 1.25rem;
       padding: 2.25rem 2rem;
       width: 100%;
       max-width: 420px;
-      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+      box-shadow: 0 24px 60px rgba(16,23,26,.08);
       animation: fadeUp .4s ease both;
     }
     .logo-wrap {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: .75rem;
+      gap: .625rem;
       margin-bottom: 1.75rem;
     }
-    .logo-icon {
-      width: 44px; height: 44px;
-      border-radius: .75rem;
-      background: linear-gradient(135deg, #1e3a8a, #7c3aed);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.35rem;
-    }
-    .logo-text { font-size: 1.3rem; font-weight: 800; color: #0f172a; letter-spacing: -.02em; }
-    .logo-text span { color: #2563eb; }
+    .logo-wrap img { width: 40px; height: 40px; border-radius: .75rem; object-fit: cover; }
+    .logo-text { font-size: 1.2rem; font-weight: 800; color: var(--text); letter-spacing: -.02em; }
     h1 {
-      font-size: 1.375rem; font-weight: 800; color: #0f172a;
+      font-size: 1.375rem; font-weight: 800; color: var(--text);
       margin-bottom: .375rem; text-align: center;
     }
-    .subtitle { font-size: .82rem; color: #94a3b8; text-align: center; margin-bottom: 1.75rem; }
+    .subtitle { font-size: .85rem; color: var(--text-2); text-align: center; margin-bottom: 1.75rem; }
     .field { margin-bottom: 1.125rem; }
     label {
-      display: block; font-size: .78rem; font-weight: 600;
-      color: #374151; margin-bottom: .35rem;
+      display: block; font-size: .8rem; font-weight: 600;
+      color: var(--text); margin-bottom: .35rem;
     }
-    input[type=email], input[type=password] {
+    input[type=email], input[type=password], input[type=text] {
       width: 100%; padding: .65rem .875rem;
-      font-size: .9rem; border: 1.5px solid #e2e8f0;
-      border-radius: .625rem; outline: none; background: #f8fafc;
-      color: #0f172a; transition: border-color .2s, background .2s;
+      font-size: .9rem; border: 1.5px solid var(--border);
+      border-radius: .625rem; outline: none; background: var(--bg);
+      color: var(--text); transition: border-color .2s, background .2s;
       font-family: inherit;
     }
-    input[type=email]:focus, input[type=password]:focus {
-      border-color: #818cf8; background: #fff;
-      box-shadow: 0 0 0 3px rgba(129,140,248,.15);
+    input[type=email]:focus, input[type=password]:focus, input[type=text]:focus {
+      border-color: var(--accent); background: #fff;
+      box-shadow: 0 0 0 3px rgba(22,163,74,.15);
     }
     .remember-row {
-      display: flex; align-items: center; gap: .5rem;
+      display: flex; align-items: center; justify-content: space-between; gap: .5rem;
       margin-bottom: 1.375rem;
     }
-    .remember-row input { width: 15px; height: 15px; accent-color: #2563eb; cursor: pointer; }
-    .remember-row label { font-size: .78rem; color: #64748b; cursor: pointer; margin: 0; }
+    .remember-row .check { display:flex; align-items:center; gap:.5rem; }
+    .remember-row input { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; }
+    .remember-row label { font-size: .8rem; color: var(--text-2); cursor: pointer; margin: 0; }
+    .remember-row a { font-size: .8rem; color: var(--brand); font-weight: 600; }
+    .remember-row a:hover { text-decoration: underline; }
     .btn-login {
       width: 100%; padding: .75rem;
       font-size: .9375rem; font-weight: 700;
-      background: linear-gradient(135deg, #1e40af, #7c3aed);
+      background: var(--brand);
       color: #fff; border: none; border-radius: .75rem;
       cursor: pointer; font-family: inherit;
-      transition: opacity .15s, transform .1s;
+      transition: background .15s, transform .1s;
       display: flex; align-items: center; justify-content: center; gap: .5rem;
     }
-    .btn-login:hover  { opacity: .9; }
+    .btn-login:hover  { background: #0f3f22; }
     .btn-login:active { transform: scale(.98); }
     .error-box {
       background: #fef2f2; border: 1px solid #fecaca;
       border-radius: .625rem; padding: .65rem .875rem;
-      font-size: .78rem; color: #dc2626;
+      font-size: .8rem; color: #dc2626;
       margin-bottom: 1.125rem;
     }
     .status-box {
-      background: #f0fdf4; border: 1px solid #bbf7d0;
+      background: var(--accent-dim); border: 1px solid #bbf7d0;
       border-radius: .625rem; padding: .65rem .875rem;
-      font-size: .78rem; color: #16a34a;
+      font-size: .8rem; color: var(--brand);
       margin-bottom: 1.125rem;
     }
     .footer-note {
       margin-top: 1.5rem; text-align: center;
-      font-size: .72rem; color: #94a3b8;
-      border-top: 1px solid #f1f5f9; padding-top: 1rem;
+      font-size: .8rem; color: var(--text-2);
+      border-top: 1px solid var(--border); padding-top: 1.1rem;
     }
-    .footer-note strong { color: #374151; }
+    .footer-note a { color: var(--brand); font-weight: 700; }
+    .footer-note a:hover { text-decoration: underline; }
     @media (max-width: 460px) {
       .card { margin: 1rem; padding: 1.75rem 1.25rem; }
     }
@@ -133,21 +138,18 @@
   <div class="blob2"></div>
 
   <div class="card">
-    {{-- Logo --}}
-    <div class="logo-wrap">
-      <div class="logo-icon">📈</div>
-      <div class="logo-text">NEPSE<span>Analytics</span></div>
-    </div>
+    <a href="{{ route('landing') }}" class="logo-wrap">
+      <img src="{{ asset('images/logo.png') }}" alt="Riwash Money">
+      <div class="logo-text">Riwash Money</div>
+    </a>
 
     <h1>Welcome back</h1>
-    <p class="subtitle">Sign in to access your analytics dashboard</p>
+    <p class="subtitle">Log in to your NEPSE portfolio dashboard</p>
 
-    {{-- Status message (e.g. password reset) --}}
     @if (session('status'))
     <div class="status-box">{{ session('status') }}</div>
     @endif
 
-    {{-- Validation errors --}}
     @if ($errors->any())
     <div class="error-box">
       {{ $errors->first() }}
@@ -173,8 +175,13 @@
       </div>
 
       <div class="remember-row">
-        <input id="remember_me" type="checkbox" name="remember">
-        <label for="remember_me">Keep me signed in</label>
+        <div class="check">
+          <input id="remember_me" type="checkbox" name="remember">
+          <label for="remember_me">Keep me signed in</label>
+        </div>
+        @if (Route::has('password.request'))
+          <a href="{{ route('password.request') }}">Forgot password?</a>
+        @endif
       </div>
 
       <button type="submit" class="btn-login">
@@ -187,7 +194,7 @@
     </form>
 
     <div class="footer-note">
-      <strong>NEPSE Analytics</strong> &mdash; Real-time Nepal stock analysis &amp; signals
+      Don't have an account? <a href="{{ route('register') }}">Create one</a>
     </div>
   </div>
 </body>

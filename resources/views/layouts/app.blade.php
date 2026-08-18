@@ -5,16 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'NEPSE Analytics') — Nepal Stock Exchange</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('head')
     <style>
         #sidebar { transition: transform 0.26s cubic-bezier(0.4,0,0.2,1); }
         #sidebarOverlay { display:none;position:fixed;inset:0;z-index:40;background:rgba(0,0,0,0.45); }
-        .nav-link.active { color:#2563eb;background:#eff6ff;border:1px solid #bfdbfe; }
+        .nav-link.active { color:#14532D;background:#DCFCE7;border:1px solid #bbf7d0; }
         .nav-group summary { list-style:none; cursor:pointer; }
-        .nav-group summary.nav-link { background:#eef2ff; color:#4338ca; border:1px solid #e0e7ff; }
-        .nav-group summary.nav-link:hover { background:#e0e7ff; }
-        .nav-group summary.nav-link.active { background:#4338ca; color:#ffffff; border-color:#4338ca; }
+        .nav-group summary.nav-link { background:#DCFCE7; color:#14532D; border:1px solid #bbf7d0; }
+        .nav-group summary.nav-link:hover { background:#bbf7d0; }
+        .nav-group summary.nav-link.active { background:#14532D; color:#ffffff; border-color:#14532D; }
         .nav-group summary.nav-link.active .chevron { color:#ffffff; }
         .nav-group summary::-webkit-details-marker { display:none; }
         .nav-group summary::marker { content:''; }
@@ -22,7 +23,7 @@
         .nav-group[open] .chevron { transform: rotate(180deg); }
         .nav-sublink { display:flex; align-items:center; gap:0.625rem; padding:0.5rem 0.75rem 0.5rem 1.75rem; border-radius:0.5rem; color:#64748b; font-size:0.8125rem; font-weight:500; transition:all 0.15s; text-decoration:none; }
         .nav-sublink:hover { color:#0f172a; background:#f1f5f9; }
-        .nav-sublink.active { color:#2563eb; background:#eff6ff; font-weight:600; }
+        .nav-sublink.active { color:#14532D; background:#DCFCE7; font-weight:600; }
         .nav-sublink .dot { width:5px; height:5px; border-radius:9999px; background:currentColor; opacity:0.5; flex-shrink:0; }
     </style>
 </head>
@@ -46,16 +47,10 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
             </button>
-            <div style="width:36px;height:36px;border-radius:0.5rem;flex-shrink:0;
-                        background:linear-gradient(135deg,#2563eb,#7c3aed);
-                        display:flex;align-items:center;justify-content:center;">
-                <svg width="18" height="18" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-                </svg>
-            </div>
+            <img src="{{ asset('images/logo.png') }}" alt="Riwash Money" style="width:36px;height:36px;border-radius:0.5rem;flex-shrink:0;object-fit:cover;">
             <div>
-                <div style="font-weight:700;font-size:0.9375rem;color:#0f172a;line-height:1.2;">NEPSE</div>
-                <div style="font-size:0.7rem;color:#94a3b8;">Analytics Platform</div>
+                <div style="font-weight:700;font-size:0.9375rem;color:#0f172a;line-height:1.2;">Riwash Money</div>
+                <div style="font-size:0.7rem;color:#94a3b8;">NEPSE Analytics Platform</div>
             </div>
         </div>
 
@@ -155,7 +150,7 @@
         <div style="padding:0.75rem;border-top:1px solid #e2e8f0;">
             @auth
             <div style="display:flex;align-items:center;gap:0.75rem;padding:0.5rem;">
-                <div style="width:32px;height:32px;border-radius:9999px;flex-shrink:0;background:linear-gradient(135deg,#2563eb,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:0.8125rem;font-weight:700;color:#fff;">
+                <div style="width:32px;height:32px;border-radius:9999px;flex-shrink:0;background:linear-gradient(135deg,#14532D,#16A34A);display:flex;align-items:center;justify-content:center;font-size:0.8125rem;font-weight:700;color:#fff;">
                     {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
                 </div>
                 <div style="flex:1;min-width:0;">
