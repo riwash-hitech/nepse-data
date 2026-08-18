@@ -7,6 +7,7 @@ use App\Services\NepseScraperService;
 use App\Services\PortfolioService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Carbon;
 
 class DashboardController extends Controller
 {
@@ -41,9 +42,77 @@ class DashboardController extends Controller
             }
         }
 
+        // NEPSE index quote for the hero card
+        $nepseIndex = Cache::remember('chukul_index_NEPSE', 300, fn() => $this->scraper->fetchIndexQuote('NEPSE'));
+        $marketStatus = $this->marketStatus();
+
+        // Live market-wide summary (turnover / shares traded) + per-sector
+        // performance + top-volume list, all from the same bulk quote pull.
+        $bulk = Cache::remember('chukul_bulk_summary', 180, fn() => $this->scraper->fetchBulkMarketSummary());
+        $sectorBySymbol = $active->pluck('sector', 'symbol');
+
+        $bulkRows = collect($bulk)->map(fn($s) => [
+            'symbol'         => $s['symbol'] ?? null,
+            'ltp'            => (float) ($s['close'] ?? 0),
+            'change_percent' => (float) ($s['percentage_change'] ?? 0),
+            'turnover'       => (float) ($s['amount'] ?? 0),
+            'volume'         => (float) ($s['volume'] ?? 0),
+            'sector'         => $sectorBySymbol[$s['symbol'] ?? ''] ?? null,
+        ])->filter(fn($s) => $s['symbol']);
+
+        $marketSummary = [
+            'turnover' => $this->formatCompactRupees($bulkRows->sum('turnover')),
+            'volume'   => $this->formatCompactNumber($bulkRows->sum('volume')),
+        ];
+
+        $sectorPerformance = $bulkRows
+            ->filter(fn($r) => $r['sector'])
+            ->groupBy('sector')
+            ->map(fn($g, $name) => [
+                'name'   => $name,
+                'count'  => $g->count(),
+                'weight' => $totalStocks > 0 ? round($g->count() / $totalStocks * 100, 1) : 0,
+                'change' => round($g->avg('change_percent'), 2),
+            ])
+            ->sortByDesc('count')
+            ->values()
+            ->take(3);
+
+        $topVolume = $bulkRows->sortByDesc('volume')->values()->take(4);
+
         return view('dashboard.index', compact(
-            'stockList', 'sectors', 'totalStocks', 'sectorStats', 'portfolioOverview'
+            'stockList', 'sectors', 'totalStocks', 'sectorStats', 'portfolioOverview',
+            'nepseIndex', 'marketStatus', 'marketSummary', 'sectorPerformance', 'topVolume'
         ));
+    }
+
+    /**
+     * Heuristic only (Sun–Thu, 11:00–15:00 Nepal time) — NEPSE doesn't expose
+     * a live session-status API, so this is a documented approximation,
+     * mirrored from the mobile app's market_hours.dart.
+     */
+    private function marketStatus(): array
+    {
+        $now = Carbon::now('Asia/Kathmandu');
+        $isTradingDay = $now->dayOfWeekIso !== Carbon::FRIDAY && $now->dayOfWeekIso !== Carbon::SATURDAY;
+        $open = $now->copy()->setTime(11, 0);
+        $close = $now->copy()->setTime(15, 0);
+        $isOpen = $isTradingDay && $now->between($open, $close);
+
+        return [
+            'open'    => $isOpen,
+            'closesIn' => $isOpen ? $now->diff($close)->format('%hh %im') : null,
+        ];
+    }
+
+    private function formatCompactNumber(float $amount): string
+    {
+        return match (true) {
+            $amount >= 1_000_000_000 => round($amount / 1_000_000_000, 1) . 'B',
+            $amount >= 1_000_000     => round($amount / 1_000_000, 1) . 'M',
+            $amount >= 1_000         => round($amount / 1_000, 1) . 'K',
+            default                  => number_format($amount, 0),
+        };
     }
 
     // ── Public landing page: live indices + top movers ────────────────────────
