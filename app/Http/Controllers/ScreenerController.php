@@ -55,6 +55,9 @@ class ScreenerController extends Controller
         if ($minVol = $request->get('vol_min')) {
             $query->where('sp.volume', '>=', $minVol);
         }
+        if ($changeSign = $request->get('change_sign')) {
+            $query->where('sp.change_percent', $changeSign === 'positive' ? '>' : '<', 0);
+        }
 
         $sortBy = $request->get('sort', 'sp.change_percent');
         $dir    = $request->get('dir', 'desc');
