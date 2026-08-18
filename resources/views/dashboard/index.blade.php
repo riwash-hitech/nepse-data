@@ -32,6 +32,11 @@
 @media (max-width: 860px) {
   .sector-volume-grid { grid-template-columns:1fr; }
 }
+.hero-stats-grid { display:grid; grid-template-columns:repeat(2,minmax(140px,1fr)); gap:1rem; width:100%; max-width:340px; }
+@media (max-width: 560px) {
+  .market-hero { padding:1.25rem !important; }
+  .hero-stats-grid { grid-template-columns:1fr; max-width:100%; }
+}
 </style>
 @endpush
 
@@ -41,7 +46,7 @@
 @endphp
 
 {{-- ════ MARKET TECHNICALS MINI-HERO ══════════════════════════════════════ --}}
-<div class="fade-up" style="border-radius:1.25rem;overflow:hidden;margin-bottom:1.75rem;
+<div class="fade-up market-hero" style="border-radius:1.25rem;overflow:hidden;margin-bottom:1.75rem;
      background:linear-gradient(135deg,#14532D 0%,#166534 100%);
      position:relative;padding:1.75rem 2rem;">
 
@@ -91,7 +96,7 @@
       </div>
     </div>
 
-    <div style="display:grid;grid-template-columns:repeat(2,minmax(140px,1fr));gap:1rem;width:100%;max-width:340px;">
+    <div class="hero-stats-grid">
       <div style="background:rgba(255,255,255,.1);backdrop-filter:blur(8px);border-radius:.75rem;padding:1rem;border:1px solid rgba(255,255,255,.15);">
         <p style="font-size:.7rem;color:rgba(255,255,255,.7);margin:0 0 .3rem;">NEPSE Index</p>
         @if($nepseIndex)

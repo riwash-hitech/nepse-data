@@ -7,9 +7,9 @@ use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\SyncController;
 
 // ── Public marketing page ──────────────────────────────────────────────────────
-Route::get('/', function (DashboardController $dashboard) {
-    return auth()->check() ? redirect()->route('dashboard') : $dashboard->landing();
-})->name('landing');
+// Shown to everyone, logged in or not — logged-in users reach the dashboard
+// via the nav link, not an automatic redirect.
+Route::get('/', [DashboardController::class, 'landing'])->name('landing');
 
 // ── Main Dashboard ────────────────────────────────────────────────────────────
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

@@ -39,8 +39,12 @@ class WatchlistController extends Controller
                 'stock_id'       => $w->stock_id,
                 'symbol'         => $stock->symbol,
                 'name'           => $stock->name,
+                'sector'         => $stock->sector->name ?? null,
                 'ltp'            => $last ? (float) $last['close'] : null,
                 'change_percent' => $last ? (float) ($last['change_percent'] ?? 0) : null,
+                'high'           => $last ? (float) ($last['high'] ?? 0) : null,
+                'low'            => $last ? (float) ($last['low'] ?? 0) : null,
+                'volume'         => $last ? (float) ($last['volume'] ?? 0) : null,
                 'signal_type'    => $signal['signal_type'] ?? null,
                 'confidence'     => $signal['confidence'] ?? null,
             ];

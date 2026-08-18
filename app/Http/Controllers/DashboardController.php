@@ -27,10 +27,15 @@ class DashboardController extends Controller
         $active     = collect($stockList)->filter(fn($s) => !($s['is_delisted'] ?? false) && !($s['is_merged'] ?? false));
         $totalStocks = $active->count();
 
+        // The stock list's `sector` field is a numeric Chukul sector ID —
+        // map it through the sector list to get real display names.
+        $sectorNameById = collect($sectors)->pluck('name', 'id');
+        $sectorName     = fn($id) => $sectorNameById[$id] ?? null;
+
         // Sector breakdown
         $sectorStats = $active
-            ->groupBy('sector')
-            ->map(fn($g, $name) => ['name' => $name ?: 'Other', 'count' => $g->count()])
+            ->groupBy(fn($s) => $sectorName($s['sector'] ?? null) ?: 'Other')
+            ->map(fn($g, $name) => ['name' => $name, 'count' => $g->count()])
             ->sortByDesc('count')
             ->values();
 
@@ -59,7 +64,7 @@ class DashboardController extends Controller
             'change_percent' => (float) ($s['percentage_change'] ?? 0),
             'turnover'       => (float) ($s['amount'] ?? 0),
             'volume'         => (float) ($s['volume'] ?? 0),
-            'sector'         => $sectorBySymbol[$s['symbol'] ?? ''] ?? null,
+            'sector'         => $sectorName($sectorBySymbol[$s['symbol'] ?? ''] ?? null),
         ])->filter(fn($s) => $s['symbol']);
 
         $marketSummary = [

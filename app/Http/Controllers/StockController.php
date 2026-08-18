@@ -30,6 +30,12 @@ class StockController extends Controller
         $all  = Cache::remember('chukul_stock_list', 3600, fn() => $this->scraper->fetchStockList());
         $bulk = Cache::remember('chukul_bulk_summary', 180, fn() => $this->scraper->fetchBulkMarketSummary());
 
+        // The stock list's `sector` field is a numeric Chukul sector ID, not
+        // a display name — map it through the sector list to get real names.
+        $sectorList     = Cache::remember('chukul_sector_list', 3600, fn() => $this->scraper->fetchSectorList());
+        $sectorNameById = collect($sectorList)->pluck('name', 'id');
+        $sectorName     = fn($id) => $sectorNameById[$id] ?? null;
+
         $quotesBySymbol = collect($bulk)->keyBy('symbol');
         $quoteFor = function (string $symbol) use ($quotesBySymbol) {
             $q = $quotesBySymbol->get($symbol);
@@ -52,12 +58,12 @@ class StockController extends Controller
                     str_contains(strtoupper($s['name'] ?? ''), $up)
                 );
             })
-            ->when($sector, fn($c) => $c->filter(fn($s) => ($s['sector'] ?? '') === $sector))
+            ->when($sector, fn($c) => $c->filter(fn($s) => $sectorName($s['sector'] ?? null) === $sector))
             ->values()
             ->map(fn($s) => (object)[
                 'symbol'       => $s['symbol'],
                 'name'         => $s['name'],
-                'sector'       => $s['sector'] ? (object)['name' => $s['sector']] : null,
+                'sector'       => $sectorName($s['sector'] ?? null) ? (object)['name' => $sectorName($s['sector'])] : null,
                 'latestPrice'  => $quoteFor($s['symbol']),
                 'latestSignal' => null,
             ]);
@@ -80,7 +86,8 @@ class StockController extends Controller
         );
 
         $sectors = collect($all)
-            ->pluck('sector')->filter()->unique()->sort()->values();
+            ->pluck('sector')->filter()->unique()
+            ->map($sectorName)->filter()->unique()->sort()->values();
 
         // NEPSE index quote + market-wide summary for the overview header
         $nepseIndex  = Cache::remember('chukul_index_NEPSE', 300, fn() => $this->scraper->fetchIndexQuote('NEPSE'));
@@ -167,11 +174,17 @@ class StockController extends Controller
         $stockList = Cache::remember('chukul_stock_list', 3600, fn() => $this->scraper->fetchStockList());
         $info      = collect($stockList)->firstWhere('symbol', $symbol) ?? [];
 
+        // The stock list's `sector` field is a numeric Chukul sector ID —
+        // map it through the sector list to get the real display name.
+        $sectorList     = Cache::remember('chukul_sector_list', 3600, fn() => $this->scraper->fetchSectorList());
+        $sectorNameById = collect($sectorList)->pluck('name', 'id');
+        $sectorName     = isset($info['sector']) ? ($sectorNameById[$info['sector']] ?? null) : null;
+
         // Build view-compatible objects
         $stock     = (object)[
             'symbol' => $symbol,
             'name'   => $info['name'] ?? $symbol,
-            'sector' => isset($info['sector']) ? (object)['name' => $info['sector']] : null,
+            'sector' => $sectorName ? (object)['name' => $sectorName] : null,
         ];
         $indicator = !empty($analytics['indicator']) ? (object)$analytics['indicator'] : null;
 

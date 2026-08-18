@@ -25,6 +25,11 @@
         .nav-sublink:hover { color:#0f172a; background:#f1f5f9; }
         .nav-sublink.active { color:#14532D; background:#DCFCE7; font-weight:600; }
         .nav-sublink .dot { width:5px; height:5px; border-radius:9999px; background:currentColor; opacity:0.5; flex-shrink:0; }
+        @media (max-width: 480px) {
+            header { padding: 0.5rem 0.75rem !important; }
+            #marketTime { display: none; }
+            main { padding: 1rem 0.75rem !important; }
+        }
     </style>
 </head>
 <body style="background:#f5f7fa;color:#0f172a;font-family:Inter,sans-serif;margin:0;padding:0;">

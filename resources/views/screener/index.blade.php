@@ -83,13 +83,13 @@
             <thead>
                 <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;">
                     <th class="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider whitespace-nowrap" style="color:#64748b;">Symbol</th>
-                    <th class="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider whitespace-nowrap" style="color:#64748b;">Sector</th>
+                    <th class="hidden md:table-cell text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider whitespace-nowrap" style="color:#64748b;">Sector</th>
                     <th class="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wider whitespace-nowrap" style="color:#64748b;">LTP</th>
                     <th class="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wider whitespace-nowrap" style="color:#64748b;">Change %</th>
-                    <th class="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wider whitespace-nowrap" style="color:#64748b;">Volume</th>
-                    <th class="text-center px-4 py-3 text-xs font-semibold uppercase tracking-wider whitespace-nowrap" style="color:#64748b;">RSI (14)</th>
+                    <th class="hidden lg:table-cell text-right px-4 py-3 text-xs font-semibold uppercase tracking-wider whitespace-nowrap" style="color:#64748b;">Volume</th>
+                    <th class="hidden sm:table-cell text-center px-4 py-3 text-xs font-semibold uppercase tracking-wider whitespace-nowrap" style="color:#64748b;">RSI (14)</th>
                     <th class="text-center px-4 py-3 text-xs font-semibold uppercase tracking-wider whitespace-nowrap" style="color:#64748b;">Signal</th>
-                    <th class="text-center px-4 py-3 text-xs font-semibold uppercase tracking-wider whitespace-nowrap" style="color:#64748b;">Action</th>
+                    <th class="hidden sm:table-cell text-center px-4 py-3 text-xs font-semibold uppercase tracking-wider whitespace-nowrap" style="color:#64748b;">Action</th>
                 </tr>
             </thead>
             <tbody style="color:#0f172a;">
@@ -104,7 +104,7 @@
                         </a>
                         <div class="text-xs mt-0.5" style="color:#94a3b8;">{{ Str::limit($stock->name, 20) }}</div>
                     </td>
-                    <td class="px-4 py-3">
+                    <td class="hidden md:table-cell px-4 py-3">
                         @if($stock->sector)
                         <span class="text-xs px-2 py-0.5 rounded" style="background:#DCFCE7;color:#14532D;">
                             {{ $stock->sector->name }}
@@ -115,8 +115,8 @@
                     <td class="text-right font-mono px-4 py-3 {{ $p && $p->change_percent >= 0 ? 'change-pos' : 'change-neg' }}">
                         {{ $p ? ($p->change_percent >= 0 ? '+' : '') . number_format($p->change_percent, 2) . '%' : '—' }}
                     </td>
-                    <td class="text-right font-mono px-4 py-3" style="color:#64748b;">{{ $p ? number_format($p->volume) : '—' }}</td>
-                    <td class="text-center font-mono px-4 py-3">
+                    <td class="hidden lg:table-cell text-right font-mono px-4 py-3" style="color:#64748b;">{{ $p ? number_format($p->volume) : '—' }}</td>
+                    <td class="hidden sm:table-cell text-center font-mono px-4 py-3">
                         @if($stock->latestIndicator)
                         @php $rsi = $stock->latestIndicator->rsi_14 ?? null; @endphp
                         @if($rsi)

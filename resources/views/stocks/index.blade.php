@@ -181,29 +181,30 @@
         <table class="w-full text-sm border-collapse">
             <thead>
                 <tr style="border-bottom:1px solid #e2e8f0;background:#f8fafc;">
-                    <th class="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:#64748b;">#</th>
+                    <th class="hidden sm:table-cell text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:#64748b;">#</th>
                     <th class="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:#64748b;">Symbol</th>
-                    <th class="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:#64748b;">Company</th>
-                    <th class="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:#64748b;">Sector</th>
+                    <th class="hidden md:table-cell text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:#64748b;">Company</th>
+                    <th class="hidden sm:table-cell text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:#64748b;">Sector</th>
                     <th class="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:#64748b;">LTP</th>
                     <th class="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:#64748b;">Change</th>
-                    <th class="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:#64748b;">Volume</th>
-                    <th class="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:#64748b;">Turnover</th>
+                    <th class="hidden lg:table-cell text-right px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:#64748b;">Volume</th>
+                    <th class="hidden lg:table-cell text-right px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:#64748b;">Turnover</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($stocks as $i => $stock)
                 @php $p = $stock->latestPrice; @endphp
                 <tr class="market-row transition-colors" style="border-bottom:1px solid #f1f5f9;">
-                    <td class="px-4 py-3" style="color:#94a3b8;">{{ $stocks->firstItem() + $i }}</td>
+                    <td class="hidden sm:table-cell px-4 py-3" style="color:#94a3b8;">{{ $stocks->firstItem() + $i }}</td>
                     <td class="px-4 py-3">
                         <a href="{{ route('stocks.show', $stock->symbol) }}" class="font-bold transition-colors" style="color:#0f172a;"
                            onmouseover="this.style.color='#14532D'" onmouseout="this.style.color='#0f172a'">
                             {{ $stock->symbol }}
                         </a>
+                        <div class="sm:hidden" style="font-size:.7rem;color:#94a3b8;">{{ $stock->sector->name ?? '' }}</div>
                     </td>
-                    <td class="px-4 py-3" style="color:#64748b;">{{ Str::limit($stock->name, 30) }}</td>
-                    <td class="px-4 py-3">
+                    <td class="hidden md:table-cell px-4 py-3" style="color:#64748b;">{{ Str::limit($stock->name, 30) }}</td>
+                    <td class="hidden sm:table-cell px-4 py-3">
                         @if($stock->sector)
                         <span class="text-xs px-2 py-0.5 rounded" style="background:#DCFCE7;color:#14532D;">{{ $stock->sector->name }}</span>
                         @else
@@ -214,8 +215,8 @@
                     <td class="text-right font-mono px-4 py-3 {{ $p && $p->change_percent >= 0 ? 'change-pos' : 'change-neg' }}">
                         @if($p) {{ $p->change_percent >= 0 ? '+' : '' }}{{ number_format($p->change_percent, 2) }}% @else — @endif
                     </td>
-                    <td class="text-right font-mono px-4 py-3" style="color:#64748b;">{{ $p ? number_format($p->volume) : '—' }}</td>
-                    <td class="text-right font-mono px-4 py-3" style="color:#64748b;">{{ $p ? \App\Services\MarketFormatter::compactRupees($p->turnover) : '—' }}</td>
+                    <td class="hidden lg:table-cell text-right font-mono px-4 py-3" style="color:#64748b;">{{ $p ? number_format($p->volume) : '—' }}</td>
+                    <td class="hidden lg:table-cell text-right font-mono px-4 py-3" style="color:#64748b;">{{ $p ? \App\Services\MarketFormatter::compactRupees($p->turnover) : '—' }}</td>
                 </tr>
                 @empty
                 <tr>

@@ -45,6 +45,11 @@
         .nav-links a{font-size:.9rem;font-weight:600;color:var(--text-2);transition:color .15s;}
         .nav-links a:hover{color:var(--brand);}
         .nav-actions{display:flex;align-items:center;gap:.75rem;}
+        @media(max-width:760px){
+            .nav-links{display:none;}
+            .brand{font-size:.95rem;}
+            .brand img{width:28px;height:28px;}
+        }
         .btn{display:inline-flex;align-items:center;justify-content:center;padding:.6rem 1.15rem;border-radius:.6rem;font-weight:600;font-size:.9rem;border:1px solid transparent;transition:.15s;}
         .btn-ghost{color:var(--brand);}
         .btn-ghost:hover{background:var(--accent-dim);}

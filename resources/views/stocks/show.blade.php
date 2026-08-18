@@ -13,6 +13,17 @@
 .card{background:#fff;border:1px solid #e2e8f0;border-radius:.75rem;padding:1.25rem;box-shadow:0 1px 3px rgba(0,0,0,.05);}
 .card-sm{background:#f8fafc;border:1px solid #e2e8f0;border-radius:.625rem;padding:.875rem;}
 .section-lbl{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin-bottom:.75rem;}
+.day-strip{display:grid;grid-template-columns:repeat(7,1fr);gap:.5rem;}
+@media (max-width:640px){
+  .day-strip{grid-template-columns:repeat(4,1fr);}
+}
+@media (max-width:400px){
+  .day-strip{grid-template-columns:repeat(3,1fr);}
+}
+.trend-lock-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;}
+@media (max-width:560px){
+  .trend-lock-grid{grid-template-columns:repeat(2,1fr);}
+}
 .sig-buy{background:var(--up-bg);border:2px solid var(--up-bd);}
 .sig-sell{background:var(--dn-bg);border:2px solid var(--dn-bd);}
 .sig-hold{background:#fefce8;border:2px solid #fde68a;}
@@ -377,7 +388,7 @@
 @else
 {{-- Guest lock: trend analysis --}}
 <div style="position:relative;border-radius:1rem;overflow:hidden;margin-bottom:1.25rem;">
-  <div style="filter:blur(5px);user-select:none;pointer-events:none;display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;padding:.75rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:1rem;">
+  <div class="trend-lock-grid" style="filter:blur(5px);user-select:none;pointer-events:none;padding:.75rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:1rem;">
     @foreach(['Very Short Term','Short Term','Mid Term','Long Term'] as $tl)
     <div style="background:#fff;border:1px solid #e2e8f0;border-radius:.75rem;padding:1rem;">
       <div style="height:.6rem;background:#e2e8f0;border-radius:9999px;width:60%;margin-bottom:.5rem;"></div>
@@ -455,7 +466,7 @@
   </div>
 
   {{-- Timeline strip --}}
-  <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:.5rem;">
+  <div class="day-strip">
     @foreach($prediction7d as $day)
     @php
       $isUp   = $day['direction'] === 'up';
@@ -585,7 +596,7 @@
 <div style="position:relative;border-radius:1rem;overflow:hidden;margin-bottom:1.25rem;">
   <div style="filter:blur(5px);user-select:none;pointer-events:none;padding:1.25rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:1rem;">
     <div style="height:.75rem;background:#e2e8f0;border-radius:9999px;width:40%;margin-bottom:1rem;"></div>
-    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:.5rem;margin-bottom:.875rem;">
+    <div class="day-strip" style="margin-bottom:.875rem;">
       @foreach(range(1,7) as $_)
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:.5rem;padding:.75rem .5rem;text-align:center;">
         <div style="height:.6rem;background:#e2e8f0;border-radius:9999px;margin-bottom:.4rem;"></div>
