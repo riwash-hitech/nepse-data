@@ -88,6 +88,7 @@ class SignalEngine
             macd: $macd,
             sma20: $sma20,
             sma50: $sma50,
+            sma200: $sma200,
             support1: $support1,
             resistance1: $resistance1,
             volumes: $volumes,

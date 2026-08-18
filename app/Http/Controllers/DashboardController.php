@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\FetchLiveMarketDataJob;
+use App\Models\Watchlist;
 use App\Services\MarketFormatter;
 use App\Services\MarketHours;
 use App\Services\NepseScraperService;
@@ -81,9 +82,32 @@ class DashboardController extends Controller
 
         $topVolume = $bulkRows->sortByDesc('volume')->values()->take(4);
 
+        // Watchlist preview for logged-in users — reuses the same live
+        // bulk quote pull above, so no extra API calls are needed.
+        $watchlistPreview = null;
+        if (Auth::check()) {
+            $quotesBySymbol = $bulkRows->keyBy('symbol');
+            $watchlistPreview = Watchlist::with('stock')
+                ->where('user_id', Auth::id())
+                ->orderBy('sort_order')
+                ->get()
+                ->filter(fn($w) => $w->stock)
+                ->map(function ($w) use ($quotesBySymbol) {
+                    $q = $quotesBySymbol->get($w->stock->symbol);
+                    return [
+                        'symbol'         => $w->stock->symbol,
+                        'name'           => $w->stock->name,
+                        'ltp'            => $q['ltp'] ?? null,
+                        'change_percent' => $q['change_percent'] ?? null,
+                    ];
+                })
+                ->values();
+        }
+
         return view('dashboard.index', compact(
             'stockList', 'sectors', 'totalStocks', 'sectorStats', 'portfolioOverview',
-            'nepseIndex', 'marketStatus', 'marketSummary', 'sectorPerformance', 'topVolume'
+            'nepseIndex', 'marketStatus', 'marketSummary', 'sectorPerformance', 'topVolume',
+            'watchlistPreview'
         ));
     }
 

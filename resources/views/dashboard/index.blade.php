@@ -164,6 +164,46 @@
 </div>
 @endif
 
+{{-- ════ YOUR WATCHLIST ════════════════════════════════════════════════════ --}}
+@if($watchlistPreview && $watchlistPreview->isNotEmpty())
+<div class="fade-up" style="background:#fff;border:1px solid #e2e8f0;border-radius:1rem;
+     padding:1.5rem;margin-bottom:1.75rem;box-shadow:0 1px 3px rgba(0,0,0,.04);">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:.5rem;">
+    <div style="display:flex;align-items:center;gap:.5rem;font-size:1rem;font-weight:700;color:#0f172a;">
+      <span class="material-symbols-outlined" style="color:#416550;font-size:20px;">star</span>
+      Your Watchlist
+    </div>
+    <a href="{{ route('watchlist.index') }}" style="font-size:.75rem;color:#14532D;text-decoration:none;
+       padding:.3rem .75rem;border-radius:.5rem;background:#DCFCE7;border:1px solid #bbf7d0;font-weight:600;
+       display:inline-flex;align-items:center;gap:.25rem;">
+      Full Watchlist <span class="material-symbols-outlined" style="font-size:16px;">arrow_forward</span>
+    </a>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.875rem;">
+    @foreach($watchlistPreview->take(6) as $w)
+    <a href="{{ route('stocks.show', $w['symbol']) }}" class="card-hover"
+       style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.75rem .875rem;
+              background:#f8fafc;border:1px solid #e2e8f0;border-radius:.625rem;text-decoration:none;">
+      <div style="min-width:0;">
+        <div style="font-size:.85rem;font-weight:700;color:#0f172a;">{{ $w['symbol'] }}</div>
+        <div style="font-size:.68rem;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ Str::limit($w['name'], 18) }}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-size:.8rem;font-weight:700;font-family:'JetBrains Mono',monospace;color:#0f172a;">
+          {{ $w['ltp'] !== null ? number_format($w['ltp'], 2) : '—' }}
+        </div>
+        @if($w['change_percent'] !== null)
+        <div style="font-size:.7rem;font-weight:600;" class="{{ $w['change_percent'] >= 0 ? 'change-pos' : 'change-neg' }}">
+          {{ $w['change_percent'] >= 0 ? '+' : '' }}{{ number_format($w['change_percent'], 2) }}%
+        </div>
+        @endif
+      </div>
+    </a>
+    @endforeach
+  </div>
+</div>
+@endif
+
 {{-- ════ MARKET SUMMARY ════════════════════════════════════════════════════ --}}
 <div class="fade-up fade-d1" style="margin-bottom:1.75rem;">
   <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:1rem;font-size:1rem;font-weight:700;color:#0f172a;">
