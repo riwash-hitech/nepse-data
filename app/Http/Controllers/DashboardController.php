@@ -4,11 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Jobs\FetchLiveMarketDataJob;
 use App\Services\NepseScraperService;
+use App\Services\PortfolioService;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
 class DashboardController extends Controller
 {
-    public function __construct(private readonly NepseScraperService $scraper) {}
+    public function __construct(
+        private readonly NepseScraperService $scraper,
+        private readonly PortfolioService $portfolio,
+    ) {}
 
     public function index()
     {
@@ -26,8 +31,18 @@ class DashboardController extends Controller
             ->sortByDesc('count')
             ->values();
 
+        // Portfolio P&L snapshot for logged-in users only
+        $portfolioOverview = null;
+        if (Auth::check()) {
+            try {
+                $portfolioOverview = $this->portfolio->overview(Auth::user());
+            } catch (\Throwable $e) {
+                $portfolioOverview = null;
+            }
+        }
+
         return view('dashboard.index', compact(
-            'stockList', 'sectors', 'totalStocks', 'sectorStats'
+            'stockList', 'sectors', 'totalStocks', 'sectorStats', 'portfolioOverview'
         ));
     }
 

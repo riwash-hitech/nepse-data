@@ -14,6 +14,7 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _emailCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   final _confirmCtrl = TextEditingController();
   bool _submitting = false;
@@ -23,12 +24,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   void dispose() {
     _emailCtrl.dispose();
+    _phoneCtrl.dispose();
     _passCtrl.dispose();
     _confirmCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
+    if (_phoneCtrl.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Phone number is required.')));
+      return;
+    }
     if (_passCtrl.text != _confirmCtrl.text) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Passwords do not match.')));
       return;
@@ -41,6 +47,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _submitting = true);
     final ok = await context.read<AuthProvider>().register(
           _emailCtrl.text.trim(),
+          _phoneCtrl.text.trim(),
           _passCtrl.text,
           _confirmCtrl.text,
         );
@@ -65,6 +72,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
               icon: Icons.mail_outline,
               hint: 'trader@domain.com',
               keyboardType: TextInputType.emailAddress,
+            ),
+            const SizedBox(height: 18),
+            AuthField(
+              label: 'PHONE NUMBER',
+              controller: _phoneCtrl,
+              icon: Icons.phone_outlined,
+              hint: '98XXXXXXXX',
+              keyboardType: TextInputType.phone,
             ),
             const SizedBox(height: 18),
             AuthField(

@@ -118,6 +118,47 @@
   </div>
 </div>
 
+{{-- ════ YOUR PORTFOLIO ════════════════════════════════════════════════════ --}}
+@if($portfolioOverview)
+<div class="fade-up" style="background:#fff;border:1px solid #e2e8f0;border-radius:1rem;
+     padding:1.5rem;margin-bottom:1.75rem;box-shadow:0 1px 3px rgba(0,0,0,.04);">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:.5rem;">
+    <div style="font-size:1rem;font-weight:700;color:#0f172a;">💼 Your Portfolio</div>
+    <a href="{{ route('portfolio.overview') }}" style="font-size:.75rem;color:#14532D;text-decoration:none;
+       padding:.3rem .75rem;border-radius:.5rem;background:#DCFCE7;border:1px solid #bbf7d0;font-weight:600;">
+      Full Portfolio →
+    </a>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;">
+    @php
+      $pStats = [
+        ['label'=>'Investment', 'value'=>$portfolioOverview['investment'], 'signed'=>false],
+        ['label'=>'Market Value', 'value'=>$portfolioOverview['market_value'], 'signed'=>false],
+        ["label"=>"Day G/L", 'value'=>$portfolioOverview['day_gain_loss'], 'signed'=>true],
+        ['label'=>'Unrealized G/L', 'value'=>$portfolioOverview['unrealized'], 'signed'=>true],
+        ['label'=>'Realized G/L', 'value'=>$portfolioOverview['realized'], 'signed'=>true],
+      ];
+    @endphp
+    @foreach($pStats as $ps)
+    <div>
+      <div style="font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:.3rem;">
+        {{ $ps['label'] }}
+      </div>
+      <div style="font-size:1.15rem;font-weight:800;font-family:'JetBrains Mono',monospace;
+           color:{{ $ps['signed'] ? ($ps['value'] >= 0 ? '#16a34a' : '#dc2626') : '#0f172a' }};">
+        {{ $ps['signed'] && $ps['value'] > 0 ? '+' : '' }}{{ number_format($ps['value'], 2) }}
+      </div>
+    </div>
+    @endforeach
+  </div>
+  @if($portfolioOverview['stock_count'] === 0)
+  <div style="margin-top:1rem;font-size:.8rem;color:#94a3b8;">
+    You haven't added any holdings yet. <a href="{{ route('portfolio.adjust') }}" style="color:#14532D;font-weight:600;">Add your first transaction →</a>
+  </div>
+  @endif
+</div>
+@endif
+
 {{-- ════ QUICK NAV ═════════════════════════════════════════════════════════ --}}
 <div class="fade-up fade-d1" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));
      gap:.875rem;margin-bottom:1.75rem;">

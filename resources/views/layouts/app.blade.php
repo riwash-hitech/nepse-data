@@ -243,6 +243,23 @@
             @endif
             @yield('content')
         </main>
+
+        <footer style="padding:1.25rem 1rem 1.5rem;">
+            <div style="display:flex;gap:.75rem;align-items:flex-start;font-size:.78rem;color:#7f1d1d;
+                 line-height:1.6;background:#fef2f2;border:1px solid #fecaca;border-left:4px solid #dc2626;
+                 border-radius:.75rem;padding:.875rem 1.125rem;max-width:960px;">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                     style="flex-shrink:0;margin-top:.1rem;color:#dc2626;">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                </svg>
+                <p style="margin:0;">
+                    Riwash Money is built specially for NEPSE portfolio management. Buy/sell signals, predictions and
+                    technical indicators shown on this site and app are for informational purposes only — they are
+                    <strong style="color:#b91c1c;font-weight:700;">not investment advice or a recommendation to trade</strong>.
+                    Do your own research and consult a licensed advisor before making any investment decision.
+                </p>
+            </div>
+        </footer>
     </div>
 
     <script>

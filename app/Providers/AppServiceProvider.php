@@ -6,6 +6,9 @@ use App\Services\IndicatorService;
 use App\Services\SignalEngine;
 use App\Services\NepseScraperService;
 use App\Services\AlertService;
+use Illuminate\Auth\Events\Registered;
+use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Pagination\Paginator;
 
@@ -25,6 +28,8 @@ class AppServiceProvider extends ServiceProvider
     {
         Paginator::useBootstrapFive();
         Paginator::defaultView('vendor.pagination.tailwind');
+
+        Event::listen(Registered::class, SendEmailVerificationNotification::class);
     }
 }
 

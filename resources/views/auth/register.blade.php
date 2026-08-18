@@ -165,6 +165,14 @@
                required autocomplete="username">
       </div>
 
+      <div class="field">
+        <label for="phone">Phone number</label>
+        <input id="phone" type="tel" name="phone"
+               value="{{ old('phone') }}"
+               placeholder="98XXXXXXXX"
+               required autocomplete="tel">
+      </div>
+
       <div class="field-row">
         <div class="field">
           <label for="password">Password</label>

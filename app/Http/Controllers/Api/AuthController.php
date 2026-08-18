@@ -19,14 +19,16 @@ class AuthController extends Controller
     {
         $validated = $request->validate([
             'email'    => 'required|string|lowercase|email|max:255|unique:users,email',
+            'phone'    => 'required|string|max:20',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
         $user = User::create([
-            // Self-registration only asks for email + password — a display
-            // name isn't collected, so derive a starting one from the email.
+            // Self-registration only asks for email + phone + password — a
+            // display name isn't collected, so derive a starting one from the email.
             'name'     => ucfirst(Str::before($validated['email'], '@')),
             'email'    => $validated['email'],
+            'phone'    => $validated['phone'],
             'password' => Hash::make($validated['password']),
             'role_id'  => User::ROLE_USER,
         ]);
@@ -38,10 +40,11 @@ class AuthController extends Controller
         return response()->json([
             'token' => $token,
             'user'  => [
-                'id'       => $user->id,
-                'name'     => $user->name,
-                'email'    => $user->email,
-                'is_admin' => $user->isAdmin(),
+                'id'             => $user->id,
+                'name'           => $user->name,
+                'email'          => $user->email,
+                'is_admin'       => $user->isAdmin(),
+                'email_verified' => $user->hasVerifiedEmail(),
             ],
         ], 201);
     }
@@ -83,10 +86,11 @@ class AuthController extends Controller
         return response()->json([
             'token' => $token,
             'user'  => [
-                'id'       => $user->id,
-                'name'     => $user->name,
-                'email'    => $user->email,
-                'is_admin' => $user->isAdmin(),
+                'id'             => $user->id,
+                'name'           => $user->name,
+                'email'          => $user->email,
+                'is_admin'       => $user->isAdmin(),
+                'email_verified' => $user->hasVerifiedEmail(),
             ],
         ]);
     }
@@ -96,10 +100,11 @@ class AuthController extends Controller
         $user = $request->user();
 
         return response()->json([
-            'id'       => $user->id,
-            'name'     => $user->name,
-            'email'    => $user->email,
-            'is_admin' => $user->isAdmin(),
+            'id'             => $user->id,
+            'name'           => $user->name,
+            'email'          => $user->email,
+            'is_admin'       => $user->isAdmin(),
+            'email_verified' => $user->hasVerifiedEmail(),
         ]);
     }
 
@@ -108,5 +113,18 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->json(['message' => 'Logged out.']);
+    }
+
+    public function resendVerification(Request $request)
+    {
+        $user = $request->user();
+
+        if ($user->hasVerifiedEmail()) {
+            return response()->json(['message' => 'Email already verified.']);
+        }
+
+        $user->sendEmailVerificationNotification();
+
+        return response()->json(['message' => 'Verification email sent.']);
     }
 }

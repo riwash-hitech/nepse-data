@@ -37,7 +37,7 @@ Route::post('/ipo/refresh', [IpoController::class, 'refreshCompanies'])->name('i
 Route::get('/screener', [ScreenerController::class, 'index'])->name('screener.index');
 
 // ── Auth-protected ────────────────────────────────────────────────────────────
-Route::middleware(['auth', 'no-cache'])->group(function () {
+Route::middleware(['auth', 'verified', 'no-cache'])->group(function () {
     Route::get('/watchlist', [WatchlistController::class, 'index'])->name('watchlist.index');
     Route::post('/watchlist', [WatchlistController::class, 'store'])->name('watchlist.store');
     Route::delete('/watchlist/{stock}', [WatchlistController::class, 'destroy'])->name('watchlist.destroy');

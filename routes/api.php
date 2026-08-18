@@ -23,17 +23,22 @@ Route::get('/stocks/{symbol}/chart', [MarketController::class, 'chartData']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/email/verification-notification', [AuthController::class, 'resendVerification']);
 
-    Route::get('/watchlist', [WatchlistController::class, 'index']);
-    Route::post('/watchlist', [WatchlistController::class, 'store']);
-    Route::delete('/watchlist/{stock}', [WatchlistController::class, 'destroy']);
+    // Everything below requires a verified email address — an unverified
+    // user gets a 403 here (see Illuminate\Auth\Middleware\EnsureEmailIsVerified).
+    Route::middleware('verified')->group(function () {
+        Route::get('/watchlist', [WatchlistController::class, 'index']);
+        Route::post('/watchlist', [WatchlistController::class, 'store']);
+        Route::delete('/watchlist/{stock}', [WatchlistController::class, 'destroy']);
 
-    Route::prefix('portfolio')->group(function () {
-        Route::get('/overview', [PortfolioController::class, 'overview']);
-        Route::get('/holdings', [PortfolioController::class, 'holdings']);
-        Route::get('/realized', [PortfolioController::class, 'realized']);
-        Route::get('/transactions', [PortfolioController::class, 'transactions']);
-        Route::post('/adjust', [PortfolioController::class, 'adjustStore']);
-        Route::get('/stocks/search', [PortfolioController::class, 'searchStocks']);
+        Route::prefix('portfolio')->group(function () {
+            Route::get('/overview', [PortfolioController::class, 'overview']);
+            Route::get('/holdings', [PortfolioController::class, 'holdings']);
+            Route::get('/realized', [PortfolioController::class, 'realized']);
+            Route::get('/transactions', [PortfolioController::class, 'transactions']);
+            Route::post('/adjust', [PortfolioController::class, 'adjustStore']);
+            Route::get('/stocks/search', [PortfolioController::class, 'searchStocks']);
+        });
     });
 });

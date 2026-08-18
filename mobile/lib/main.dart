@@ -4,6 +4,7 @@ import 'services/auth_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_shell.dart';
 import 'screens/splash_screen.dart';
+import 'screens/verify_email_screen.dart';
 import 'theme/app_theme.dart';
 
 void main() {
@@ -36,6 +37,9 @@ class _Root extends StatelessWidget {
     if (auth.loading) {
       return const SplashScreen();
     }
-    return auth.isAuthenticated ? const HomeShell() : const LoginScreen();
+    if (!auth.isAuthenticated) {
+      return const LoginScreen();
+    }
+    return auth.emailVerified ? const HomeShell() : const VerifyEmailScreen();
   }
 }

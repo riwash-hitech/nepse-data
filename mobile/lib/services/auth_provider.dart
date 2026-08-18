@@ -9,6 +9,7 @@ class AuthProvider extends ChangeNotifier {
   String? _name;
   String? _email;
   bool _isAdmin = false;
+  bool _emailVerified = true;
   String? _error;
 
   bool get loading => _loading;
@@ -16,6 +17,7 @@ class AuthProvider extends ChangeNotifier {
   String? get name => _name;
   String? get email => _email;
   bool get isAdmin => _isAdmin;
+  bool get emailVerified => _emailVerified;
   String? get error => _error;
 
   Future<void> bootstrap() async {
@@ -31,6 +33,7 @@ class AuthProvider extends ChangeNotifier {
         _name = me['name'];
         _email = me['email'];
         _isAdmin = me['is_admin'] ?? false;
+        _emailVerified = me['email_verified'] ?? true;
       } catch (_) {
         await _api.setToken(null);
         _authed = false;
@@ -51,6 +54,7 @@ class AuthProvider extends ChangeNotifier {
       _name = res['user']['name'];
       _email = res['user']['email'];
       _isAdmin = res['user']['is_admin'] ?? false;
+      _emailVerified = res['user']['email_verified'] ?? true;
       notifyListeners();
       return true;
     } on ApiException catch (e) {
@@ -67,11 +71,12 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> register(String email, String password, String passwordConfirmation) async {
+  Future<bool> register(String email, String phone, String password, String passwordConfirmation) async {
     _error = null;
     try {
       final res = await _api.post('/register', {
         'email': email,
+        'phone': phone,
         'password': password,
         'password_confirmation': passwordConfirmation,
       });
@@ -80,6 +85,7 @@ class AuthProvider extends ChangeNotifier {
       _name = res['user']['name'];
       _email = res['user']['email'];
       _isAdmin = res['user']['is_admin'] ?? false;
+      _emailVerified = res['user']['email_verified'] ?? true;
       notifyListeners();
       return true;
     } on ApiException catch (e) {
@@ -109,6 +115,32 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Re-checks verification status with the server (e.g. after the user taps
+  /// the link in their email and comes back to the app).
+  Future<void> refreshVerificationStatus() async {
+    try {
+      final me = await _api.get('/me');
+      _emailVerified = me['email_verified'] ?? true;
+      notifyListeners();
+    } catch (_) {}
+  }
+
+  Future<bool> resendVerification() async {
+    _error = null;
+    try {
+      await _api.post('/email/verification-notification');
+      return true;
+    } on ApiException catch (e) {
+      _error = e.message;
+      notifyListeners();
+      return false;
+    } catch (_) {
+      _error = 'Something went wrong. Please try again.';
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<void> logout() async {
     try {
       await _api.post('/logout');
@@ -117,6 +149,7 @@ class AuthProvider extends ChangeNotifier {
     _authed = false;
     _name = null;
     _email = null;
+    _emailVerified = true;
     notifyListeners();
   }
 }
