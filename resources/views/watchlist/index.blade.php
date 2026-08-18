@@ -2,12 +2,12 @@
 @section('title', 'My Watchlist')
 
 @section('content')
-<div class="space-y-5">
+<div class="space-y-5" style="max-width:42rem;">
 
     <h1 class="text-2xl font-bold" style="color:#0f172a;">📌 My Watchlist</h1>
 
     {{-- Add to watchlist --}}
-    <div class="glass p-4">
+    <div class="bg-white border rounded-xl p-4" style="border-color:#e2e8f0;">
         <div class="text-xs font-semibold uppercase tracking-wide mb-2" style="color:#94a3b8;">Add Stock</div>
         <form method="POST" action="{{ route('watchlist.store') }}" class="flex flex-col sm:flex-row gap-3">
             @csrf
@@ -31,80 +31,69 @@
     @endif
 
     @if($watchlist->isEmpty())
-        <div class="glass p-12 text-center" style="color:#64748b;">
+        <div class="bg-white border rounded-xl p-12 text-center" style="border-color:#e2e8f0;color:#94a3b8;">
             <p class="mb-3">Your watchlist is empty. Search for a stock above to start tracking it.</p>
             <a href="{{ route('stocks.index') }}" class="btn-primary inline-flex">Browse Stocks</a>
         </div>
     @else
-    <div class="glass overflow-hidden">
-        <div style="overflow-x:auto;">
-        <table class="w-full text-sm">
-            <thead>
-                <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;">
-                    <th class="text-left px-4 py-3 text-xs font-medium uppercase tracking-wider" style="color:#475569;">Symbol</th>
-                    <th class="text-right px-4 py-3 text-xs font-medium uppercase tracking-wider" style="color:#475569;">LTP</th>
-                    <th class="text-right px-4 py-3 text-xs font-medium uppercase tracking-wider" style="color:#475569;">Change%</th>
-                    <th class="text-center px-4 py-3 text-xs font-medium uppercase tracking-wider" style="color:#475569;">Signal</th>
-                    <th class="text-right px-4 py-3 text-xs font-medium uppercase tracking-wider" style="color:#475569;">Confidence</th>
-                    <th class="text-center px-4 py-3 text-xs font-medium uppercase tracking-wider" style="color:#475569;">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($watchlist as $w)
-                <tr style="border-bottom:1px solid #f1f5f9;" class="hover:bg-slate-50 transition-colors">
-                    <td class="px-4 py-3">
-                        <a href="{{ route('stocks.show', $w['symbol']) }}"
-                           class="font-bold hover:text-blue-600 transition-colors" style="color:#0f172a;">
+    <div class="space-y-2">
+        @foreach($watchlist as $w)
+        @php
+            $sigColor = match($w['signal_type']) {
+                'BUY' => '#16a34a', 'SELL' => '#dc2626', 'HOLD' => '#ca8a04', default => null,
+            };
+        @endphp
+        <div class="bg-white border rounded-xl p-3" style="border-color:#e2e8f0;">
+            <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <a href="{{ route('stocks.show', $w['symbol']) }}" class="font-bold text-sm transition-colors" style="color:#0f172a;"
+                           onmouseover="this.style.color='#14532D'" onmouseout="this.style.color='#0f172a'">
                             {{ $w['symbol'] }}
                         </a>
-                        <div class="text-xs mt-0.5" style="color:#94a3b8;">{{ Str::limit($w['name'], 28) }}</div>
-                    </td>
-                    <td class="text-right font-mono px-4 py-3" style="color:#0f172a;">{{ $w['ltp'] !== null ? number_format($w['ltp'], 2) : '—' }}</td>
-                    <td class="text-right font-mono px-4 py-3 {{ $w['change_percent'] !== null && $w['change_percent'] >= 0 ? 'change-pos' : 'change-neg' }}">
-                        {{ $w['change_percent'] !== null ? ($w['change_percent'] >= 0 ? '+' : '') . number_format($w['change_percent'], 2) . '%' : '—' }}
-                    </td>
-                    <td class="text-center px-4 py-3">
                         @if($w['signal_type'])
                             @if($w['signal_type'] === 'BUY')   <span class="badge-buy">BUY</span>
                             @elseif($w['signal_type'] === 'SELL') <span class="badge-sell">SELL</span>
                             @else <span class="badge-hold">HOLD</span>
                             @endif
-                        @else <span style="color:#cbd5e1;">—</span>
                         @endif
-                    </td>
-                    <td class="text-right px-4 py-3">
-                        @if($w['signal_type'])
-                        <div class="flex items-center justify-end gap-2">
-                            <div class="w-16 rounded-full h-1.5" style="background:#e2e8f0;">
-                                <div class="h-1.5 rounded-full"
-                                     style="width:{{ $w['confidence'] }}%;background:{{ $w['signal_type'] === 'BUY' ? '#22c55e' : ($w['signal_type'] === 'SELL' ? '#ef4444' : '#eab308') }};"></div>
-                            </div>
-                            <span class="text-xs font-mono" style="color:#64748b;">{{ $w['confidence'] }}%</span>
-                        </div>
-                        @else <span style="color:#cbd5e1;">—</span>
-                        @endif
-                    </td>
-                    <td class="text-center px-4 py-3">
-                        <div class="flex items-center justify-center gap-2">
-                            <a href="{{ route('stocks.show', $w['symbol']) }}"
-                               class="text-xs px-3 py-1 rounded-md"
-                               style="background:#eff6ff;color:#2563eb;">View</a>
-                            <form method="POST" action="{{ route('watchlist.destroy', $w['stock_id']) }}" class="inline">
-                                @csrf @method('DELETE')
-                                <button type="submit"
-                                        onclick="return confirm('Remove from watchlist?')"
-                                        class="text-xs px-3 py-1 rounded-md transition-colors"
-                                        style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;">
-                                    Remove
-                                </button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
+                    </div>
+                    <div class="text-xs mt-0.5" style="color:#94a3b8;">{{ Str::limit($w['name'], 30) }}{{ $w['sector'] ? ' · '.$w['sector'] : '' }}</div>
+                </div>
+                <div class="text-right flex-shrink-0">
+                    <div class="font-mono font-bold text-sm" style="color:#0f172a;">{{ $w['ltp'] !== null ? number_format($w['ltp'], 2) : '—' }}</div>
+                    <div class="font-mono text-xs font-semibold {{ $w['change_percent'] !== null && $w['change_percent'] >= 0 ? 'change-pos' : 'change-neg' }}">
+                        {{ $w['change_percent'] !== null ? ($w['change_percent'] >= 0 ? '+' : '') . number_format($w['change_percent'], 2) . '%' : '—' }}
+                    </div>
+                </div>
+            </div>
+
+            @if($w['signal_type'])
+            <div class="flex items-center gap-2 mt-2">
+                <div class="flex-1 rounded-full h-1" style="background:#f1f5f9;">
+                    <div class="h-1 rounded-full" style="width:{{ $w['confidence'] }}%;background:{{ $sigColor }};"></div>
+                </div>
+                <span class="text-xs font-mono" style="color:#94a3b8;">{{ $w['confidence'] }}%</span>
+            </div>
+            @endif
+
+            <div class="flex items-center gap-4 mt-2 pt-2 text-xs" style="border-top:1px solid #f1f5f9;color:#94a3b8;">
+                <div><span style="color:#cbd5e1;">High</span> <span class="font-mono" style="color:#374151;">{{ $w['high'] ? number_format($w['high'], 2) : '—' }}</span></div>
+                <div><span style="color:#cbd5e1;">Low</span> <span class="font-mono" style="color:#374151;">{{ $w['low'] ? number_format($w['low'], 2) : '—' }}</span></div>
+                <div><span style="color:#cbd5e1;">Vol</span> <span class="font-mono" style="color:#374151;">{{ $w['volume'] ? number_format($w['volume']) : '—' }}</span></div>
+                <div class="ml-auto flex items-center gap-2">
+                    <a href="{{ route('stocks.show', $w['symbol']) }}" class="px-2 py-1 rounded" style="background:#DCFCE7;color:#14532D;font-weight:600;">View</a>
+                    <form method="POST" action="{{ route('watchlist.destroy', $w['stock_id']) }}" class="inline">
+                        @csrf @method('DELETE')
+                        <button type="submit" onclick="return confirm('Remove from watchlist?')"
+                                class="px-2 py-1 rounded transition-colors" style="background:#fef2f2;color:#dc2626;font-weight:600;border:none;cursor:pointer;">
+                            Remove
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
+        @endforeach
     </div>
     @endif
 

@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Services\IndicatorService;
+use App\Services\MarketHours;
 use App\Services\SignalEngine;
 use App\Services\NepseScraperService;
 use App\Services\AlertService;
@@ -12,6 +13,7 @@ use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Pagination\Paginator;
 
@@ -33,6 +35,13 @@ class AppServiceProvider extends ServiceProvider
         Paginator::defaultView('vendor.pagination.tailwind');
 
         Event::listen(Registered::class, SendEmailVerificationNotification::class);
+
+        // Market open/closed badge shown in the shared header — every page
+        // that extends layouts.app gets it without each controller needing
+        // to pass it explicitly.
+        View::composer('layouts.app', function ($view) {
+            $view->with('headerMarketStatus', MarketHours::status());
+        });
 
         VerifyEmail::toMailUsing(function ($notifiable, $url) {
             return (new MailMessage)

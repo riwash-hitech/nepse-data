@@ -50,6 +50,14 @@
             .brand{font-size:.95rem;}
             .brand img{width:28px;height:28px;}
         }
+        .market-badge{display:inline-flex;align-items:center;gap:.4rem;font-size:.75rem;font-weight:700;
+             padding:.3rem .7rem;border-radius:999px;white-space:nowrap;}
+        .market-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;display:inline-block;}
+        @keyframes navPulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+        @media(max-width:480px){
+            .market-label{display:none;}
+            .market-badge{padding:.4rem;}
+        }
         .btn{display:inline-flex;align-items:center;justify-content:center;padding:.6rem 1.15rem;border-radius:.6rem;font-weight:600;font-size:.9rem;border:1px solid transparent;transition:.15s;}
         .btn-ghost{color:var(--brand);}
         .btn-ghost:hover{background:var(--accent-dim);}
@@ -215,6 +223,10 @@
             <a href="#pricing">Pricing</a>
         </nav>
         <div class="nav-actions">
+            <span class="market-badge" style="background:{{ $marketStatus['open'] ? '#DCFCE7' : '#f1f5f9' }};color:{{ $marketStatus['open'] ? '#14532D' : '#64748b' }};">
+                <span class="market-dot" style="background:{{ $marketStatus['open'] ? '#16a34a' : '#94a3b8' }};{{ $marketStatus['open'] ? 'animation:navPulse 1.6s infinite;' : '' }}"></span>
+                <span class="market-label">{{ $marketStatus['open'] ? 'Market Open' : 'Market Closed' }}</span>
+            </span>
             @auth
                 <a href="{{ route('dashboard') }}" class="btn btn-primary">Go to Dashboard</a>
             @else
@@ -493,6 +505,9 @@
         <div class="foot-row">
             <div class="brand"><img src="{{ asset('images/logo.png') }}" alt="Riwash Money"> Riwash Money</div>
             <div>Powered by <a href="https://riwash.com" target="_blank" rel="noopener" style="color:var(--brand);font-weight:600;">riwash.com</a></div>
+        </div>
+        <div style="text-align:center;font-size:.8rem;color:var(--text-2);margin-top:.75rem;">
+            Interested in investing in this product? Contact <a href="https://riwash.com" target="_blank" rel="noopener" style="color:var(--brand);font-weight:600;">riwash.com</a>
         </div>
     </div>
 </footer>

@@ -145,8 +145,9 @@ class DashboardController extends Controller
         $losers        = $rows->sortBy('change_percent')->values()->take(3);
         $volumeLeaders = $rows->sortByDesc('volume')->values()->take(3);
         $totalTurnover = MarketFormatter::compactRupees($rows->sum('turnover'));
+        $marketStatus  = MarketHours::status();
 
-        return view('landing', compact('indices', 'gainers', 'losers', 'volumeLeaders', 'totalTurnover'));
+        return view('landing', compact('indices', 'gainers', 'losers', 'volumeLeaders', 'totalTurnover', 'marketStatus'));
     }
 
     public function syncLive()

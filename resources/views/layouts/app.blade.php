@@ -30,6 +30,7 @@
             #marketTime { display: none; }
             main { padding: 1rem 0.75rem !important; }
         }
+        @keyframes headerPulse { 0%,100%{opacity:1;} 50%{opacity:.35;} }
     </style>
 </head>
 <body style="background:#f5f7fa;color:#0f172a;font-family:Inter,sans-serif;margin:0;padding:0;">
@@ -224,7 +225,16 @@
                 </form>
                 @endif
                 @endauth
-                <span id="marketTime" style="font-size:0.75rem;font-family:'JetBrains Mono',monospace;color:#94a3b8;white-space:nowrap;"></span>
+                <span style="display:inline-flex;align-items:center;gap:.35rem;font-size:.75rem;font-weight:700;
+                       padding:.25rem .6rem;border-radius:9999px;white-space:nowrap;
+                       background:{{ $headerMarketStatus['open'] ? '#DCFCE7' : '#f1f5f9' }};
+                       color:{{ $headerMarketStatus['open'] ? '#14532D' : '#64748b' }};">
+                    <span style="width:7px;height:7px;border-radius:50%;flex-shrink:0;
+                           background:{{ $headerMarketStatus['open'] ? '#16a34a' : '#94a3b8' }};
+                           {{ $headerMarketStatus['open'] ? 'animation:headerPulse 1.6s infinite;' : '' }}"></span>
+                    <span class="hidden sm:inline">Market</span> {{ $headerMarketStatus['open'] ? 'Open' : 'Closed' }}
+                </span>
+                <span id="marketTime" style="font-size:0.75rem;font-family:'JetBrains Mono',monospace;color:#94a3b8;white-space:nowrap;" class="hidden sm:inline"></span>
                 @if(isset($summary) && $summary)
                 <div style="display:flex;align-items:center;gap:0.375rem;font-size:0.8125rem;">
                     <span style="color:#94a3b8;">NEPSE</span>
@@ -281,16 +291,13 @@
             </div>
         </div>
         <script>
-            (function() {
-                if (sessionStorage.getItem('disclaimerDismissed') === '1') {
-                    document.getElementById('disclaimerPopup').style.display = 'none';
-                }
-            })();
+            // Deliberately not remembered across page loads — this is a
+            // compliance notice, so closing it only hides it for the current
+            // page view; it reappears on every refresh/navigation.
             function dismissDisclaimer() {
                 var el = document.getElementById('disclaimerPopup');
                 el.style.transform = 'translateY(120%)';
                 el.style.opacity = '0';
-                sessionStorage.setItem('disclaimerDismissed', '1');
                 setTimeout(function() { el.style.display = 'none'; }, 300);
             }
         </script>
