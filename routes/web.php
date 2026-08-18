@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{DashboardController, IpoController, OutlookController, PortfolioController, ProfileController, ScreenerController, SignalController, StockController, TopPicksController, WatchlistController};
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\SyncController;
+use App\Http\Controllers\Admin\LogViewerController;
 
 // ── URL-triggered cron (for hosts without SSH/real cron access) ─────────────
 // Point an external "hit this URL every minute" service (cron-job.org,
@@ -87,6 +88,7 @@ Route::middleware(['auth', 'verified', 'no-cache'])->group(function () {
         });
 
         Route::post('/admin/sync-stocks', [SyncController::class, 'run'])->name('admin.sync-stocks');
+        Route::get('/admin/logs', [LogViewerController::class, 'index'])->name('admin.logs');
 
         Route::get('/outlook', [OutlookController::class, 'index'])->name('outlook.index');
         Route::post('/outlook/generate', [OutlookController::class, 'generate'])->name('outlook.generate');
