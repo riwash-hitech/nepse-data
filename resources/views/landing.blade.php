@@ -45,16 +45,25 @@
         .nav-links a{font-size:.9rem;font-weight:600;color:var(--text-2);transition:color .15s;}
         .nav-links a:hover{color:var(--brand);}
         .nav-actions{display:flex;align-items:center;gap:.75rem;}
-        @media(max-width:760px){
-            .nav-links{display:none;}
-            .brand{font-size:.95rem;}
-            .brand img{width:28px;height:28px;}
-        }
         .market-badge{display:inline-flex;align-items:center;gap:.4rem;font-size:.75rem;font-weight:700;
              padding:.3rem .7rem;border-radius:999px;white-space:nowrap;}
         .market-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;display:inline-block;}
         @keyframes navPulse{0%,100%{opacity:1;}50%{opacity:.35;}}
-        @media(max-width:480px){
+
+        .nav-toggle{display:none;align-items:center;justify-content:center;width:38px;height:38px;
+             border-radius:.6rem;border:1px solid var(--border);background:var(--surface);color:var(--text);
+             cursor:pointer;flex-shrink:0;}
+        .mobile-nav{display:none;flex-direction:column;gap:.25rem;padding:0 0 1rem;}
+        .mobile-nav a{padding:.65rem .25rem;font-size:.95rem;font-weight:600;color:var(--text);border-bottom:1px solid var(--border);}
+        .mobile-nav-divider{height:.5rem;}
+        .mobile-nav.open{display:flex;}
+
+        @media(max-width:760px){
+            .nav-links{display:none;}
+            .brand{font-size:.95rem;}
+            .brand img{width:28px;height:28px;}
+            .btn.desktop-only-btn{display:none;}
+            .nav-toggle{display:flex;}
             .market-label{display:none;}
             .market-badge{padding:.4rem;}
         }
@@ -228,11 +237,29 @@
                 <span class="market-label">{{ $marketStatus['open'] ? 'Market Open' : 'Market Closed' }}</span>
             </span>
             @auth
-                <a href="{{ route('dashboard') }}" class="btn btn-primary">Go to Dashboard</a>
+                <a href="{{ route('dashboard') }}" class="btn btn-primary desktop-only-btn">Go to Dashboard</a>
             @else
-                <a href="{{ route('login') }}" class="btn btn-primary">Log in</a>
+                <a href="{{ route('login') }}" class="btn btn-primary desktop-only-btn">Log in</a>
             @endauth
+            <button type="button" class="nav-toggle" onclick="toggleMobileNav()" aria-label="Toggle menu">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
         </div>
+    </div>
+    <div class="mobile-nav" id="mobileNav">
+        <a href="#live-market" onclick="closeMobileNav()">Dashboard</a>
+        <a href="{{ route('stocks.index') }}" onclick="closeMobileNav()">Market</a>
+        <a href="#portfolio" onclick="closeMobileNav()">Portfolio</a>
+        <a href="#pricing" onclick="closeMobileNav()">Pricing</a>
+        <div class="mobile-nav-divider"></div>
+        @auth
+            <a href="{{ route('dashboard') }}" class="btn btn-primary" style="justify-content:center;">Go to Dashboard</a>
+        @else
+            <a href="{{ route('login') }}" class="btn btn-ghost" style="justify-content:center;border:1px solid var(--border);">Log in</a>
+            <a href="{{ route('register') }}" class="btn btn-primary" style="justify-content:center;">Sign up</a>
+        @endauth
     </div>
 </header>
 
@@ -511,6 +538,15 @@
         </div>
     </div>
 </footer>
+
+<script>
+    function toggleMobileNav() {
+        document.getElementById('mobileNav').classList.toggle('open');
+    }
+    function closeMobileNav() {
+        document.getElementById('mobileNav').classList.remove('open');
+    }
+</script>
 
 </body>
 </html>
