@@ -249,6 +249,15 @@
                         ↻ Sync
                     </button>
                 </form>
+                <form method="POST" action="{{ route('admin.scrape-now') }}">
+                    @csrf
+                    <button type="submit"
+                            onclick="this.disabled=true;this.innerText='Scraping… (may take a few min)';this.form.submit();return false;"
+                            title="Backfills price history and recomputes buy/sell signals for every stock — can take a couple of minutes"
+                            style="display:flex;align-items:center;gap:0.4rem;padding:0.375rem 0.75rem;font-size:0.8125rem;font-weight:600;border-radius:0.5rem;border:1px solid #bbf7d0;background:#DCFCE7;color:#14532D;cursor:pointer;white-space:nowrap;">
+                        ⚡ Scrape Now
+                    </button>
+                </form>
                 @endif
                 @endauth
                 <span style="display:inline-flex;align-items:center;gap:.35rem;font-size:.75rem;font-weight:700;

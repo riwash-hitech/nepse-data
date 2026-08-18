@@ -88,6 +88,7 @@ Route::middleware(['auth', 'verified', 'no-cache'])->group(function () {
         });
 
         Route::post('/admin/sync-stocks', [SyncController::class, 'run'])->name('admin.sync-stocks');
+        Route::post('/admin/scrape-now', [SyncController::class, 'scrapeNow'])->name('admin.scrape-now');
         Route::get('/admin/logs', [LogViewerController::class, 'index'])->name('admin.logs');
 
         Route::get('/outlook', [OutlookController::class, 'index'])->name('outlook.index');
