@@ -3,11 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\FetchLiveMarketDataJob;
+use App\Services\MarketFormatter;
+use App\Services\MarketHours;
 use App\Services\NepseScraperService;
 use App\Services\PortfolioService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Carbon;
 
 class DashboardController extends Controller
 {
@@ -44,7 +45,7 @@ class DashboardController extends Controller
 
         // NEPSE index quote for the hero card
         $nepseIndex = Cache::remember('chukul_index_NEPSE', 300, fn() => $this->scraper->fetchIndexQuote('NEPSE'));
-        $marketStatus = $this->marketStatus();
+        $marketStatus = MarketHours::status();
 
         // Live market-wide summary (turnover / shares traded) + per-sector
         // performance + top-volume list, all from the same bulk quote pull.
@@ -61,8 +62,8 @@ class DashboardController extends Controller
         ])->filter(fn($s) => $s['symbol']);
 
         $marketSummary = [
-            'turnover' => $this->formatCompactRupees($bulkRows->sum('turnover')),
-            'volume'   => $this->formatCompactNumber($bulkRows->sum('volume')),
+            'turnover' => MarketFormatter::compactRupees($bulkRows->sum('turnover')),
+            'volume'   => MarketFormatter::compactNumber($bulkRows->sum('volume')),
         ];
 
         $sectorPerformance = $bulkRows
@@ -84,35 +85,6 @@ class DashboardController extends Controller
             'stockList', 'sectors', 'totalStocks', 'sectorStats', 'portfolioOverview',
             'nepseIndex', 'marketStatus', 'marketSummary', 'sectorPerformance', 'topVolume'
         ));
-    }
-
-    /**
-     * Heuristic only (Sun–Thu, 11:00–15:00 Nepal time) — NEPSE doesn't expose
-     * a live session-status API, so this is a documented approximation,
-     * mirrored from the mobile app's market_hours.dart.
-     */
-    private function marketStatus(): array
-    {
-        $now = Carbon::now('Asia/Kathmandu');
-        $isTradingDay = $now->dayOfWeekIso !== Carbon::FRIDAY && $now->dayOfWeekIso !== Carbon::SATURDAY;
-        $open = $now->copy()->setTime(11, 0);
-        $close = $now->copy()->setTime(15, 0);
-        $isOpen = $isTradingDay && $now->between($open, $close);
-
-        return [
-            'open'    => $isOpen,
-            'closesIn' => $isOpen ? $now->diff($close)->format('%hh %im') : null,
-        ];
-    }
-
-    private function formatCompactNumber(float $amount): string
-    {
-        return match (true) {
-            $amount >= 1_000_000_000 => round($amount / 1_000_000_000, 1) . 'B',
-            $amount >= 1_000_000     => round($amount / 1_000_000, 1) . 'M',
-            $amount >= 1_000         => round($amount / 1_000, 1) . 'K',
-            default                  => number_format($amount, 0),
-        };
     }
 
     // ── Public landing page: live indices + top movers ────────────────────────
@@ -143,19 +115,9 @@ class DashboardController extends Controller
         $gainers       = $rows->sortByDesc('change_percent')->values()->take(3);
         $losers        = $rows->sortBy('change_percent')->values()->take(3);
         $volumeLeaders = $rows->sortByDesc('volume')->values()->take(3);
-        $totalTurnover = $this->formatCompactRupees($rows->sum('turnover'));
+        $totalTurnover = MarketFormatter::compactRupees($rows->sum('turnover'));
 
         return view('landing', compact('indices', 'gainers', 'losers', 'volumeLeaders', 'totalTurnover'));
-    }
-
-    private function formatCompactRupees(float $amount): string
-    {
-        return match (true) {
-            $amount >= 1_000_000_000 => 'Rs. ' . round($amount / 1_000_000_000, 1) . 'B',
-            $amount >= 1_000_000     => 'Rs. ' . round($amount / 1_000_000, 1) . 'M',
-            $amount >= 1_000         => 'Rs. ' . round($amount / 1_000, 1) . 'K',
-            default                  => 'Rs. ' . number_format($amount, 0),
-        };
     }
 
     public function syncLive()

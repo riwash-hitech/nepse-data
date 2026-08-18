@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\MarketFormatter;
+use App\Services\MarketHours;
 use App\Services\NepseScraperService;
 use App\Services\Outlook30Service;
 use App\Services\PredictionService;
@@ -23,8 +25,23 @@ class StockController extends Controller
     {
         $search = trim($request->get('search', ''));
         $sector = $request->get('sector', '');
+        $view   = $request->get('view', 'all');
 
-        $all = Cache::remember('chukul_stock_list', 3600, fn() => $this->scraper->fetchStockList());
+        $all  = Cache::remember('chukul_stock_list', 3600, fn() => $this->scraper->fetchStockList());
+        $bulk = Cache::remember('chukul_bulk_summary', 180, fn() => $this->scraper->fetchBulkMarketSummary());
+
+        $quotesBySymbol = collect($bulk)->keyBy('symbol');
+        $quoteFor = function (string $symbol) use ($quotesBySymbol) {
+            $q = $quotesBySymbol->get($symbol);
+            if (!$q) return null;
+            return (object) [
+                'close'          => (float) ($q['close'] ?? 0),
+                'change'         => (float) ($q['change'] ?? 0),
+                'change_percent' => (float) ($q['percentage_change'] ?? 0),
+                'volume'         => (float) ($q['volume'] ?? 0),
+                'turnover'       => (float) ($q['amount'] ?? 0),
+            ];
+        };
 
         $filtered = collect($all)
             ->filter(fn($s) => !($s['is_delisted'] ?? false) && !($s['is_merged'] ?? false))
@@ -36,15 +53,21 @@ class StockController extends Controller
                 );
             })
             ->when($sector, fn($c) => $c->filter(fn($s) => ($s['sector'] ?? '') === $sector))
-            ->sortBy('symbol')
             ->values()
             ->map(fn($s) => (object)[
                 'symbol'       => $s['symbol'],
                 'name'         => $s['name'],
                 'sector'       => $s['sector'] ? (object)['name' => $s['sector']] : null,
-                'latestPrice'  => null,
+                'latestPrice'  => $quoteFor($s['symbol']),
                 'latestSignal' => null,
             ]);
+
+        $filtered = match ($view) {
+            'gainers'  => $filtered->filter(fn($s) => $s->latestPrice)->sortByDesc(fn($s) => $s->latestPrice->change_percent)->values(),
+            'losers'   => $filtered->filter(fn($s) => $s->latestPrice)->sortBy(fn($s) => $s->latestPrice->change_percent)->values(),
+            'turnover' => $filtered->filter(fn($s) => $s->latestPrice)->sortByDesc(fn($s) => $s->latestPrice->turnover)->values(),
+            default    => $filtered->sortBy('symbol')->values(),
+        };
 
         $page   = max(1, (int)$request->get('page', 1));
         $perPage = 50;
@@ -59,7 +82,36 @@ class StockController extends Controller
         $sectors = collect($all)
             ->pluck('sector')->filter()->unique()->sort()->values();
 
-        return view('stocks.index', compact('stocks', 'sectors', 'search', 'sector'));
+        // NEPSE index quote + market-wide summary for the overview header
+        $nepseIndex  = Cache::remember('chukul_index_NEPSE', 300, fn() => $this->scraper->fetchIndexQuote('NEPSE'));
+        $marketStatus = MarketHours::status();
+        $allQuotes  = collect($bulk)->map(fn($q) => [
+            'turnover' => (float) ($q['amount'] ?? 0),
+            'volume'   => (float) ($q['volume'] ?? 0),
+        ]);
+        $marketSummary = [
+            'turnover' => MarketFormatter::compactRupees($allQuotes->sum('turnover')),
+            'volume'   => MarketFormatter::compactNumber($allQuotes->sum('volume')),
+        ];
+
+        // Top Gainers / Top Turnover highlight tables
+        $nameBySymbol = collect($all)->pluck('name', 'symbol');
+        $liveRows = $quotesBySymbol->map(fn($q, $symbol) => [
+            'symbol'         => $symbol,
+            'name'           => $nameBySymbol[$symbol] ?? $symbol,
+            'ltp'            => (float) ($q['close'] ?? 0),
+            'change'         => (float) ($q['change'] ?? 0),
+            'change_percent' => (float) ($q['percentage_change'] ?? 0),
+            'turnover'       => (float) ($q['amount'] ?? 0),
+        ])->values();
+
+        $topGainers  = $liveRows->sortByDesc('change_percent')->values()->take(4);
+        $topTurnover = $liveRows->sortByDesc('turnover')->values()->take(4);
+
+        return view('stocks.index', compact(
+            'stocks', 'sectors', 'search', 'sector', 'view',
+            'nepseIndex', 'marketStatus', 'marketSummary', 'topGainers', 'topTurnover'
+        ));
     }
 
     // ── Stock analytics page (Chukul live data + in-memory indicators) ────────
