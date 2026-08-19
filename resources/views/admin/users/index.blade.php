@@ -16,6 +16,7 @@
                 <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;">
                     <th class="text-left px-4 py-3 text-xs font-medium uppercase tracking-wider" style="color:#475569;">Name</th>
                     <th class="text-left px-4 py-3 text-xs font-medium uppercase tracking-wider" style="color:#475569;">Email</th>
+                    <th class="text-left px-4 py-3 text-xs font-medium uppercase tracking-wider" style="color:#475569;">Phone</th>
                     <th class="text-center px-4 py-3 text-xs font-medium uppercase tracking-wider" style="color:#475569;">Role</th>
                     <th class="text-left px-4 py-3 text-xs font-medium uppercase tracking-wider" style="color:#475569;">Joined</th>
                     <th class="text-center px-4 py-3 text-xs font-medium uppercase tracking-wider" style="color:#475569;">Actions</th>
@@ -31,6 +32,7 @@
                         @endif
                     </td>
                     <td class="px-4 py-3" style="color:#475569;">{{ $u->email }}</td>
+                    <td class="px-4 py-3" style="color:#475569;">{{ $u->phone ?: '—' }}</td>
                     <td class="text-center px-4 py-3">
                         @if($u->isAdmin())
                         <span class="text-xs px-2.5 py-1 rounded-full font-semibold" style="background:#DCFCE7;color:#14532D;border:1px solid #bbf7d0;">Admin</span>
@@ -43,8 +45,13 @@
                     </td>
                     <td class="px-4 py-3" style="color:#64748b;">{{ $u->created_at->format('d M Y') }}</td>
                     <td class="text-center px-4 py-3">
-                        @if($u->id !== auth()->id())
                         <div class="flex items-center justify-center gap-1.5 flex-wrap">
+                            <a href="{{ route('admin.users.edit', $u) }}"
+                               class="text-xs px-3 py-1 rounded-md transition-colors"
+                               style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;">
+                                Edit
+                            </a>
+                        @if($u->id !== auth()->id())
                             <form method="POST" action="{{ route('admin.users.force-logout', $u) }}" class="inline">
                                 @csrf
                                 <button type="submit"
@@ -80,10 +87,8 @@
                                     Delete
                                 </button>
                             </form>
-                        </div>
-                        @else
-                        <span style="color:#cbd5e1;">—</span>
                         @endif
+                        </div>
                     </td>
                 </tr>
                 @endforeach
