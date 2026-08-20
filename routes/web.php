@@ -7,6 +7,8 @@ use App\Http\Controllers\{DashboardController, IpoController, OutlookController,
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\SyncController;
 use App\Http\Controllers\Admin\LogViewerController;
+use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\UserDataViewController;
 
 // ── URL-triggered cron (for hosts without SSH/real cron access) ─────────────
 // Point an external "hit this URL every minute" service (cron-job.org,
@@ -85,6 +87,8 @@ Route::middleware(['auth', 'verified', 'no-cache'])->group(function () {
             Route::get('/{user}/edit', [UserManagementController::class, 'edit'])->name('edit');
             Route::put('/{user}', [UserManagementController::class, 'update'])->name('update');
             Route::delete('/{user}', [UserManagementController::class, 'destroy'])->name('destroy');
+            Route::get('/{user}/portfolio', [UserDataViewController::class, 'portfolio'])->name('portfolio');
+            Route::get('/{user}/watchlist', [UserDataViewController::class, 'watchlist'])->name('watchlist');
             Route::post('/{user}/toggle-block', [UserManagementController::class, 'toggleBlock'])->name('toggle-block');
             Route::post('/{user}/force-logout', [UserManagementController::class, 'forceLogout'])->name('force-logout');
         });
@@ -92,6 +96,7 @@ Route::middleware(['auth', 'verified', 'no-cache'])->group(function () {
         Route::post('/admin/sync-stocks', [SyncController::class, 'run'])->name('admin.sync-stocks');
         Route::post('/admin/scrape-now', [SyncController::class, 'scrapeNow'])->name('admin.scrape-now');
         Route::get('/admin/logs', [LogViewerController::class, 'index'])->name('admin.logs');
+        Route::get('/admin/activity-logs', [ActivityLogController::class, 'index'])->name('admin.activity-logs');
 
         Route::get('/outlook', [OutlookController::class, 'index'])->name('outlook.index');
         Route::post('/outlook/generate', [OutlookController::class, 'generate'])->name('outlook.generate');

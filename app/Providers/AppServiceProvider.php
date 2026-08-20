@@ -7,6 +7,10 @@ use App\Services\MarketHours;
 use App\Services\SignalEngine;
 use App\Services\NepseScraperService;
 use App\Services\AlertService;
+use App\Support\Activity;
+use Illuminate\Auth\Events\Failed;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\Logout;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Auth\Notifications\ResetPassword;
@@ -35,6 +39,25 @@ class AppServiceProvider extends ServiceProvider
         Paginator::defaultView('vendor.pagination.tailwind');
 
         Event::listen(Registered::class, SendEmailVerificationNotification::class);
+
+        Event::listen(Registered::class, function (Registered $event) {
+            Activity::log($event->user, 'register', "{$event->user->name} created an account.");
+        });
+
+        Event::listen(Login::class, function (Login $event) {
+            Activity::log($event->user, 'login', "{$event->user->name} logged in.");
+        });
+
+        Event::listen(Logout::class, function (Logout $event) {
+            if ($event->user) {
+                Activity::log($event->user, 'logout', "{$event->user->name} logged out.");
+            }
+        });
+
+        Event::listen(Failed::class, function (Failed $event) {
+            $email = $event->credentials['email'] ?? 'unknown';
+            Activity::log($event->user, 'login_failed', "Failed login attempt for {$email}.");
+        });
 
         // Market open/closed badge shown in the shared header — every page
         // that extends layouts.app gets it without each controller needing

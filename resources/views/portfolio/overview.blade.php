@@ -4,9 +4,19 @@
 @section('content')
 <div class="space-y-5">
 
+    @isset($viewingUser)
+    <div class="px-4 py-2.5 rounded-lg text-sm flex items-center gap-2" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+        Viewing <strong>{{ $viewingUser->name }}</strong>'s portfolio (read-only) ·
+        <a href="{{ route('admin.users.index') }}" style="text-decoration:underline;">Back to Users</a>
+    </div>
+    @endisset
+
     <div class="flex items-center justify-between">
         <h1 class="text-2xl font-bold" style="color:#0f172a;">💼 Portfolio Overview</h1>
+        @unless($readOnly ?? false)
         <a href="{{ route('portfolio.adjust') }}" class="btn-primary">+ Adjust Holdings</a>
+        @endunless
     </div>
 
     @if($stock_count === 0)
@@ -14,9 +24,15 @@
         <div class="text-4xl mb-4">📭</div>
         <div class="font-semibold text-lg mb-2" style="color:#0f172a;">No holdings yet</div>
         <div class="text-sm mb-6" style="color:#64748b;">
+            @unless($readOnly ?? false)
             Add your first buy transaction to start tracking your portfolio.
+            @else
+            This user has no holdings yet.
+            @endunless
         </div>
+        @unless($readOnly ?? false)
         <a href="{{ route('portfolio.adjust') }}" class="btn-primary">Adjust Holdings</a>
+        @endunless
     </div>
     @else
 

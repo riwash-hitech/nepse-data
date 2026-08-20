@@ -1,27 +1,48 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
-use App\Models\Stock;
+use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Models\Watchlist;
 use App\Services\NepseScraperService;
+use App\Services\PortfolioService;
 use App\Services\SignalEngine;
 use App\Support\Activity;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
-class WatchlistController extends Controller
+/**
+ * Read-only admin views into another user's portfolio/watchlist — support
+ * and account-review use cases. Reuses the same portfolio.overview and
+ * watchlist.index blade views as the user-facing pages, with a $readOnly
+ * flag that hides every mutating form/link so an admin can never edit
+ * another user's data from here.
+ */
+class UserDataViewController extends Controller
 {
     public function __construct(
+        private readonly PortfolioService $portfolio,
         private readonly NepseScraperService $scraper,
         private readonly SignalEngine $signalEngine
-    ) {}
+    ) {
+    }
 
-    public function index()
+    public function portfolio(User $user)
     {
+        Activity::log(Auth::user(), 'admin_view_portfolio', "Viewed {$user->name}'s portfolio.");
+
+        $data = $this->portfolio->overview($user);
+
+        return view('portfolio.overview', $data + ['viewingUser' => $user, 'readOnly' => true]);
+    }
+
+    public function watchlist(User $user)
+    {
+        Activity::log(Auth::user(), 'admin_view_watchlist', "Viewed {$user->name}'s watchlist.");
+
         $entries = Watchlist::with(['stock.sector'])
-            ->where('user_id', Auth::id())
+            ->where('user_id', $user->id)
             ->orderBy('sort_order')
             ->get();
 
@@ -52,33 +73,6 @@ class WatchlistController extends Controller
             ];
         });
 
-        return view('watchlist.index', compact('watchlist'));
-    }
-
-    public function store(Request $request)
-    {
-        $request->validate(['stock_id' => 'required|exists:stocks,id']);
-
-        Watchlist::firstOrCreate([
-            'user_id'  => Auth::id(),
-            'stock_id' => $request->stock_id,
-        ]);
-
-        $symbol = Stock::find($request->stock_id)?->symbol;
-        Activity::log(Auth::user(), 'watchlist_add', "Added {$symbol} to watchlist.");
-
-        return back()->with('success', 'Stock added to watchlist.');
-    }
-
-    public function destroy(int $stockId)
-    {
-        Watchlist::where('user_id', Auth::id())
-            ->where('stock_id', $stockId)
-            ->delete();
-
-        $symbol = Stock::find($stockId)?->symbol;
-        Activity::log(Auth::user(), 'watchlist_remove', "Removed {$symbol} from watchlist.");
-
-        return back()->with('success', 'Removed from watchlist.');
+        return view('watchlist.index', compact('watchlist') + ['viewingUser' => $user, 'readOnly' => true]);
     }
 }

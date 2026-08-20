@@ -4,8 +4,17 @@
 @section('content')
 <div class="space-y-5" style="max-width:42rem;">
 
-    <h1 class="text-2xl font-bold" style="color:#0f172a;">📌 My Watchlist</h1>
+    @isset($viewingUser)
+    <div class="px-4 py-2.5 rounded-lg text-sm flex items-center gap-2" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+        Viewing <strong>{{ $viewingUser->name }}</strong>'s watchlist (read-only) ·
+        <a href="{{ route('admin.users.index') }}" style="text-decoration:underline;">Back to Users</a>
+    </div>
+    @endisset
 
+    <h1 class="text-2xl font-bold" style="color:#0f172a;">📌 {{ isset($viewingUser) ? "{$viewingUser->name}'s Watchlist" : 'My Watchlist' }}</h1>
+
+    @unless($readOnly ?? false)
     {{-- Add to watchlist --}}
     <div class="bg-white border rounded-xl p-4" style="border-color:#e2e8f0;">
         <div class="text-xs font-semibold uppercase tracking-wide mb-2" style="color:#94a3b8;">Add Stock</div>
@@ -21,6 +30,7 @@
             <button type="submit" class="btn-primary justify-center">+ Add to Watchlist</button>
         </form>
     </div>
+    @endunless
 
     @if($errors->any())
     <div class="px-4 py-3 rounded-lg text-sm" style="background:#fef2f2;border:1px solid #fecaca;color:#dc2626;">
@@ -83,6 +93,7 @@
                 <div><span style="color:#cbd5e1;">Vol</span> <span class="font-mono" style="color:#374151;">{{ $w['volume'] ? number_format($w['volume']) : '—' }}</span></div>
                 <div class="ml-auto flex items-center gap-2">
                     <a href="{{ route('stocks.show', $w['symbol']) }}" class="px-2 py-1 rounded" style="background:#DCFCE7;color:#14532D;font-weight:600;">View</a>
+                    @unless($readOnly ?? false)
                     <form method="POST" action="{{ route('watchlist.destroy', $w['stock_id']) }}" class="inline">
                         @csrf @method('DELETE')
                         <button type="submit" onclick="return confirm('Remove from watchlist?')"
@@ -90,6 +101,7 @@
                             Remove
                         </button>
                     </form>
+                    @endunless
                 </div>
             </div>
         </div>
@@ -100,6 +112,7 @@
 </div>
 @endsection
 
+@unless($readOnly ?? false)
 @push('scripts')
 <script>
 (function(){
@@ -144,3 +157,4 @@
 })();
 </script>
 @endpush
+@endunless

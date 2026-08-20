@@ -51,6 +51,16 @@
                                style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;">
                                 Edit
                             </a>
+                            <a href="{{ route('admin.users.portfolio', $u) }}"
+                               class="text-xs px-3 py-1 rounded-md transition-colors"
+                               style="background:#f5f3ff;color:#6d28d9;border:1px solid #ddd6fe;">
+                                Portfolio
+                            </a>
+                            <a href="{{ route('admin.users.watchlist', $u) }}"
+                               class="text-xs px-3 py-1 rounded-md transition-colors"
+                               style="background:#fffbeb;color:#92400e;border:1px solid #fde68a;">
+                                Watchlist
+                            </a>
                         @if($u->id !== auth()->id())
                             <form method="POST" action="{{ route('admin.users.force-logout', $u) }}" class="inline">
                                 @csrf

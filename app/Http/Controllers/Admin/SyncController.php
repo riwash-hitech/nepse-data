@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\NepseScraperService;
+use App\Support\Activity;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
 class SyncController extends Controller
@@ -24,6 +26,8 @@ class SyncController extends Controller
         $stocks  = $this->scraper->syncStocks();
 
         Cache::forget('chukul_stock_list');
+
+        Activity::log(Auth::user(), 'admin_sync', "Synced {$sectors} sectors and {$stocks} stocks.");
 
         return back()->with('success', "Synced {$sectors} sectors and {$stocks} stocks to the database.");
     }
@@ -46,6 +50,8 @@ class SyncController extends Controller
         // line rather than dumping the raw console output into a flash box.
         $lines = array_filter(array_map('trim', explode("\n", Artisan::output())));
         $summary = collect($lines)->last(fn ($line) => str_starts_with($line, 'Done —'));
+
+        Activity::log(Auth::user(), 'admin_scrape_now', $summary ?: 'Ran Scrape Now.');
 
         return back()->with('success', $summary ?: 'Scrape finished.');
     }

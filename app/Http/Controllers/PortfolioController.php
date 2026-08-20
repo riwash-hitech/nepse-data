@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Sector;
 use App\Models\Stock;
 use App\Services\PortfolioService;
+use App\Support\Activity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -72,6 +73,8 @@ class PortfolioController extends Controller
             $validated['txn_date'],
             $validated['remarks'] ?? null
         );
+
+        Activity::log(Auth::user(), 'portfolio_' . $validated['type'], ucfirst($validated['type']) . " {$validated['quantity']} {$stock->symbol} @ {$validated['rate']}.");
 
         return redirect()->route('portfolio.adjust')->with('success', ucfirst($validated['type']) . " recorded for {$stock->symbol}.");
     }
