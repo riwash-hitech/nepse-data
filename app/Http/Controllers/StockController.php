@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\AiSignalService;
 use App\Services\MarketFormatter;
 use App\Services\MarketHours;
 use App\Services\NepseScraperService;
@@ -248,6 +249,28 @@ class StockController extends Controller
             'last_volume'  => (int)end($priceRows)['volume'],
         ];
 
+        // ── AI second opinion — cached per-day, only cached on success so a
+        // transient API failure doesn't lock out the feature for 6 hours ──
+        $aiAnalysis = null;
+        if ($signal && $indicator) {
+            $aiCacheKey = "ai_signal_{$symbol}_" . now()->format('Y-m-d');
+            $aiAnalysis = Cache::get($aiCacheKey);
+            if ($aiAnalysis === null) {
+                $aiContext = [
+                    'high_low'         => $highLowStats,
+                    'volume_analytics' => $volumeAnalytics,
+                    'alpha_beta'       => $alphaBeta,
+                    'var_monthly'      => $varMonthly,
+                    'recent_closes'    => array_column(array_slice($priceRows, -15), 'close'),
+                ];
+                $result = app(AiSignalService::class)->analyze($stock, (array)$indicator, (array)$signal, $trendArr, $aiContext);
+                if ($result !== null) {
+                    Cache::put($aiCacheKey, $result, 21600);
+                    $aiAnalysis = $result;
+                }
+            }
+        }
+
         // ── Trend — keep as plain array for Blade (nested structure with consensus) ──
         $trend = $trendArr ?? null;
 
@@ -325,7 +348,8 @@ class StockController extends Controller
             'stock', 'prices', 'indicator', 'signal', 'chartData',
             'floorsheetSummary', 'volumeAnalytics', 'trend', 'brokers',
             'marketSummary', 'highLowStats', 'supportLevels', 'resistanceLevels',
-            'alphaBeta', 'varMonthly', 'brokerActivity', 'prediction7d', 'prediction30d'
+            'alphaBeta', 'varMonthly', 'brokerActivity', 'prediction7d', 'prediction30d',
+            'aiAnalysis'
         ));
     }
 

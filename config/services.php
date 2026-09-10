@@ -35,4 +35,19 @@ return [
         ],
     ],
 
+    // AI second opinion on the stock detail page (App\Services\AiSignalService).
+    // Switch providers via AI_PROVIDER in .env — defaults to Gemini since a
+    // key for it was already present; set to "anthropic" to use Claude instead.
+    'ai_provider' => env('AI_PROVIDER', 'gemini'),
+
+    'gemini' => [
+        'key'   => env('GEMINI_API_KEY'),
+        'model' => env('GEMINI_MODEL', 'gemini-flash-lite-latest'),
+    ],
+
+    'anthropic' => [
+        'key'   => env('ANTHROPIC_API_KEY'),
+        'model' => env('ANTHROPIC_MODEL', 'claude-haiku-4-5-20251001'),
+    ],
+
 ];

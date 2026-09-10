@@ -173,7 +173,7 @@
 
     {{-- Signal type + why --}}
     <div style="min-width:220px;flex:1;">
-      <div class="section-lbl">AI Analytics Signal</div>
+      <div class="section-lbl">Technical Signal</div>
       <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.625rem;">
         <span class="mono" style="font-size:1.75rem;font-weight:800;color:{{ $sigClr }};">
           {{ $isBuy ? '▲ BUY' : ($isSell ? '▼ SELL' : '◆ HOLD') }}
@@ -262,6 +262,105 @@
   <div style="margin-top:.875rem;padding-top:.75rem;border-top:1px solid rgba(0,0,0,.07);font-size:.7rem;color:#94a3b8;">
     ⚠ Algorithmic signal — educational only. Not financial/investment advice. Always do your own research before trading.
   </div>
+</div>
+@endif
+
+{{-- ════ AI TAKE ══════════════════════════════════════════════════════════ --}}
+@if($signal)
+@php
+    $aiIsBuy  = ($aiAnalysis['verdict'] ?? null) === 'BUY';
+    $aiIsSell = ($aiAnalysis['verdict'] ?? null) === 'SELL';
+    $aiClr    = $aiIsBuy ? '#16a34a' : ($aiIsSell ? '#dc2626' : '#ca8a04');
+@endphp
+<div class="rounded-xl p-5" style="background:#faf5ff;border:1px solid #e9d5ff;">
+  <div class="section-lbl">🤖 AI Take</div>
+  @if($aiAnalysis)
+  <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.625rem;">
+    <span class="mono" style="font-size:1.5rem;font-weight:800;color:{{ $aiClr }};">
+      {{ $aiIsBuy ? '▲ BUY' : ($aiIsSell ? '▼ SELL' : '◆ HOLD') }}
+    </span>
+    <span style="font-size:.8rem;font-weight:700;padding:.25rem .75rem;border-radius:9999px;
+      background:{{ $aiIsBuy ? '#dcfce7' : ($aiIsSell ? '#fee2e2' : '#fef9c3') }};
+      color:{{ $aiClr }};
+      border:1px solid {{ $aiIsBuy ? '#86efac' : ($aiIsSell ? '#fca5a5' : '#fde68a') }};">
+      {{ $aiAnalysis['confidence'] ?? 0 }}% confidence
+    </span>
+  </div>
+  <p style="font-size:.85rem;color:#374151;line-height:1.5;margin-bottom:.75rem;">{{ $aiAnalysis['summary'] }}</p>
+
+  {{-- When to buy / When to sell --}}
+  @if(!empty($aiAnalysis['when_to_buy']) || !empty($aiAnalysis['when_to_sell']))
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+    @if(!empty($aiAnalysis['when_to_buy']))
+    <div class="card-sm" style="border-color:#bbf7d0;background:#f0fdf4;">
+      <div style="font-size:.65rem;color:#16a34a;margin-bottom:.3rem;font-weight:700;">📈 WHEN TO BUY</div>
+      <div style="font-size:.8rem;color:#374151;line-height:1.4;">{{ $aiAnalysis['when_to_buy'] }}</div>
+    </div>
+    @endif
+    @if(!empty($aiAnalysis['when_to_sell']))
+    <div class="card-sm" style="border-color:#fecaca;background:#fff5f5;">
+      <div style="font-size:.65rem;color:#dc2626;margin-bottom:.3rem;font-weight:700;">📉 WHEN TO SELL</div>
+      <div style="font-size:.8rem;color:#374151;line-height:1.4;">{{ $aiAnalysis['when_to_sell'] }}</div>
+    </div>
+    @endif
+  </div>
+  @endif
+
+  {{-- Entry / Target / Stop --}}
+  @if($aiAnalysis['entry_price'] || $aiAnalysis['target_price'] || $aiAnalysis['stop_loss'])
+  <div class="grid grid-cols-3 gap-3 mb-3">
+    <div class="card-sm">
+      <div style="font-size:.65rem;color:#64748b;margin-bottom:.3rem;">📍 Entry</div>
+      <div class="mono" style="font-size:.95rem;font-weight:800;color:#0f172a;">{{ $aiAnalysis['entry_price'] ? number_format($aiAnalysis['entry_price'], 2) : '—' }}</div>
+    </div>
+    <div class="card-sm" style="border-color:#bbf7d0;background:#f0fdf4;">
+      <div style="font-size:.65rem;color:#16a34a;margin-bottom:.3rem;">🎯 Target</div>
+      <div class="mono" style="font-size:.95rem;font-weight:800;color:#16a34a;">{{ $aiAnalysis['target_price'] ? number_format($aiAnalysis['target_price'], 2) : '—' }}</div>
+    </div>
+    <div class="card-sm" style="border-color:#fecaca;background:#fff5f5;">
+      <div style="font-size:.65rem;color:#dc2626;margin-bottom:.3rem;">🛑 Stop Loss</div>
+      <div class="mono" style="font-size:.95rem;font-weight:800;color:#dc2626;">{{ $aiAnalysis['stop_loss'] ? number_format($aiAnalysis['stop_loss'], 2) : '—' }}</div>
+    </div>
+  </div>
+  @endif
+
+  {{-- 10-day AI price prediction --}}
+  @if(!empty($aiAnalysis['prediction_10d']))
+  <div style="margin-top:.5rem;padding-top:.75rem;border-top:1px solid rgba(124,58,237,.12);">
+    <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#7c3aed;margin-bottom:.5rem;">
+      🔮 10-Day AI Price Outlook
+    </div>
+    @if(!empty($aiAnalysis['outlook_10d']))
+    <p style="font-size:.8rem;color:#374151;line-height:1.4;margin-bottom:.625rem;">{{ $aiAnalysis['outlook_10d'] }}</p>
+    @endif
+    <div style="display:flex;gap:.4rem;overflow-x:auto;padding-bottom:.25rem;">
+      @foreach($aiAnalysis['prediction_10d'] as $d)
+      @php
+        $dUp = $d['trend'] === 'up'; $dDn = $d['trend'] === 'down';
+        $dClr = $dUp ? '#16a34a' : ($dDn ? '#dc2626' : '#94a3b8');
+        $dArrow = $dUp ? '▲' : ($dDn ? '▼' : '▬');
+      @endphp
+      <div style="flex-shrink:0;min-width:64px;text-align:center;background:#fff;border:1px solid #e9d5ff;border-radius:.6rem;padding:.5rem .4rem;">
+        <div style="font-size:.6rem;font-weight:700;color:#94a3b8;margin-bottom:.3rem;">DAY {{ $d['day'] }}</div>
+        <div style="font-size:1rem;color:{{ $dClr }};line-height:1;margin-bottom:.2rem;">{{ $dArrow }}</div>
+        <div class="mono" style="font-size:.68rem;font-weight:700;color:#0f172a;">{{ number_format($d['price'], 2) }}</div>
+      </div>
+      @endforeach
+    </div>
+  </div>
+  @endif
+
+  @if(!empty($aiAnalysis['key_risk']))
+  <div style="margin-top:.75rem;font-size:.78rem;color:#7c3aed;background:#f3e8ff;border-radius:.5rem;padding:.5rem .75rem;">
+    ⚠ Key risk: {{ $aiAnalysis['key_risk'] }}
+  </div>
+  @endif
+  <div style="margin-top:.875rem;padding-top:.75rem;border-top:1px solid rgba(0,0,0,.07);font-size:.7rem;color:#94a3b8;">
+    ⚠ AI-generated second opinion, including the 10-day price outlook — educational only, not financial/investment advice. AI price predictions are estimates, not guarantees.
+  </div>
+  @else
+  <p style="font-size:.82rem;color:#94a3b8;">AI analysis unavailable right now — showing the technical signal above only.</p>
+  @endif
 </div>
 @endif
 
