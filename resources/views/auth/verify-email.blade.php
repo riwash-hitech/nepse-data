@@ -84,6 +84,15 @@
       font-size: .8rem; color: var(--brand);
       margin-bottom: 1.125rem; text-align: center;
     }
+    .spam-note {
+      display: flex; align-items: flex-start; gap: .625rem;
+      background: #FFFBEB; border: 1px solid #FDE68A;
+      border-radius: .625rem; padding: .75rem .875rem;
+      font-size: .8rem; color: #92400E; line-height: 1.5;
+      margin-bottom: 1.125rem; text-align: left;
+    }
+    .spam-note svg { flex-shrink: 0; margin-top: .1rem; }
+    .spam-note strong { color: #78350F; }
     .btn-login {
       width: 100%; padding: .75rem;
       font-size: .9375rem; font-weight: 700;
@@ -132,8 +141,15 @@
       Didn't get it? We'll gladly send another.
     </p>
 
+    <div class="spam-note">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
+      </svg>
+      <span><strong>Can't find the email?</strong> Please check your <strong>Spam</strong> or <strong>Junk</strong> folder — verification emails sometimes land there instead of your inbox.</span>
+    </div>
+
     @if (session('status') == 'verification-link-sent')
-    <div class="status-box">A new verification link has been sent to the email address you provided.</div>
+    <div class="status-box">A new verification link has been sent to the email address you provided. Please also check your Spam/Junk folder if it doesn't arrive within a few minutes.</div>
     @endif
 
     <form method="POST" action="{{ route('verification.send') }}">

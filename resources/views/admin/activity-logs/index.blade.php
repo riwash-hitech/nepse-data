@@ -18,6 +18,8 @@
         'admin_user_delete' => 'Admin: Delete User',
         'admin_user_block' => 'Admin: Block User',
         'admin_user_unblock' => 'Admin: Unblock User',
+        'admin_user_verify' => 'Admin: Verify Email',
+        'admin_user_unverify' => 'Admin: Unverify Email',
         'admin_force_logout' => 'Admin: Force Logout',
         'admin_sync' => 'Admin: Sync',
         'admin_scrape_now' => 'Admin: Scrape Now',

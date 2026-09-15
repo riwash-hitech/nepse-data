@@ -94,6 +94,7 @@ Route::middleware(['auth', 'verified', 'no-cache'])->group(function () {
             Route::get('/{user}/portfolio', [UserDataViewController::class, 'portfolio'])->name('portfolio');
             Route::get('/{user}/watchlist', [UserDataViewController::class, 'watchlist'])->name('watchlist');
             Route::post('/{user}/toggle-block', [UserManagementController::class, 'toggleBlock'])->name('toggle-block');
+            Route::post('/{user}/toggle-verify', [UserManagementController::class, 'toggleVerify'])->name('toggle-verify');
             Route::post('/{user}/force-logout', [UserManagementController::class, 'forceLogout'])->name('force-logout');
         });
 

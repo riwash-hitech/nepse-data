@@ -51,11 +51,25 @@
                         @endif
                     </td>
                     <td class="text-center px-4 py-3">
-                        @if($u->email_verified_at)
-                        <span class="text-xs px-2.5 py-1 rounded-full font-semibold" style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;" title="{{ $u->email_verified_at->format('d M Y, h:i A') }}">Verified</span>
-                        @else
-                        <span class="text-xs px-2.5 py-1 rounded-full font-semibold" style="background:#fffbeb;color:#92400e;border:1px solid #fde68a;">Unverified</span>
-                        @endif
+                        <form method="POST" action="{{ route('admin.users.toggle-verify', $u) }}" class="inline">
+                            @csrf
+                            @if($u->email_verified_at)
+                            <button type="submit"
+                                    onclick="return confirm('Mark {{ $u->name }}\'s email as unverified?')"
+                                    class="text-xs px-2.5 py-1 rounded-full font-semibold transition-colors"
+                                    style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;cursor:pointer;"
+                                    title="{{ $u->email_verified_at->format('d M Y, h:i A') }} — click to unverify">
+                                Verified
+                            </button>
+                            @else
+                            <button type="submit"
+                                    class="text-xs px-2.5 py-1 rounded-full font-semibold transition-colors"
+                                    style="background:#fffbeb;color:#92400e;border:1px solid #fde68a;cursor:pointer;"
+                                    title="Click to manually verify this email">
+                                Unverified
+                            </button>
+                            @endif
+                        </form>
                     </td>
                     <td class="px-4 py-3" style="color:#64748b;white-space:nowrap;">
                         @if($u->last_login_at)

@@ -111,6 +111,23 @@ class UserManagementController extends Controller
         return back()->with('success', "{$user->name} has been unblocked.");
     }
 
+    public function toggleVerify(User $user)
+    {
+        if ($user->email_verified_at) {
+            $user->email_verified_at = null;
+            $user->save();
+            Activity::log(Auth::user(), 'admin_user_unverify', "Marked {$user->name}'s email as unverified.");
+
+            return back()->with('success', "{$user->name}'s email has been marked unverified.");
+        }
+
+        $user->email_verified_at = now();
+        $user->save();
+        Activity::log(Auth::user(), 'admin_user_verify', "Manually verified {$user->name}'s email.");
+
+        return back()->with('success', "{$user->name}'s email has been verified.");
+    }
+
     public function forceLogout(User $user)
     {
         if ($user->id === Auth::id()) {
