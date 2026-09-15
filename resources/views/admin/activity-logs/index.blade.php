@@ -84,7 +84,8 @@
                     <th class="text-left px-4 py-3 text-xs font-medium uppercase tracking-wider" style="color:#475569;">User</th>
                     <th class="text-left px-4 py-3 text-xs font-medium uppercase tracking-wider" style="color:#475569;">Action</th>
                     <th class="text-left px-4 py-3 text-xs font-medium uppercase tracking-wider" style="color:#475569;">Description</th>
-                    <th class="text-left px-4 py-3 text-xs font-medium uppercase tracking-wider" style="color:#475569;">IP</th>
+                    <th class="text-left px-4 py-3 text-xs font-medium uppercase tracking-wider" style="color:#475569;">IP / Location</th>
+                    <th class="text-left px-4 py-3 text-xs font-medium uppercase tracking-wider" style="color:#475569;">Device</th>
                 </tr>
             </thead>
             <tbody>
@@ -108,11 +109,29 @@
                         </span>
                     </td>
                     <td class="px-4 py-3" style="color:#475569;">{{ $log->description }}</td>
-                    <td class="px-4 py-3 whitespace-nowrap" style="color:#94a3b8;">{{ $log->ip_address }}</td>
+                    <td class="px-4 py-3 whitespace-nowrap" style="color:#94a3b8;">
+                        <div class="mono" style="font-size:.78rem;color:#475569;">{{ $log->ip_address }}</div>
+                        @if($log->city || $log->country)
+                        <div style="font-size:.72rem;">
+                            {{ collect([$log->city, $log->country])->filter()->implode(', ') }}
+                            @if($log->latitude && $log->longitude)
+                            <a href="https://www.google.com/maps?q={{ $log->latitude }},{{ $log->longitude }}" target="_blank" rel="noopener" style="color:#2563eb;text-decoration:none;" title="{{ $log->latitude }}, {{ $log->longitude }}">🗺</a>
+                            @endif
+                        </div>
+                        @endif
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap" style="color:#94a3b8;font-size:.78rem;">
+                        @if($log->browser || $log->platform)
+                        <div>{{ $log->browser ?? '—' }} · {{ $log->platform ?? '—' }}</div>
+                        <div style="font-size:.68rem;text-transform:capitalize;color:#cbd5e1;">{{ $log->device_type ?? '' }}</div>
+                        @else
+                        —
+                        @endif
+                    </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="5" class="px-4 py-8 text-center" style="color:#94a3b8;">No activity recorded yet.</td>
+                    <td colspan="7" class="px-4 py-8 text-center" style="color:#94a3b8;">No activity recorded yet.</td>
                 </tr>
                 @endforelse
             </tbody>
