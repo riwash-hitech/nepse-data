@@ -6,7 +6,9 @@ use App\Models\Stock;
 use App\Models\StockPrice;
 use App\Models\Signal;
 use App\Models\Sector;
+use App\Support\Activity;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
 class ScreenerController extends Controller
@@ -68,6 +70,14 @@ class ScreenerController extends Controller
 
         $stocks  = $query->orderBy($sortBy, $dir === 'asc' ? 'asc' : 'desc')->paginate(50)->withQueryString();
         $sectors = Sector::orderBy('name')->get();
+
+        if (Auth::check()) {
+            $activeFilters = collect($request->only(['sector', 'rsi_min', 'rsi_max', 'signal', 'change_min', 'change_max', 'vol_min', 'change_sign']))
+                ->filter(fn ($v) => $v !== null && $v !== '');
+            Activity::log(Auth::user(), 'screener_view', $activeFilters->isEmpty()
+                ? 'Viewed Screener.'
+                : 'Viewed Screener with filters: ' . $activeFilters->map(fn ($v, $k) => "{$k}={$v}")->implode(', ') . '.');
+        }
 
         return view('screener.index', compact('stocks', 'sectors'));
     }

@@ -12,7 +12,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'phone', 'password', 'role_id', 'is_blocked'])]
+#[Fillable(['name', 'email', 'phone', 'password', 'role_id', 'is_blocked', 'last_login_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -31,6 +31,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return [
             'email_verified_at' => 'datetime',
+            'last_login_at' => 'datetime',
             'password' => 'hashed',
             'role_id' => 'integer',
             'is_blocked' => 'boolean',

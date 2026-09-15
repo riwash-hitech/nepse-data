@@ -9,8 +9,10 @@ use App\Services\NepseScraperService;
 use App\Services\Outlook30Service;
 use App\Services\PredictionService;
 use App\Services\SignalEngine;
+use App\Support\Activity;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
 class StockController extends Controller
@@ -116,6 +118,10 @@ class StockController extends Controller
         $topGainers  = $liveRows->sortByDesc('change_percent')->values()->take(4);
         $topTurnover = $liveRows->sortByDesc('turnover')->values()->take(4);
 
+        if (Auth::check() && ($search !== '' || $sector !== '' || $view !== 'all')) {
+            Activity::log(Auth::user(), 'stock_search', "Searched markets" . ($search !== '' ? " for \"{$search}\"" : '') . ($sector !== '' ? ", sector filter {$sector}" : '') . ($view !== 'all' ? ", view={$view}" : '') . '.');
+        }
+
         return view('stocks.index', compact(
             'stocks', 'sectors', 'search', 'sector', 'view',
             'nepseIndex', 'marketStatus', 'marketSummary', 'topGainers', 'topTurnover'
@@ -127,6 +133,10 @@ class StockController extends Controller
     public function show(string $symbol)
     {
         $symbol = strtoupper(trim($symbol));
+
+        if (Auth::check()) {
+            Activity::log(Auth::user(), 'stock_view', "Viewed {$symbol}.");
+        }
 
         // ── Fetch all Chukul data in parallel via cache ──
         $priceRows = Cache::remember("chukul_adj_{$symbol}", 300, fn() =>

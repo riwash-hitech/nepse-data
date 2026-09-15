@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Signal;
 use App\Models\Stock;
+use App\Support\Activity;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
 class SignalController extends Controller
@@ -27,12 +29,21 @@ class SignalController extends Controller
 
         $signals = $query->orderByDesc('confidence')->paginate(30)->withQueryString();
 
+        if (Auth::check()) {
+            Activity::log(Auth::user(), 'signals_view', "Viewed Signals (type={$type}, min confidence={$minConfidence}%).");
+        }
+
         return view('signals.index', compact('signals', 'type', 'minConfidence'));
     }
 
     public function show(int $id)
     {
         $signal = Signal::with('stock.sector')->findOrFail($id);
+
+        if (Auth::check()) {
+            Activity::log(Auth::user(), 'signal_view', "Viewed signal for {$signal->stock->symbol}.");
+        }
+
         return view('signals.show', compact('signal'));
     }
 }

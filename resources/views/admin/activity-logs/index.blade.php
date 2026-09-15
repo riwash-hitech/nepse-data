@@ -23,6 +23,13 @@
         'admin_scrape_now' => 'Admin: Scrape Now',
         'admin_view_portfolio' => 'Admin: View Portfolio',
         'admin_view_watchlist' => 'Admin: View Watchlist',
+        'stock_view' => 'Stock View',
+        'stock_search' => 'Market Search',
+        'screener_view' => 'Screener View',
+        'signals_view' => 'Signals View',
+        'signal_view' => 'Signal Detail View',
+        'top_picks_view' => 'Top Picks View',
+        'ipo_view' => 'IPO Results View',
     ];
     $badgeColors = [
         'login' => ['#DCFCE7', '#14532D'],

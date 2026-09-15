@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(\"/c/Program Files/Google/Chrome/Application/chrome.exe\" --headless --disable-gpu --window-size=1200,1600 --screenshot=\"C:\\\\Users\\\\Admin\\\\Downloads\\\\pdf-check.png\" \"file:///C:/Users/Admin/Downloads/Riwash-Chamlagain-Resume.pdf\")"
+    ]
+  }
+}

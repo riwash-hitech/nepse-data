@@ -45,6 +45,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Event::listen(Login::class, function (Login $event) {
+            $event->user->forceFill(['last_login_at' => now()])->save();
             Activity::log($event->user, 'login', "{$event->user->name} logged in.");
         });
 

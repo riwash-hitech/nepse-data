@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Services\IndicatorService;
 use App\Services\NepseScraperService;
+use App\Support\Activity;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
@@ -17,6 +19,10 @@ class TopPicksController extends Controller
         $picks = Cache::remember('top_picks_v2', 1800, function () {
             return $this->computeTopPicks();
         });
+
+        if (Auth::check()) {
+            Activity::log(Auth::user(), 'top_picks_view', 'Viewed Top Picks.');
+        }
 
         return view('top-picks.index', compact('picks'));
     }

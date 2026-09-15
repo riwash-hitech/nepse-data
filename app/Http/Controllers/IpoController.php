@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Services\IpoService;
+use App\Support\Activity;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
 class IpoController extends Controller
@@ -20,6 +22,10 @@ class IpoController extends Controller
             if ($aO !== $bO) return $aO - $bO;
             return strcmp($b['closing_date'] ?? '', $a['closing_date'] ?? '');
         });
+
+        if (Auth::check()) {
+            Activity::log(Auth::user(), 'ipo_view', 'Viewed IPO Results.');
+        }
 
         return view('ipo.index', compact('ipoList'));
     }

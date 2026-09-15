@@ -18,6 +18,9 @@
                     <th class="text-left px-4 py-3 text-xs font-medium uppercase tracking-wider" style="color:#475569;">Email</th>
                     <th class="text-left px-4 py-3 text-xs font-medium uppercase tracking-wider" style="color:#475569;">Phone</th>
                     <th class="text-center px-4 py-3 text-xs font-medium uppercase tracking-wider" style="color:#475569;">Role</th>
+                    <th class="text-center px-4 py-3 text-xs font-medium uppercase tracking-wider" style="color:#475569;">Status</th>
+                    <th class="text-center px-4 py-3 text-xs font-medium uppercase tracking-wider" style="color:#475569;">Verified</th>
+                    <th class="text-left px-4 py-3 text-xs font-medium uppercase tracking-wider" style="color:#475569;">Last Login</th>
                     <th class="text-left px-4 py-3 text-xs font-medium uppercase tracking-wider" style="color:#475569;">Joined</th>
                     <th class="text-center px-4 py-3 text-xs font-medium uppercase tracking-wider" style="color:#475569;">Actions</th>
                 </tr>
@@ -39,8 +42,26 @@
                         @else
                         <span class="text-xs px-2.5 py-1 rounded-full font-semibold" style="background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;">User</span>
                         @endif
+                    </td>
+                    <td class="text-center px-4 py-3">
                         @if($u->isBlocked())
                         <span class="text-xs px-2.5 py-1 rounded-full font-semibold" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;">Blocked</span>
+                        @else
+                        <span class="text-xs px-2.5 py-1 rounded-full font-semibold" style="background:#DCFCE7;color:#14532D;border:1px solid #bbf7d0;">Active</span>
+                        @endif
+                    </td>
+                    <td class="text-center px-4 py-3">
+                        @if($u->email_verified_at)
+                        <span class="text-xs px-2.5 py-1 rounded-full font-semibold" style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;" title="{{ $u->email_verified_at->format('d M Y, h:i A') }}">Verified</span>
+                        @else
+                        <span class="text-xs px-2.5 py-1 rounded-full font-semibold" style="background:#fffbeb;color:#92400e;border:1px solid #fde68a;">Unverified</span>
+                        @endif
+                    </td>
+                    <td class="px-4 py-3" style="color:#64748b;white-space:nowrap;">
+                        @if($u->last_login_at)
+                        <span title="{{ $u->last_login_at->format('d M Y, h:i A') }}">{{ $u->last_login_at->diffForHumans() }}</span>
+                        @else
+                        <span style="color:#cbd5e1;">Never</span>
                         @endif
                     </td>
                     <td class="px-4 py-3" style="color:#64748b;">{{ $u->created_at->format('d M Y') }}</td>
