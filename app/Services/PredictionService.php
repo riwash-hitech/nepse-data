@@ -83,6 +83,23 @@ class PredictionService
         $vol5Avg   = count($volumes) >= 5  ? array_sum(array_slice($volumes, -5))  / 5  : 0;
         $volSurge  = ($vol20Avg > 0) ? ($vol5Avg / $vol20Avg) : 1.0;
 
+        // ── Sideways/consolidation regime detection ───────────────────────────
+        // A near-flat 20-day regression slope means the stock has no real
+        // directional drift right now — it's chopping in a range, not trending.
+        // Without this check, the day-of-week/momentum/RSI/MACD sub-scores
+        // below (each individually small) can still sum to a large composite
+        // and, chained across 7 days, compound into a fictional double-digit
+        // rally or slide for a stock that's actually been flat for a month.
+        // Uses closing prices (same series the regression slope above already
+        // operates on), not intraday high/low — a thinly-traded stock's
+        // intraday wicks can look wide even when it's actually settling flat
+        // day to day, which is what actually matters for a "sideways" call.
+        $rangePct = ($lastClose > 0 && !empty($recentC))
+            ? ((max($recentC) - min($recentC)) / $lastClose * 100)
+            : 100;
+        $isSideways = abs($slopePct) < 0.15 && $rangePct < 15;
+        $sidewaysDamp = $isSideways ? 0.3 : 1.0;
+
         // ── Primary signal bias — the single biggest factor below, so this
         // forecast's day-by-day path agrees with the page's main BUY/SELL/HOLD
         // verdict instead of running an independent (and sometimes opposite)
@@ -201,6 +218,14 @@ class PredictionService
             // 8. Trend decay over days (confidence reduces for further days)
             $decayFactor = 1 - ($dayCount * 0.06); // -6% per day
             $score *= $decayFactor;
+
+            // 9. Sideways regime — dampen the whole composite so a genuinely
+            // range-bound stock gets a small, choppy forecast instead of a
+            // manufactured trend
+            if ($isSideways) {
+                $score *= $sidewaysDamp;
+                $reasons[] = 'Trading sideways — ' . round($rangePct, 1) . '% range over the last 20 sessions with near-zero trend';
+            }
 
             // ── Determine direction ──────────────────────────────────────────
             // The raw composite above can (and for some stocks does) disagree
