@@ -20,13 +20,20 @@ class PredictionService
     /**
      * Generate 7 trading-day forecasts for the given symbol.
      *
-     * @param  array  $priceRows  Ascending-sorted rows from NepseScraperService::fetchHistoricalPrices()
+     * @param  array       $priceRows   Ascending-sorted rows from NepseScraperService::fetchHistoricalPrices()
+     * @param  array|null  $ruleSignal  The page's primary rule-based verdict (SignalEngine::scoreSignal()
+     *                                  output: signal_type + confidence). Without this, the forecast is
+     *                                  scored purely from its own independent RSI/MACD/regression read —
+     *                                  which can (and did) disagree with the SELL/BUY badge shown
+     *                                  elsewhere on the same page, since the two engines never talked to
+     *                                  each other. Passing it in makes the day-by-day path agree with the
+     *                                  primary signal instead of contradicting it.
      * @return array  Array of 7 forecast objects, each with:
      *   date, day_name, direction ('up'|'down'|'neutral'),
      *   confidence (0-100), predicted_price, predicted_low, predicted_high,
      *   change_pct, reasons[]
      */
-    public static function forecast(array $priceRows): array
+    public static function forecast(array $priceRows, ?array $ruleSignal = null): array
     {
         if (count($priceRows) < 30) {
             return [];
@@ -76,6 +83,18 @@ class PredictionService
         $vol5Avg   = count($volumes) >= 5  ? array_sum(array_slice($volumes, -5))  / 5  : 0;
         $volSurge  = ($vol20Avg > 0) ? ($vol5Avg / $vol20Avg) : 1.0;
 
+        // ── Primary signal bias — the single biggest factor below, so this
+        // forecast's day-by-day path agrees with the page's main BUY/SELL/HOLD
+        // verdict instead of running an independent (and sometimes opposite)
+        // read of the same stock ──
+        $signalType       = strtoupper($ruleSignal['signal_type'] ?? '');
+        $signalConfidence = (float) ($ruleSignal['confidence'] ?? 0);
+        $signalBias       = match ($signalType) {
+            'BUY'   => ($signalConfidence / 100) * 60,
+            'SELL'  => -($signalConfidence / 100) * 60,
+            default => 0,
+        };
+
         // ── Build 7 trading-day forecasts ─────────────────────────────────────
         $forecasts  = [];
         $runPrice   = $lastClose;
@@ -94,6 +113,13 @@ class PredictionService
             // ── Composite score: positive = bullish ──────────────────────────
             $score   = 0;
             $reasons = [];
+
+            // 0. Primary signal bias — dominant factor, see above (+/-35 pts,
+            // decayed further out just like every other factor below)
+            if ($signalBias !== 0.0) {
+                $score += $signalBias;
+                $reasons[] = "Aligned with the {$signalType} signal ({$signalConfidence}% confidence)";
+            }
 
             // 1. Trend from regression (+/-20 pts)
             $trendScore = min(20, max(-20, $slopePct * 5));
@@ -177,7 +203,28 @@ class PredictionService
             $score *= $decayFactor;
 
             // ── Determine direction ──────────────────────────────────────────
-            $direction  = $score > 3 ? 'up' : ($score < -3 ? 'down' : 'neutral');
+            // The raw composite above can (and for some stocks does) disagree
+            // with the primary rule-based signal shown elsewhere on the page —
+            // e.g. short-term RSI/MACD/regression reading bullish while the
+            // signal engine calls SELL on trend/resistance grounds. Rather than
+            // let a weighted score alone decide (which still let this happen),
+            // the primary signal directly gates which side of the ledger this
+            // forecast can land on: a SELL never renders an "up" day, a BUY
+            // never renders "down" — technical strength can only soften it to
+            // "neutral", never flip it, so the arrows never contradict the
+            // headline verdict shown right above this forecast.
+            $direction = $score > 3 ? 'up' : ($score < -3 ? 'down' : 'neutral');
+
+            if ($signalType === 'SELL' && $direction === 'up') {
+                $direction = 'neutral';
+                $score = $score * 0.15;
+                $reasons[] = 'Short-term indicators lean bullish, but deferring to the SELL signal';
+            } elseif ($signalType === 'BUY' && $direction === 'down') {
+                $direction = 'neutral';
+                $score = $score * 0.15;
+                $reasons[] = 'Short-term indicators lean bearish, but deferring to the BUY signal';
+            }
+
             $confidence = min(90, max(30, 50 + abs($score)));
             // Confidence also decays further out
             $confidence = (int)round($confidence * $decayFactor);

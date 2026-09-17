@@ -8,6 +8,8 @@ use App\Services\MarketHours;
 use App\Services\NepseScraperService;
 use App\Services\Outlook30Service;
 use App\Services\PredictionService;
+use App\Services\ReturnsCalculator;
+use App\Services\ShareHubScraperService;
 use App\Services\SignalEngine;
 use App\Support\Activity;
 use Illuminate\Http\Request;
@@ -178,6 +180,16 @@ class StockController extends Controller
             $this->scraper->fetchVarMonthly($symbol)
         );
 
+        // ── Fundamentals & sector peers from ShareHubNepal — Chukul only
+        // exposes EPS/P.E./Book Value behind a paywalled endpoint we don't
+        // have access to; ShareHub publishes the same data openly ──
+        $fundamentals = Cache::remember("sharehub_fund_{$symbol}", 86400, fn() =>
+            app(ShareHubScraperService::class)->fetchFundamentals($symbol)
+        );
+        $peers = Cache::remember("sharehub_peers_{$symbol}", 3600, fn() =>
+            app(ShareHubScraperService::class)->fetchPeers($symbol)
+        );
+
         // ── Run full in-memory analytics ──
         $analytics = $this->signalEngine->analyzeFromData($priceRows);
 
@@ -203,6 +215,10 @@ class StockController extends Controller
         if ($indicator && !empty($liveIndicators['rsi14'])) {
             $indicator->rsi_14 = (float)$liveIndicators['rsi14'];
         }
+
+        // Support/resistance zones (bands, not single points) — computed
+        // inside SignalEngine::analyzeFromData() alongside the indicators
+        $zones = $analytics['indicator']['zones'] ?? null;
 
         // Extract trend — returned as top-level key from analyzeFromData
         $trendArr  = $analytics['trend'] ?? null;
@@ -272,6 +288,8 @@ class StockController extends Controller
                     'alpha_beta'       => $alphaBeta,
                     'var_monthly'      => $varMonthly,
                     'recent_closes'    => array_column(array_slice($priceRows, -15), 'close'),
+                    'fundamentals'     => $fundamentals,
+                    'zones'            => $zones,
                 ];
                 $result = app(AiSignalService::class)->analyze($stock, (array)$indicator, (array)$signal, $trendArr, $aiContext);
                 if ($result !== null) {
@@ -344,9 +362,11 @@ class StockController extends Controller
             ];
         }
 
-        // ── 7-Day Price Prediction ────────────────────────────────────────────
+        // ── 7-Day Price Prediction — anchored to the same rule-based signal
+        // shown elsewhere on this page, so the day-by-day path agrees with
+        // the BUY/SELL/HOLD verdict instead of running an independent read ──
         $prediction7d = Cache::remember("chukul_pred_{$symbol}", 1800, fn() =>
-            PredictionService::forecast($priceRows)
+            PredictionService::forecast($priceRows, $signal ? (array) $signal : null)
         );
 
         // ── 30-Day Outlook — will this stock likely gain or lose over the next month? ──
@@ -354,12 +374,20 @@ class StockController extends Controller
             Outlook30Service::project($priceRows)
         );
 
+        // ── Historical returns (1M/3M/6M/YTD/1Y/3Y/5Y/all-time) ──
+        // The adjusted price feed above is capped at ~3 months by Chukul
+        // itself, so 1Y/3Y/5Y need the separate long-range endpoint instead.
+        $longPriceRows = Cache::remember("chukul_long_hist_{$symbol}", 21600, fn() =>
+            $this->scraper->fetchLongHistoricalPrices($symbol)
+        );
+        $returns = ReturnsCalculator::compute(!empty($longPriceRows) ? $longPriceRows : $priceRows);
+
         return view('stocks.show', compact(
             'stock', 'prices', 'indicator', 'signal', 'chartData',
             'floorsheetSummary', 'volumeAnalytics', 'trend', 'brokers',
             'marketSummary', 'highLowStats', 'supportLevels', 'resistanceLevels',
             'alphaBeta', 'varMonthly', 'brokerActivity', 'prediction7d', 'prediction30d',
-            'aiAnalysis'
+            'aiAnalysis', 'returns', 'fundamentals', 'peers', 'zones'
         ));
     }
 

@@ -1,7 +1,21 @@
 {
   "permissions": {
     "allow": [
-      "Bash(\"/c/Program Files/Google/Chrome/Application/chrome.exe\" --headless --disable-gpu --window-size=1200,1600 --screenshot=\"C:\\\\Users\\\\Admin\\\\Downloads\\\\pdf-check.png\" \"file:///C:/Users/Admin/Downloads/Riwash-Chamlagain-Resume.pdf\")"
+      "Bash(\"/c/Program Files/Google/Chrome/Application/chrome.exe\" --headless --disable-gpu --window-size=1200,1600 --screenshot=\"C:\\\\Users\\\\Admin\\\\Downloads\\\\pdf-check.png\" \"file:///C:/Users/Admin/Downloads/Riwash-Chamlagain-Resume.pdf\")",
+      "Bash(php -l app/Services/ShareHubScraperService.php)",
+      "Bash(php -l resources/views/stocks/show.blade.php)",
+      "Bash(python -c \"import selenium; print\\('selenium ok'\\)\")",
+      "Bash(where chromedriver *)",
+      "Bash(python -m pip show playwright)",
+      "Bash(python -c \"import websocket; print\\('ws ok'\\)\")",
+      "Bash(python -c \"import requests; print\\('requests ok'\\)\")",
+      "Bash(python -m pip install websocket-client --quiet)",
+      "Bash(grep -v \"^$\")",
+      "Bash(python shot.py)",
+      "Bash(taskkill //F //IM chrome.exe //T)",
+      "Bash(python -c ' *)",
+      "Bash(php -l app/Services/PredictionService.php)",
+      "Bash(php -l app/Http/Controllers/StockController.php)"
     ]
   }
 }

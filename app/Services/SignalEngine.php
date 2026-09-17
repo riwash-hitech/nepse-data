@@ -506,6 +506,8 @@ class SignalEngine
             atr: $atr, signalType: $signalType
         );
 
+        $zones = IndicatorService::zonesFromLevels($support1, $support2, $resistance1, $resistance2, $atr);
+
         $trend = $this->multiTimeframeTrend($closes);
 
         return [
@@ -529,6 +531,7 @@ class SignalEngine
                 'resistance_1'    => $resistance1,
                 'resistance_2'    => $resistance2,
                 'pivot'           => $pivots['pivot'],
+                'zones'           => $zones,
             ],
             'signal' => array_merge([
                 'signal_type'      => $signalType,

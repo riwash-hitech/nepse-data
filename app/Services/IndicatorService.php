@@ -221,4 +221,44 @@ class IndicatorService
             'support_2'    => $recentLows[1] ?? null,
         ];
     }
+
+    /**
+     * Turns the single support/resistance price points above into bands a
+     * trader can actually act on — level ± half the current ATR (falling
+     * back to a 1.5% estimate when ATR isn't available yet, matching the
+     * same fallback SignalEngine::calculateEntryExit() already uses).
+     */
+    public static function zonesFromLevels(
+        ?float $support1,
+        ?float $support2,
+        ?float $resistance1,
+        ?float $resistance2,
+        ?float $atr
+    ): array {
+        $band = function (?float $level, string $label) use ($atr): ?array {
+            if ($level === null) {
+                return null;
+            }
+            $width = $atr ?? ($level * 0.015);
+            $half  = $width * 0.5;
+
+            return [
+                'label' => $label,
+                'low'   => round($level - $half, 2),
+                'high'  => round($level + $half, 2),
+                'mid'   => round($level, 2),
+            ];
+        };
+
+        return [
+            'support' => array_values(array_filter([
+                $band($support1, 'Primary Support'),
+                $band($support2, 'Secondary Support'),
+            ])),
+            'resistance' => array_values(array_filter([
+                $band($resistance1, 'Primary Resistance'),
+                $band($resistance2, 'Secondary Resistance'),
+            ])),
+        ];
+    }
 }

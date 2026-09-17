@@ -164,7 +164,129 @@
     </div>
   </div>
   @endif
+
+  {{-- Historical returns --}}
+  @if(!empty($returns))
+  @php
+    $returnLabels = [
+      '1M' => '1 Month', '3M' => '3 Months', '6M' => '6 Months', 'YTD' => 'Year to Date',
+      '1Y' => '1 Year', '3Y' => '3 Years', '5Y' => '5 Years', 'all_time' => 'All Time',
+    ];
+  @endphp
+  <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid #f1f5f9;">
+    <div style="font-size:.68rem;color:#94a3b8;margin-bottom:.625rem;font-weight:600;text-transform:uppercase;">Historical Returns</div>
+    <div style="display:flex;gap:.6rem;overflow-x:auto;padding-bottom:.25rem;">
+      @foreach($returnLabels as $period => $label)
+      @php $r = $returns[$period] ?? null; @endphp
+      <div class="card-sm" style="flex-shrink:0;min-width:108px;text-align:center;">
+        <div style="font-size:.68rem;color:#64748b;margin-bottom:.4rem;font-weight:600;white-space:nowrap;">{{ $label }}</div>
+        @if($r)
+        <div class="mono" style="font-size:1rem;font-weight:800;color:{{ $r['pct'] >= 0 ? '#16a34a' : '#dc2626' }};">
+          {{ $r['pct'] >= 0 ? '+' : '' }}{{ number_format($r['pct'], 1) }}%
+        </div>
+        @else
+        <div style="font-size:.85rem;color:#cbd5e1;">—</div>
+        @endif
+      </div>
+      @endforeach
+    </div>
+  </div>
+  @endif
 </div>
+
+{{-- ════ FUNDAMENTALS ═══════════════════════════════════════════════════════ --}}
+<div class="rounded-xl p-5" style="background:#fff;border:1px solid #e2e8f0;">
+  <div class="section-lbl">Fundamentals</div>
+  @if(!empty($fundamentals))
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+    <div class="card-sm">
+      <div style="font-size:.65rem;color:#64748b;margin-bottom:.3rem;">EPS</div>
+      <div class="mono" style="font-size:.95rem;font-weight:800;color:#0f172a;">{{ isset($fundamentals['eps']) ? number_format($fundamentals['eps'], 2) : '—' }}</div>
+    </div>
+    <div class="card-sm">
+      <div style="font-size:.65rem;color:#64748b;margin-bottom:.3rem;">P/E Ratio</div>
+      <div class="mono" style="font-size:.95rem;font-weight:800;color:#0f172a;">{{ isset($fundamentals['pe_ratio']) ? number_format($fundamentals['pe_ratio'], 2) : '—' }}</div>
+    </div>
+    <div class="card-sm">
+      <div style="font-size:.65rem;color:#64748b;margin-bottom:.3rem;">Book Value</div>
+      <div class="mono" style="font-size:.95rem;font-weight:800;color:#0f172a;">{{ isset($fundamentals['book_value']) ? number_format($fundamentals['book_value'], 2) : '—' }}</div>
+    </div>
+    <div class="card-sm">
+      <div style="font-size:.65rem;color:#64748b;margin-bottom:.3rem;">P/BV</div>
+      <div class="mono" style="font-size:.95rem;font-weight:800;color:#0f172a;">{{ isset($fundamentals['pbv']) ? number_format($fundamentals['pbv'], 2) : '—' }}</div>
+    </div>
+    <div class="card-sm">
+      <div style="font-size:.65rem;color:#64748b;margin-bottom:.3rem;">Market Cap</div>
+      <div class="mono" style="font-size:.85rem;font-weight:800;color:#0f172a;">{{ isset($fundamentals['market_cap']) ? number_format($fundamentals['market_cap'] / 10000000, 2) . ' Cr' : '—' }}</div>
+    </div>
+    <div class="card-sm">
+      <div style="font-size:.65rem;color:#64748b;margin-bottom:.3rem;">Paid-up Capital</div>
+      <div class="mono" style="font-size:.85rem;font-weight:800;color:#0f172a;">{{ isset($fundamentals['paid_up_capital']) ? number_format($fundamentals['paid_up_capital'] / 10000000, 2) . ' Cr' : '—' }}</div>
+    </div>
+    <div class="card-sm">
+      <div style="font-size:.65rem;color:#64748b;margin-bottom:.3rem;">Face Value</div>
+      <div class="mono" style="font-size:.95rem;font-weight:800;color:#0f172a;">{{ $fundamentals['face_value'] ?? '—' }}</div>
+    </div>
+    <div class="card-sm">
+      <div style="font-size:.65rem;color:#64748b;margin-bottom:.3rem;">Listed Shares</div>
+      <div class="mono" style="font-size:.85rem;font-weight:800;color:#0f172a;">{{ isset($fundamentals['listed_shares']) ? number_format($fundamentals['listed_shares']) : '—' }}</div>
+    </div>
+  </div>
+
+  @if(isset($fundamentals['promoter_pct']) || isset($fundamentals['public_pct']))
+  <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid #f1f5f9;">
+    <div style="font-size:.68rem;color:#94a3b8;margin-bottom:.5rem;font-weight:600;text-transform:uppercase;">Shareholding Structure</div>
+    <div style="display:flex;height:10px;border-radius:9999px;overflow:hidden;background:#f1f5f9;">
+      <div style="width:{{ $fundamentals['promoter_pct'] ?? 0 }}%;background:#2563eb;"></div>
+      <div style="width:{{ $fundamentals['public_pct'] ?? 0 }}%;background:#22c55e;"></div>
+    </div>
+    <div style="display:flex;gap:1.5rem;margin-top:.5rem;font-size:.78rem;">
+      <span style="color:#2563eb;">● Promoter {{ $fundamentals['promoter_pct'] ?? '—' }}%</span>
+      <span style="color:#16a34a;">● Public {{ $fundamentals['public_pct'] ?? '—' }}%</span>
+    </div>
+  </div>
+  @endif
+
+  @if(!empty($fundamentals['fiscal_year']))
+  <div style="margin-top:.75rem;font-size:.7rem;color:#94a3b8;">Latest reported: FY {{ $fundamentals['fiscal_year'] }}{{ $fundamentals['quarter'] ? ', Q'.$fundamentals['quarter'] : '' }}</div>
+  @endif
+  @else
+  <p style="font-size:.82rem;color:#94a3b8;">Fundamentals unavailable for this stock right now.</p>
+  @endif
+</div>
+
+{{-- ════ SECTOR PEERS ══════════════════════════════════════════════════════ --}}
+@if(!empty($peers))
+<div class="rounded-xl p-5" style="background:#fff;border:1px solid #e2e8f0;">
+  <div class="section-lbl">Sector Peers</div>
+  <div style="overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;font-size:.8rem;">
+      <thead>
+        <tr style="border-bottom:1px solid #f1f5f9;">
+          <th style="text-align:left;padding:.4rem .5rem;font-size:.65rem;color:#94a3b8;text-transform:uppercase;font-weight:600;">Symbol</th>
+          <th style="text-align:left;padding:.4rem .5rem;font-size:.65rem;color:#94a3b8;text-transform:uppercase;font-weight:600;">Name</th>
+          <th style="text-align:right;padding:.4rem .5rem;font-size:.65rem;color:#94a3b8;text-transform:uppercase;font-weight:600;">LTP</th>
+          <th style="text-align:right;padding:.4rem .5rem;font-size:.65rem;color:#94a3b8;text-transform:uppercase;font-weight:600;">Chg%</th>
+        </tr>
+      </thead>
+      <tbody>
+        @foreach(array_slice($peers, 0, 8) as $p)
+        <tr style="border-bottom:1px solid #f8fafc;">
+          <td style="padding:.4rem .5rem;">
+            <a href="{{ route('stocks.show', $p['symbol']) }}" style="font-weight:700;color:#0f172a;text-decoration:none;">{{ $p['symbol'] }}</a>
+          </td>
+          <td style="padding:.4rem .5rem;color:#64748b;">{{ \Illuminate\Support\Str::limit($p['name'] ?? '', 30) }}</td>
+          <td class="mono" style="padding:.4rem .5rem;text-align:right;color:#0f172a;">{{ isset($p['ltp']) ? number_format($p['ltp'], 2) : '—' }}</td>
+          <td class="mono" style="padding:.4rem .5rem;text-align:right;font-weight:600;color:{{ ($p['changePercent'] ?? 0) >= 0 ? '#16a34a' : '#dc2626' }};">
+            {{ isset($p['changePercent']) ? (($p['changePercent'] >= 0 ? '+' : '') . number_format($p['changePercent'], 2) . '%') : '—' }}
+          </td>
+        </tr>
+        @endforeach
+      </tbody>
+    </table>
+  </div>
+</div>
+@endif
 
 {{-- ════ SIGNAL ═══════════════════════════════════════════════════════════ --}}
 @if($signal)
@@ -259,6 +381,40 @@
       </div>
     </div>
   </div>
+
+  {{-- Support & Resistance Zones — a price ladder, resistance above, support below --}}
+  @if(!empty($zones) && (!empty($zones['support']) || !empty($zones['resistance'])))
+  <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid rgba(0,0,0,.07);">
+    <div class="section-lbl">Support &amp; Resistance Zones</div>
+    <div style="display:flex;flex-direction:column;gap:.4rem;">
+
+      @foreach(array_reverse($zones['resistance'] ?? []) as $z)
+      <div style="display:flex;align-items:center;gap:.75rem;padding:.5rem .75rem;border-radius:.5rem;background:#fef2f2;border-left:3px solid #dc2626;">
+        <span style="font-size:.75rem;font-weight:700;color:#dc2626;min-width:140px;">▲ {{ $z['label'] }}</span>
+        <span class="mono" style="font-size:.82rem;color:#0f172a;">{{ number_format($z['low'],2) }} – {{ number_format($z['high'],2) }}</span>
+      </div>
+      @endforeach
+
+      <div style="display:flex;align-items:center;gap:.75rem;padding:.5rem .75rem;border-radius:.5rem;background:#eff6ff;border-left:3px solid #2563eb;">
+        <span style="font-size:.75rem;font-weight:700;color:#2563eb;min-width:140px;">📍 Entry Zone</span>
+        <span class="mono" style="font-size:.82rem;color:#0f172a;">{{ number_format($signal->entry_min??0,2) }} – {{ number_format($signal->entry_max??0,2) }}</span>
+        <span style="font-size:.7rem;color:#94a3b8;">(current: {{ number_format($signal->price_at_signal??0,2) }})</span>
+      </div>
+
+      @foreach($zones['support'] ?? [] as $z)
+      <div style="display:flex;align-items:center;gap:.75rem;padding:.5rem .75rem;border-radius:.5rem;background:#f0fdf4;border-left:3px solid #16a34a;">
+        <span style="font-size:.75rem;font-weight:700;color:#16a34a;min-width:140px;">▼ {{ $z['label'] }}</span>
+        <span class="mono" style="font-size:.82rem;color:#0f172a;">{{ number_format($z['low'],2) }} – {{ number_format($z['high'],2) }}</span>
+      </div>
+      @endforeach
+
+    </div>
+    <div style="margin-top:.625rem;font-size:.7rem;color:#94a3b8;">
+      Zones are the level ± half the 14-day ATR — a realistic band, not a bare number a price can bounce right through.
+    </div>
+  </div>
+  @endif
+
   <div style="margin-top:.875rem;padding-top:.75rem;border-top:1px solid rgba(0,0,0,.07);font-size:.7rem;color:#94a3b8;">
     ⚠ Algorithmic signal — educational only. Not financial/investment advice. Always do your own research before trading.
   </div>

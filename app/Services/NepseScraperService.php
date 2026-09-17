@@ -238,6 +238,53 @@ class NepseScraperService
     }
 
     // ────────────────────────────────────────────────────────────────────
+    //  Long-range daily history for multi-year returns (GET /api/data/historydata/data/)
+    //  TradingView UDF-style columnar format: {t:[unix_ts], o,c,h,l,vol,amt}.
+    //  Unlike fetchHistoricalPrices() (the adjusted feed, capped at ~3 months
+    //  by the API itself regardless of the requested range), this endpoint
+    //  accepts explicit from/to unix timestamps and genuinely returns years
+    //  of daily candles — needed for 1Y/3Y/5Y return calculations. Prices
+    //  here are unadjusted (no bonus/rights adjustment), unlike the other
+    //  feed, which is an accepted trade-off for a "how has this performed"
+    //  return figure rather than a precise total-return calculation.
+    // ────────────────────────────────────────────────────────────────────
+
+    public function fetchLongHistoricalPrices(string $symbol, int $years = 5): array
+    {
+        $raw = $this->get('/api/data/historydata/data/', [
+            'symbol'     => strtoupper($symbol),
+            'resolution' => '1D',
+            'from'       => now()->subYears($years)->timestamp,
+            'to'         => now()->timestamp,
+        ]);
+
+        if (!is_array($raw) || empty($raw['t'])) {
+            return [];
+        }
+
+        $rows = [];
+        foreach ($raw['t'] as $i => $ts) {
+            $close = (float) ($raw['c'][$i] ?? 0);
+            if ($close <= 0) {
+                continue;
+            }
+
+            $rows[] = [
+                'date'   => date('Y-m-d', (int) $ts),
+                'open'   => (float) ($raw['o'][$i] ?? $close),
+                'high'   => (float) ($raw['h'][$i] ?? $close),
+                'low'    => (float) ($raw['l'][$i] ?? $close),
+                'close'  => $close,
+                'volume' => (int) ($raw['vol'][$i] ?? 0),
+            ];
+        }
+
+        usort($rows, fn ($a, $b) => strcmp($a['date'], $b['date']));
+
+        return $rows;
+    }
+
+    // ────────────────────────────────────────────────────────────────────
     //  Current-day market summary  (GET /api/data/v2/market-summary/bysymbol/)
     //  Returns: [{date,open,high,low,close,volume,amount,prev_close,
     //             percentage_change,point_change,

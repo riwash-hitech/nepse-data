@@ -44,7 +44,11 @@ class AiSignalService
      *                              'volume_analytics' (buy_pct/sell_pct/avg_volume/last_volume
      *                                  from StockController's last-20-candle buy/sell pressure calc),
      *                              'alpha_beta' (Chukul alpha-beta shape), 'var_monthly' (Chukul VaR shape),
-     *                              'recent_closes' (array of the last ~15 daily closes, oldest→newest)
+     *                              'recent_closes' (array of the last ~15 daily closes, oldest→newest),
+     *                              'fundamentals' (ShareHubScraperService::fetchFundamentals() shape:
+     *                                  eps/pe_ratio/book_value/pbv/promoter_pct/public_pct),
+     *                              'zones' (IndicatorService::zonesFromLevels() shape: support/resistance
+     *                                  arrays of {label,low,high,mid} bands)
      * @return array{
      *     verdict:string,confidence:int,summary:string,key_risk:string,
      *     when_to_buy:string,when_to_sell:string,
@@ -157,6 +161,13 @@ rule-based verdict. Also give concrete buy/sell guidance and a 10-trading-day
 price path estimate, anchored to the given current price and consistent with
 your verdict (an UP path for BUY, DOWN for SELL, roughly flat/choppy for HOLD).
 
+When fundamentals (EPS, P/E, Book Value, shareholding) are provided, factor
+valuation into your verdict and summary — e.g. whether the P/E looks cheap or
+expensive, not just the chart pattern. When support/resistance zones are
+provided, phrase when_to_buy/when_to_sell in terms of those actual zone
+ranges (e.g. "buy within the 480–490 support zone") rather than a single
+bare number.
+
 Respond with STRICT JSON only, no markdown fences, no extra text, matching
 exactly this shape:
 {
@@ -233,6 +244,28 @@ PROMPT;
         if (!empty($closes)) {
             $lines[] = '';
             $lines[] = 'Last ' . count($closes) . ' daily closes (oldest→newest): ' . implode(', ', array_map(fn ($c) => number_format((float) $c, 2), $closes));
+        }
+
+        $fund = $context['fundamentals'] ?? null;
+        if (!empty($fund)) {
+            $lines[] = '';
+            $lines[] = 'Fundamentals:';
+            $lines[] = '- EPS: ' . ($fund['eps'] ?? 'n/a') . ' / P/E: ' . ($fund['pe_ratio'] ?? 'n/a') . ' / Book Value: ' . ($fund['book_value'] ?? 'n/a') . ' / P/BV: ' . ($fund['pbv'] ?? 'n/a');
+            if (isset($fund['promoter_pct']) || isset($fund['public_pct'])) {
+                $lines[] = '- Shareholding: promoter ' . ($fund['promoter_pct'] ?? 'n/a') . '% / public ' . ($fund['public_pct'] ?? 'n/a') . '%';
+            }
+        }
+
+        $zones = $context['zones'] ?? null;
+        if (!empty($zones['support']) || !empty($zones['resistance'])) {
+            $lines[] = '';
+            $lines[] = 'Support/resistance zones (bands, not single points):';
+            foreach (($zones['support'] ?? []) as $z) {
+                $lines[] = "- {$z['label']}: {$z['low']}–{$z['high']}";
+            }
+            foreach (($zones['resistance'] ?? []) as $z) {
+                $lines[] = "- {$z['label']}: {$z['low']}–{$z['high']}";
+            }
         }
 
         return implode("\n", $lines);
