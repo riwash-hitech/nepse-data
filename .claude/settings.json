@@ -15,7 +15,8 @@
       "Bash(taskkill //F //IM chrome.exe //T)",
       "Bash(python -c ' *)",
       "Bash(php -l app/Services/PredictionService.php)",
-      "Bash(php -l app/Http/Controllers/StockController.php)"
+      "Bash(php -l app/Http/Controllers/StockController.php)",
+      "Bash(grep -n 'reasons\\\\['\\\\'' as $i => $day\\\\|day\\\\['\\\\''reasons'\\\\''\\\\]' c:/laragon/www/nepseData/resources/views/stocks/show.blade.php)"
     ]
   }
 }
