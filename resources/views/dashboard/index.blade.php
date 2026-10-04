@@ -10,31 +10,37 @@
   100% { transform: translateX(-50%); }
 }
 @keyframes fadeUp {
-  from { opacity:0;transform:translateY(12px); }
+  from { opacity:0;transform:translateY(10px); }
   to   { opacity:1;transform:translateY(0); }
 }
 @keyframes livePulse { 0%,100%{opacity:1;}50%{opacity:.4;} }
 .ticker-wrap  { overflow:hidden;flex:1; }
 .ticker-inner { display:flex;animation:ticker 55s linear infinite;width:max-content; }
 .ticker-inner:hover { animation-play-state:paused; }
-.fade-up    { animation:fadeUp .4s ease both; }
-.fade-d1    { animation-delay:.06s; }
-.fade-d2    { animation-delay:.13s; }
-.fade-d3    { animation-delay:.20s; }
-.fade-d4    { animation-delay:.27s; }
+.fade-up    { animation:fadeUp .35s ease both; }
+.fade-d1    { animation-delay:.05s; }
+.fade-d2    { animation-delay:.10s; }
+.fade-d3    { animation-delay:.15s; }
+.fade-d4    { animation-delay:.20s; }
+.dash-card  { padding:1.5rem; }
 .card-hover { transition:box-shadow .18s,transform .18s; }
-.card-hover:hover { box-shadow:0 8px 28px rgba(20,83,45,.14);transform:translateY(-2px); }
+.card-hover:hover { box-shadow:0 6px 20px rgba(15,23,42,.08);transform:translateY(-2px); }
+.dash-section-title { display:flex;align-items:center;gap:.5rem;font-size:1rem;font-weight:700;color:#0f172a;margin-bottom:1.25rem; }
+.dash-link  { font-size:.75rem;color:#14532D;text-decoration:none;font-weight:600;
+              display:inline-flex;align-items:center;gap:.2rem; }
+.dash-pill  { font-size:.75rem;color:#14532D;text-decoration:none;padding:.3rem .75rem;border-radius:.5rem;
+              background:#DCFCE7;border:1px solid #bbf7d0;font-weight:600;display:inline-flex;align-items:center;gap:.25rem; }
 .sector-row { transition:background .12s; }
 .sector-row:hover { background:#f0fdf4; }
 .stock-row  { transition:background .1s; }
 .stock-row:hover  { background:#f8fafc; }
-.sector-volume-grid { display:grid; grid-template-columns:2fr 1fr; gap:1.25rem; }
+.sector-volume-grid { display:grid; grid-template-columns:2fr 1fr; gap:1.5rem; }
 @media (max-width: 860px) {
   .sector-volume-grid { grid-template-columns:1fr; }
 }
 .hero-stats-grid { display:grid; grid-template-columns:repeat(2,minmax(140px,1fr)); gap:1rem; width:100%; max-width:340px; }
 @media (max-width: 560px) {
-  .market-hero { padding:1.25rem !important; }
+  .market-hero { padding:1.5rem !important; }
   .hero-stats-grid { grid-template-columns:1fr; max-width:100%; }
 }
 </style>
@@ -46,24 +52,28 @@
 @endphp
 
 {{-- ════ MARKET TECHNICALS MINI-HERO ══════════════════════════════════════ --}}
-<div class="fade-up market-hero" style="border-radius:1.25rem;overflow:hidden;margin-bottom:1.75rem;
-     background:linear-gradient(135deg,#14532D 0%,#166534 100%);
-     position:relative;padding:1.75rem 2rem;">
+<div class="fade-up market-hero" style="border-radius:1rem;overflow:hidden;margin-bottom:1.5rem;
+     background:linear-gradient(135deg,#0f3d20 0%,#14532D 45%,#1a7a43 100%);
+     box-shadow:0 10px 30px -10px rgba(20,83,45,.45);
+     position:relative;padding:1.85rem 2rem;">
 
-  <div style="position:absolute;top:-60px;right:-60px;width:220px;height:220px;border-radius:50%;
-       background:radial-gradient(circle,rgba(255,255,255,.08),transparent 70%);pointer-events:none;"></div>
-  <div style="position:absolute;bottom:-60px;left:-40px;width:180px;height:180px;border-radius:50%;
-       background:radial-gradient(circle,rgba(0,0,0,.15),transparent 70%);pointer-events:none;"></div>
+  <div style="position:absolute;inset:0;pointer-events:none;
+       background:radial-gradient(ellipse 55% 65% at 90% -10%, rgba(255,255,255,.12) 0%, transparent 60%),
+                  radial-gradient(ellipse 50% 60% at -5% 110%, rgba(0,0,0,.25) 0%, transparent 55%);"></div>
 
   <div style="position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:1.75rem;align-items:center;">
     <div style="flex:1;min-width:280px;">
-      <h2 style="font-size:1.15rem;font-weight:700;color:#fff;margin:0 0 1rem;">Market Technicals</h2>
+      <h2 style="font-size:1.1rem;font-weight:700;color:#fff;margin:0 0 1.1rem;letter-spacing:.01em;
+           display:flex;align-items:center;gap:.5rem;">
+        <span class="material-symbols-outlined" style="font-size:20px;color:#86efac;">monitoring</span>
+        Market Technicals
+      </h2>
 
-      <div style="background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.15);border-radius:.75rem;
-           padding:.35rem;display:flex;max-width:640px;">
+      <div style="background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.18);border-radius:.75rem;
+           padding:.35rem;display:flex;max-width:640px;box-shadow:inset 0 1px 3px rgba(0,0,0,.2);">
         <div style="position:relative;flex:1;">
           <svg style="position:absolute;left:1rem;top:50%;transform:translateY(-50%);
-               color:rgba(255,255,255,.45);pointer-events:none;" width="16" height="16" fill="none"
+               color:rgba(255,255,255,.55);pointer-events:none;" width="16" height="16" fill="none"
                stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -73,23 +83,27 @@
                  style="width:100%;padding:.7rem 1rem .7rem 2.6rem;font-size:.85rem;
                         background:transparent;border:none;color:#fff;outline:none;box-sizing:border-box;">
           <div id="heroDropdown" style="display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;
-               border-radius:.875rem;overflow:hidden;background:#fff;border:1px solid #e2e8f0;
-               box-shadow:0 20px 60px rgba(0,0,0,.25);z-index:60;"></div>
+               border-radius:.75rem;overflow:hidden;background:#fff;border:1px solid #e2e8f0;
+               box-shadow:0 16px 48px rgba(0,0,0,.2);z-index:60;"></div>
         </div>
         <button type="button" onclick="document.getElementById('heroSearch').focus()"
                 style="background:#fff;color:#14532D;padding:.5rem 1.1rem;border-radius:.5rem;border:none;
-                       font-size:.8rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:.35rem;flex-shrink:0;">
+                       font-size:.8rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:.35rem;flex-shrink:0;
+                       transition:background .15s;"
+                onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='#fff'">
           <span class="material-symbols-outlined" style="font-size:16px;">search</span>
           Analyze
         </button>
       </div>
 
-      <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1rem;">
+      <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1.1rem;">
         @foreach([['icon'=>'trending_up','label'=>'RSI > 70','route'=>'screener.index'],['icon'=>'show_chart','label'=>'MACD Crossover','route'=>'screener.index'],['icon'=>'candlestick_chart','label'=>'Volume Spikes','route'=>'screener.index']] as $chip)
-        <a href="{{ route($chip['route']) }}" style="background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.2);
+        <a href="{{ route($chip['route']) }}" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);
                border-radius:9999px;padding:.35rem .85rem;font-size:.7rem;color:#fff;text-decoration:none;
-               display:inline-flex;align-items:center;gap:.3rem;">
-          <span class="material-symbols-outlined" style="font-size:13px;">{{ $chip['icon'] }}</span>
+               display:inline-flex;align-items:center;gap:.3rem;transition:background .15s,border-color .15s;"
+           onmouseover="this.style.background='rgba(255,255,255,.2)';this.style.borderColor='rgba(255,255,255,.35)'"
+           onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.borderColor='rgba(255,255,255,.22)'">
+          <span class="material-symbols-outlined" style="font-size:13px;color:#86efac;">{{ $chip['icon'] }}</span>
           {{ $chip['label'] }}
         </a>
         @endforeach
@@ -97,11 +111,12 @@
     </div>
 
     <div class="hero-stats-grid">
-      <div style="background:rgba(255,255,255,.1);backdrop-filter:blur(8px);border-radius:.75rem;padding:1rem;border:1px solid rgba(255,255,255,.15);">
-        <p style="font-size:.7rem;color:rgba(255,255,255,.7);margin:0 0 .3rem;">NEPSE Index</p>
+      <div style="background:rgba(255,255,255,.07);border-radius:.75rem;padding:1rem;border:1px solid rgba(255,255,255,.16);
+           backdrop-filter:blur(2px);">
+        <p style="font-size:.68rem;color:rgba(255,255,255,.65);margin:0 0 .3rem;text-transform:uppercase;letter-spacing:.05em;font-weight:600;">NEPSE Index</p>
         @if($nepseIndex)
         <p style="font-size:1.3rem;font-weight:700;color:#fff;margin:0;font-family:'JetBrains Mono',monospace;">{{ number_format($nepseIndex['close'], 2) }}</p>
-        <p style="font-size:.72rem;margin:.25rem 0 0;color:{{ $nepseIndex['change'] >= 0 ? '#86efac' : '#fca5a5' }};display:flex;align-items:center;gap:.15rem;">
+        <p style="font-size:.72rem;margin:.3rem 0 0;color:{{ $nepseIndex['change'] >= 0 ? '#86efac' : '#fca5a5' }};display:flex;align-items:center;gap:.15rem;font-weight:600;">
           <span class="material-symbols-outlined" style="font-size:13px;">{{ $nepseIndex['change'] >= 0 ? 'arrow_upward' : 'arrow_downward' }}</span>
           {{ $nepseIndex['change'] >= 0 ? '+' : '' }}{{ number_format($nepseIndex['change'], 2) }} ({{ number_format($nepseIndex['change_percent'], 2) }}%)
         </p>
@@ -109,14 +124,15 @@
         <p style="font-size:1.1rem;font-weight:700;color:rgba(255,255,255,.5);margin:0;">—</p>
         @endif
       </div>
-      <div style="background:rgba(255,255,255,.1);backdrop-filter:blur(8px);border-radius:.75rem;padding:1rem;border:1px solid rgba(255,255,255,.15);">
-        <p style="font-size:.7rem;color:rgba(255,255,255,.7);margin:0 0 .3rem;">Market Status</p>
+      <div style="background:rgba(255,255,255,.07);border-radius:.75rem;padding:1rem;border:1px solid rgba(255,255,255,.16);
+           backdrop-filter:blur(2px);">
+        <p style="font-size:.68rem;color:rgba(255,255,255,.65);margin:0 0 .3rem;text-transform:uppercase;letter-spacing:.05em;font-weight:600;">Market Status</p>
         <p style="font-size:1.05rem;font-weight:700;color:#fff;margin:0;display:flex;align-items:center;gap:.4rem;">
           <span style="width:9px;height:9px;border-radius:50%;background:{{ $marketStatus['open'] ? '#4ade80' : '#94a3b8' }};
                  display:inline-block;{{ $marketStatus['open'] ? 'animation:livePulse 1.5s infinite;' : '' }}"></span>
           {{ $marketStatus['open'] ? 'Open' : 'Closed' }}
         </p>
-        <p style="font-size:.7rem;color:rgba(255,255,255,.65);margin:.3rem 0 0;">
+        <p style="font-size:.7rem;color:rgba(255,255,255,.6);margin:.35rem 0 0;">
           {{ $marketStatus['open'] ? 'Closes in ' . $marketStatus['closesIn'] : 'Sun–Thu, 11:00–15:00 NPT' }}
         </p>
       </div>
@@ -126,16 +142,13 @@
 
 {{-- ════ YOUR PORTFOLIO ════════════════════════════════════════════════════ --}}
 @if($portfolioOverview)
-<div class="fade-up" style="background:#fff;border:1px solid #e2e8f0;border-radius:1rem;
-     padding:1.5rem;margin-bottom:1.75rem;box-shadow:0 1px 3px rgba(0,0,0,.04);">
+<div class="fade-up glass dash-card" style="margin-bottom:1.5rem;">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:.5rem;">
-    <div style="display:flex;align-items:center;gap:.5rem;font-size:1rem;font-weight:700;color:#0f172a;">
-      <span class="material-symbols-outlined" style="color:#416550;font-size:20px;">business_center</span>
+    <div class="dash-section-title" style="margin-bottom:0;">
+      <span class="material-symbols-outlined" style="color:#14532D;font-size:20px;">business_center</span>
       Your Portfolio
     </div>
-    <a href="{{ route('portfolio.overview') }}" style="font-size:.75rem;color:#14532D;text-decoration:none;
-       padding:.3rem .75rem;border-radius:.5rem;background:#DCFCE7;border:1px solid #bbf7d0;font-weight:600;
-       display:inline-flex;align-items:center;gap:.25rem;">
+    <a href="{{ route('portfolio.overview') }}" class="dash-pill">
       Full Portfolio <span class="material-symbols-outlined" style="font-size:16px;">arrow_forward</span>
     </a>
   </div>
@@ -171,16 +184,13 @@
 
 {{-- ════ YOUR WATCHLIST ════════════════════════════════════════════════════ --}}
 @if($watchlistPreview && $watchlistPreview->isNotEmpty())
-<div class="fade-up" style="background:#fff;border:1px solid #e2e8f0;border-radius:1rem;
-     padding:1.5rem;margin-bottom:1.75rem;box-shadow:0 1px 3px rgba(0,0,0,.04);">
+<div class="fade-up glass dash-card" style="margin-bottom:1.5rem;">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:.5rem;">
-    <div style="display:flex;align-items:center;gap:.5rem;font-size:1rem;font-weight:700;color:#0f172a;">
-      <span class="material-symbols-outlined" style="color:#416550;font-size:20px;">star</span>
+    <div class="dash-section-title" style="margin-bottom:0;">
+      <span class="material-symbols-outlined" style="color:#14532D;font-size:20px;">star</span>
       Your Watchlist
     </div>
-    <a href="{{ route('watchlist.index') }}" style="font-size:.75rem;color:#14532D;text-decoration:none;
-       padding:.3rem .75rem;border-radius:.5rem;background:#DCFCE7;border:1px solid #bbf7d0;font-weight:600;
-       display:inline-flex;align-items:center;gap:.25rem;">
+    <a href="{{ route('watchlist.index') }}" class="dash-pill">
       Full Watchlist <span class="material-symbols-outlined" style="font-size:16px;">arrow_forward</span>
     </a>
   </div>
@@ -210,8 +220,8 @@
 @endif
 
 {{-- ════ MARKET SUMMARY ════════════════════════════════════════════════════ --}}
-<div class="fade-up fade-d1" style="margin-bottom:1.75rem;">
-  <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:1rem;font-size:1rem;font-weight:700;color:#0f172a;">
+<div class="fade-up fade-d1" style="margin-bottom:1.5rem;">
+  <div class="dash-section-title">
     <span class="material-symbols-outlined" style="color:#14532D;font-size:20px;">insert_chart</span>
     Market Summary
   </div>
@@ -219,12 +229,12 @@
     @php
     $summaryCards = [
       ['label'=>'Total Turnover', 'value'=>$marketSummary['turnover'], 'icon'=>'currency_rupee', 'clr'=>'#14532D', 'bg'=>'#DCFCE7'],
-      ['label'=>'Shares Traded',  'value'=>$marketSummary['volume'],   'icon'=>'pie_chart',       'clr'=>'#3c6755', 'bg'=>'#e8eeff'],
-      ['label'=>'Active Stocks',  'value'=>number_format($totalStocks),'icon'=>'apartment',        'clr'=>'#4f46e5', 'bg'=>'#eef2ff'],
+      ['label'=>'Shares Traded',  'value'=>$marketSummary['volume'],   'icon'=>'pie_chart',       'clr'=>'#166534', 'bg'=>'#DCFCE7'],
+      ['label'=>'Active Stocks',  'value'=>number_format($totalStocks),'icon'=>'apartment',        'clr'=>'#166534', 'bg'=>'#DCFCE7'],
     ];
     @endphp
     @foreach($summaryCards as $sc)
-    <div class="card-hover" style="background:#fff;border:1px solid #e2e8f0;border-radius:.875rem;padding:1.25rem;">
+    <div class="glass card-hover" style="padding:1.25rem;">
       <div style="width:40px;height:40px;border-radius:9999px;background:{{ $sc['bg'] }};color:{{ $sc['clr'] }};
            display:flex;align-items:center;justify-content:center;margin-bottom:1rem;">
         <span class="material-symbols-outlined" style="font-size:20px;">{{ $sc['icon'] }}</span>
@@ -237,15 +247,14 @@
 </div>
 
 {{-- ════ SECTOR PERFORMANCE + TOP VOLUME ═══════════════════════════════════ --}}
-<div class="fade-up fade-d2 sector-volume-grid" style="margin-bottom:1.75rem;">
+<div class="fade-up fade-d2 sector-volume-grid" style="margin-bottom:1.5rem;">
 
   {{-- Sector Performance --}}
-  <div style="background:#fff;border:1px solid #e2e8f0;border-radius:.875rem;padding:1.5rem;">
+  <div class="glass dash-card">
     <div style="display:flex;align-items:center;justify-content:space-between;
          border-bottom:1px solid #f1f5f9;padding-bottom:1rem;margin-bottom:1.25rem;">
       <div style="font-size:.95rem;font-weight:700;color:#0f172a;">Sector Performance</div>
-      <a href="{{ route('stocks.index') }}" style="font-size:.75rem;color:#14532D;text-decoration:none;font-weight:600;
-         display:inline-flex;align-items:center;gap:.15rem;">
+      <a href="{{ route('stocks.index') }}" class="dash-link">
         View All <span class="material-symbols-outlined" style="font-size:15px;">chevron_right</span>
       </a>
     </div>
@@ -254,7 +263,7 @@
       <div>
         <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:.4rem;">
           <div style="display:flex;align-items:center;gap:.75rem;">
-            <div style="width:32px;height:32px;border-radius:.4rem;background:#f0fdf4;color:#14532D;
+            <div style="width:32px;height:32px;border-radius:.5rem;background:#f0fdf4;color:#14532D;
                  display:flex;align-items:center;justify-content:center;flex-shrink:0;">
               <span class="material-symbols-outlined" style="font-size:16px;">account_balance</span>
             </div>
@@ -283,7 +292,7 @@
   </div>
 
   {{-- Top Volume --}}
-  <div style="background:#fff;border:1px solid #e2e8f0;border-radius:.875rem;padding:1.5rem;display:flex;flex-direction:column;">
+  <div class="glass dash-card" style="display:flex;flex-direction:column;">
     <div style="font-size:.95rem;font-weight:700;color:#0f172a;border-bottom:1px solid #f1f5f9;padding-bottom:1rem;margin-bottom:1.25rem;">
       Top Volume
     </div>
@@ -323,9 +332,8 @@
 </div>
 
 {{-- ════ LIVE TICKER ═══════════════════════════════════════════════════════ --}}
-<div class="fade-up fade-d3" style="background:#fff;border:1px solid #e2e8f0;border-radius:.875rem;
-     overflow:hidden;margin-bottom:1rem;display:flex;align-items:center;">
-  <div style="flex-shrink:0;padding:.625rem 1rem;background:#0f172a;font-size:.65rem;
+<div class="fade-up fade-d3 glass" style="overflow:hidden;display:flex;align-items:center;">
+  <div style="flex-shrink:0;padding:.625rem 1rem;background:#14532D;font-size:.65rem;
        font-weight:700;color:#fff;letter-spacing:.07em;text-transform:uppercase;white-space:nowrap;">
     NEPSE
   </div>
