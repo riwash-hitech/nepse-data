@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
-use App\Http\Controllers\{DashboardController, IpoController, OutlookController, PortfolioController, ProfileController, ScreenerController, SignalController, StockController, TopPicksController, WatchlistController};
+use App\Http\Controllers\{DashboardController, IpoController, OutlookController, OversoldController, PortfolioController, ProfileController, ScreenerController, SignalController, StockController, TopPicksController, WatchlistController};
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\SyncController;
 use App\Http\Controllers\Admin\LogViewerController;
@@ -56,6 +56,10 @@ Route::middleware(['auth', 'verified', 'no-cache'])->group(function () {
     // ── Top Picks ─────────────────────────────────────────────────────────
     Route::get('/top-picks', [TopPicksController::class, 'index'])->name('top-picks.index');
     Route::post('/top-picks/refresh', [TopPicksController::class, 'refresh'])->name('top-picks.refresh');
+
+    // ── Oversold ──────────────────────────────────────────────────────────
+    Route::get('/oversold', [OversoldController::class, 'index'])->name('oversold.index');
+    Route::get('/oversold/{symbol}/ai-insight', [OversoldController::class, 'aiInsight'])->name('oversold.ai-insight');
 
     // ── IPO Result Checker ──────────────────────────────────────────────────
     Route::get('/ipo', [IpoController::class, 'index'])->name('ipo.index');

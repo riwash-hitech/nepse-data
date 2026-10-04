@@ -99,6 +99,49 @@ class IndicatorService
     }
 
     /**
+     * RSI at every index of $closes (Wilder's smoothed method), not just the
+     * final value — needed to find past oversold episodes in a price history
+     * instead of just the current reading. $result[$i] is null until enough
+     * data has accumulated (index < $period); from $period onward it mirrors
+     * what rsi() would return if called with closes[0..$i].
+     */
+    public static function rsiSeries(array $closes, int $period = 14): array
+    {
+        $n = count($closes);
+        $result = array_fill(0, $n, null);
+        if ($n < $period + 1) {
+            return $result;
+        }
+
+        $gains = [];
+        $losses = [];
+        for ($i = 1; $i < $n; $i++) {
+            $diff = $closes[$i] - $closes[$i - 1];
+            $gains[$i] = max(0, $diff);
+            $losses[$i] = max(0, -$diff);
+        }
+
+        $avgGain = 0.0;
+        $avgLoss = 0.0;
+        for ($i = 1; $i <= $period; $i++) {
+            $avgGain += $gains[$i];
+            $avgLoss += $losses[$i];
+        }
+        $avgGain /= $period;
+        $avgLoss /= $period;
+
+        $result[$period] = $avgLoss == 0 ? 100.0 : 100 - (100 / (1 + $avgGain / $avgLoss));
+
+        for ($i = $period + 1; $i < $n; $i++) {
+            $avgGain = ($avgGain * ($period - 1) + $gains[$i]) / $period;
+            $avgLoss = ($avgLoss * ($period - 1) + $losses[$i]) / $period;
+            $result[$i] = $avgLoss == 0 ? 100.0 : 100 - (100 / (1 + $avgGain / $avgLoss));
+        }
+
+        return $result;
+    }
+
+    /**
      * MACD (12, 26, 9)
      * Returns ['macd' => float, 'signal' => float, 'histogram' => float]
      */

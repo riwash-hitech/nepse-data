@@ -83,6 +83,135 @@ class AiSignalService
         }
     }
 
+    /**
+     * Short plain-English take on a stock's oversold bounce setup — used by
+     * the Oversold screener. Deliberately a separate, cheap call (plain text,
+     * ~300 tokens) rather than the full analyze() JSON schema: the screener
+     * may show up to 50 stocks and this is fetched on demand per row, not
+     * batched, so it needs to stay fast and inexpensive.
+     *
+     * @param array|null $bounce BounceAnalysisService::analyze() shape
+     */
+    public function bounceTake(string $symbol, string $name, float $currentPrice, float $rsi, ?array $bounce): ?string
+    {
+        $provider = strtolower((string) config('services.ai_provider', 'gemini'));
+        $system = <<<'PROMPT'
+You are a NEPSE (Nepal Stock Exchange) equity analyst. Given a stock's current
+oversold RSI reading and its own historical bounce-back pattern after similar
+past oversold readings, write a short, plain-English take: maximum 2
+sentences, no markdown, no JSON, no headers. Reference the actual numbers
+given. Be balanced — a stock being oversold does not guarantee a bounce —
+and mention the key risk briefly if one is evident from the data.
+PROMPT;
+        $prompt = $this->buildBouncePrompt($symbol, $name, $currentPrice, $rsi, $bounce);
+
+        try {
+            $text = match ($provider) {
+                'anthropic' => $this->callAnthropicPlain($prompt, $system),
+                default     => $this->callGeminiPlain($prompt, $system),
+            };
+
+            return $text !== null ? trim($text) : null;
+        } catch (\Throwable $e) {
+            Log::warning('[ai-signal] bounce take failed', [
+                'provider' => $provider,
+                'symbol'   => $symbol,
+                'error'    => $e->getMessage(),
+            ]);
+            return null;
+        }
+    }
+
+    private function buildBouncePrompt(string $symbol, string $name, float $price, float $rsi, ?array $bounce): string
+    {
+        $lines = [
+            "Stock: {$symbol} — {$name}",
+            'Current price: NPR ' . number_format($price, 2),
+            'Current RSI(14): ' . number_format($rsi, 1) . ' (oversold)',
+        ];
+
+        if ($bounce) {
+            $lines[] = '';
+            $lines[] = 'Historical pattern when this stock got this oversold before:';
+            $lines[] = "- Last time: bottomed near NPR {$bounce['last_low_price']} on {$bounce['last_low_date']}, "
+                . "bounced to NPR {$bounce['last_bounce_price']} by {$bounce['last_bounce_date']} "
+                . "(+{$bounce['last_bounce_pct']}% over {$bounce['last_bounce_days']} sessions)";
+            $lines[] = "- Across {$bounce['episodes_count']} such oversold episode(s) on record, "
+                . "average bounce was +{$bounce['avg_bounce_pct']}%, best was +{$bounce['max_bounce_pct']}%";
+            $lines[] = "- Projected bounce target from current price if this pattern repeats: "
+                . "NPR {$bounce['projected_target_low']}–{$bounce['projected_target_high']}";
+            if ($bounce['is_ongoing']) {
+                $lines[] = '- Note: there is also a more recent oversold episode still in progress, not yet resolved.';
+            }
+        } else {
+            $lines[] = '';
+            $lines[] = 'No clear historical oversold-bounce precedent found in the available price history for this stock.';
+        }
+
+        return implode("\n", $lines);
+    }
+
+    private function callGeminiPlain(string $prompt, string $system): ?string
+    {
+        $apiKey = config('services.gemini.key');
+        if (empty($apiKey)) {
+            return null;
+        }
+
+        $model = config('services.gemini.model', 'gemini-2.0-flash');
+        $url = sprintf(self::GEMINI_ENDPOINT, $model);
+
+        $response = $this->client->post($url, [
+            'query'   => ['key' => $apiKey],
+            'headers' => ['Content-Type' => 'application/json'],
+            'json'    => [
+                'systemInstruction' => ['parts' => [['text' => $system]]],
+                'contents' => [
+                    ['role' => 'user', 'parts' => [['text' => $prompt]]],
+                ],
+                'generationConfig' => [
+                    'temperature'     => 0.4,
+                    'maxOutputTokens' => 300,
+                ],
+            ],
+        ]);
+
+        $body = json_decode($response->getBody()->getContents(), true);
+        $text = $body['candidates'][0]['content']['parts'][0]['text'] ?? null;
+
+        return (is_string($text) && trim($text) !== '') ? $text : null;
+    }
+
+    private function callAnthropicPlain(string $prompt, string $system): ?string
+    {
+        $apiKey = config('services.anthropic.key');
+        if (empty($apiKey)) {
+            return null;
+        }
+
+        $response = $this->client->post(self::ANTHROPIC_ENDPOINT, [
+            'headers' => [
+                'x-api-key'         => $apiKey,
+                'anthropic-version' => self::ANTHROPIC_API_VERSION,
+                'content-type'      => 'application/json',
+            ],
+            'json' => [
+                'model'       => config('services.anthropic.model', 'claude-haiku-4-5-20251001'),
+                'max_tokens'  => 300,
+                'temperature' => 0.4,
+                'system'      => $system,
+                'messages'    => [
+                    ['role' => 'user', 'content' => $prompt],
+                ],
+            ],
+        ]);
+
+        $body = json_decode($response->getBody()->getContents(), true);
+        $text = $body['content'][0]['text'] ?? null;
+
+        return (is_string($text) && trim($text) !== '') ? $text : null;
+    }
+
     private function callGemini(string $prompt): ?string
     {
         $apiKey = config('services.gemini.key');
