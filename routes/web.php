@@ -76,6 +76,9 @@ Route::middleware(['auth', 'verified', 'no-cache'])->group(function () {
     Route::prefix('portfolio')->name('portfolio.')->group(function () {
         Route::get('/', [PortfolioController::class, 'overview'])->name('overview');
         Route::get('/holdings', [PortfolioController::class, 'holdings'])->name('holdings');
+        Route::post('/holdings/quick-add', [PortfolioController::class, 'quickAdd'])->name('holdings.quick-add');
+        Route::put('/holdings/{holding}', [PortfolioController::class, 'updateHolding'])->name('holdings.update');
+        Route::delete('/holdings/{holding}', [PortfolioController::class, 'destroyHolding'])->name('holdings.destroy');
         Route::get('/profit-loss', [PortfolioController::class, 'profitLoss'])->name('profit-loss');
         Route::get('/realized', [PortfolioController::class, 'realized'])->name('realized');
         Route::get('/adjust', [PortfolioController::class, 'adjustForm'])->name('adjust');

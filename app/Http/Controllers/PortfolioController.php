@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PortfolioHolding;
 use App\Models\Sector;
 use App\Models\Stock;
 use App\Services\PortfolioService;
@@ -29,6 +30,75 @@ class PortfolioController extends Controller
         $sectors = Sector::orderBy('name')->pluck('name');
 
         return view('portfolio.holdings', $data + ['sectors' => $sectors, 'filters' => $filters]);
+    }
+
+    /**
+     * Quick-add a position straight from the Holdings page, rather than the
+     * separate Adjust Holdings page — still goes through applyTransaction
+     * so the ledger/realized-gain math stays consistent, it's just a 'buy'
+     * dated today with a fixed remark.
+     */
+    public function quickAdd(Request $request)
+    {
+        $validated = $request->validate([
+            'symbol'   => 'required|string|exists:stocks,symbol',
+            'quantity' => 'required|integer|min:1',
+            'rate'     => 'required|numeric|min:0',
+        ]);
+
+        $stock = Stock::where('symbol', $validated['symbol'])->firstOrFail();
+
+        $this->portfolio->applyTransaction(
+            Auth::user(),
+            $stock,
+            'buy',
+            (int) $validated['quantity'],
+            (float) $validated['rate'],
+            now()->toDateString(),
+            'Quick add from Holdings'
+        );
+
+        Activity::log(Auth::user(), 'portfolio_quick_add', "Added {$validated['quantity']} {$stock->symbol} @ {$validated['rate']} from Holdings.");
+
+        return redirect()->route('portfolio.holdings')->with('success', "Added {$stock->symbol} to your portfolio.");
+    }
+
+    /**
+     * Direct override of a holding's quantity/avg cost — unlike
+     * adjustStore()/applyTransaction(), this does NOT append a ledger
+     * transaction or touch realized gain; it's a manual correction for when
+     * the WACC math doesn't match reality (e.g. bonus shares, a data-entry
+     * fix), not a buy/sell event.
+     */
+    public function updateHolding(Request $request, PortfolioHolding $holding)
+    {
+        abort_unless($holding->user_id === Auth::id(), 403);
+
+        $validated = $request->validate([
+            'quantity' => 'required|integer|min:0',
+            'avg_cost' => 'required|numeric|min:0',
+        ]);
+
+        $holding->update([
+            'quantity' => $validated['quantity'],
+            'avg_cost' => $validated['avg_cost'],
+        ]);
+
+        Activity::log(Auth::user(), 'portfolio_edit', "Manually set {$holding->stock->symbol} to {$validated['quantity']} shares @ {$validated['avg_cost']} avg cost.");
+
+        return redirect()->route('portfolio.holdings')->with('success', "Updated {$holding->stock->symbol}.");
+    }
+
+    public function destroyHolding(PortfolioHolding $holding)
+    {
+        abort_unless($holding->user_id === Auth::id(), 403);
+
+        $symbol = $holding->stock->symbol;
+        $holding->delete();
+
+        Activity::log(Auth::user(), 'portfolio_delete', "Removed {$symbol} from portfolio.");
+
+        return redirect()->route('portfolio.holdings')->with('success', "Removed {$symbol} from your portfolio.");
     }
 
     public function profitLoss()
