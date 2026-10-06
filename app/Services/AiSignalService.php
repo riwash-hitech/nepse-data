@@ -116,6 +116,12 @@ candidate you disagree with. Always base entry_min/entry_max/target_price/
 stop_loss on each stock's LIVE current price given below, never on an older
 signal-date price even if one is mentioned alongside the rule reasons.
 
+If you have the ability to search the web, use it to check for recent
+real-world news, earnings, or developments about these specific companies
+or their sector in Nepal before finalizing your ranking — let genuinely
+relevant current events raise or lower a candidate versus the technicals
+alone, and mention it briefly in that candidate's reason when it does.
+
 Respond with STRICT JSON only, no markdown fences, no extra text, matching
 exactly this shape:
 {
@@ -137,8 +143,13 @@ PROMPT;
 
         try {
             $text = match ($provider) {
+                // Grounded (live Google Search) call first; only Gemini
+                // supports this tool here. Falls back to the plain JSON-mode
+                // call if grounding isn't available for the configured model
+                // or the request fails for any reason.
                 'anthropic' => $this->callAnthropicJson($prompt, $system, 2048),
-                default     => $this->callGeminiJson($prompt, $system, 2048),
+                default     => $this->callGeminiGroundedJson($prompt, $system, 2048)
+                                ?? $this->callGeminiJson($prompt, $system, 2048),
             };
 
             if ($text === null) {
@@ -257,6 +268,58 @@ PROMPT;
         $text = $body['candidates'][0]['content']['parts'][0]['text'] ?? null;
 
         return (is_string($text) && trim($text) !== '') ? $text : null;
+    }
+
+    /**
+     * Same as callGeminiJson(), but enables Gemini's built-in Google Search
+     * grounding tool so the model can pull in real, current web results
+     * (news, recent developments) about the candidates before answering —
+     * reuses the same GEMINI_KEY already configured, no separate search API
+     * needed. Gemini does not support combining a tool with forced JSON mode
+     * (responseMimeType), so this omits that and relies on the system
+     * prompt's "STRICT JSON only" instruction plus the existing fence-
+     * stripping in parseTopPicks(). Returns null on ANY failure (missing
+     * key, unsupported model, API error) so the caller falls back to the
+     * plain non-grounded JSON call instead of failing outright.
+     */
+    private function callGeminiGroundedJson(string $prompt, string $system, int $maxTokens): ?string
+    {
+        $apiKey = config('services.gemini.key');
+        if (empty($apiKey)) {
+            return null;
+        }
+
+        $model = config('services.gemini.model', 'gemini-2.0-flash');
+        $url = sprintf(self::GEMINI_ENDPOINT, $model);
+
+        try {
+            $response = $this->client->post($url, [
+                'query'   => ['key' => $apiKey],
+                'headers' => ['Content-Type' => 'application/json'],
+                'json'    => [
+                    'systemInstruction' => ['parts' => [['text' => $system]]],
+                    'contents' => [
+                        ['role' => 'user', 'parts' => [['text' => $prompt]]],
+                    ],
+                    'tools' => [
+                        ['google_search' => (object) []],
+                    ],
+                    'generationConfig' => [
+                        'temperature'     => 0.3,
+                        'maxOutputTokens' => $maxTokens,
+                    ],
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            Log::info('[ai-signal] grounded search unavailable, falling back', ['error' => $e->getMessage()]);
+            return null;
+        }
+
+        $body = json_decode($response->getBody()->getContents(), true);
+        $parts = $body['candidates'][0]['content']['parts'] ?? [];
+        $text = implode('', array_map(fn($p) => $p['text'] ?? '', is_array($parts) ? $parts : []));
+
+        return trim($text) !== '' ? $text : null;
     }
 
     private function callAnthropicJson(string $prompt, string $system, int $maxTokens): ?string
