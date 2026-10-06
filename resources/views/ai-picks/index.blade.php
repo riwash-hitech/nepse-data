@@ -129,10 +129,15 @@
     <div class="p-5 space-y-4">
         <div class="flex flex-wrap gap-2 items-center">
             <div class="ai-stat-cell" style="min-width:120px;">
-                <div class="text-xs mb-1" style="color:#94a3b8;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;">Price</div>
+                <div class="text-xs mb-1" style="color:#94a3b8;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;">
+                    {{ ($pick['price_is_live'] ?? false) ? 'Live Price' : 'Price' }}
+                </div>
                 <div class="font-extrabold" style="font-size:1rem;color:#0f172a;font-family:'JetBrains Mono',monospace;">
                     NPR {{ number_format($pick['price'] ?? 0, 2) }}
                 </div>
+                @if(!($pick['price_is_live'] ?? false))
+                <div class="text-xs mt-0.5" style="color:#d97706;">⚠ not live</div>
+                @endif
             </div>
             @if(($pick['rsi'] ?? null) !== null)
             <span class="text-xs px-2.5 py-1 rounded-full font-medium" style="background:#f0f9ff;border:1px solid #bae6fd;color:#0369a1;">
@@ -183,7 +188,12 @@
 
         @if(!empty($pick['reasons']))
         <div>
-            <div class="text-xs font-semibold mb-2 uppercase tracking-wide" style="color:#94a3b8;">Rule-based signal reasons</div>
+            <div class="text-xs font-semibold mb-2 uppercase tracking-wide" style="color:#94a3b8;">
+                Rule-based signal reasons
+                @if(!empty($pick['signal_date']))
+                <span style="text-transform:none;font-weight:400;color:#cbd5e1;">· as of {{ $pick['signal_date'] }}</span>
+                @endif
+            </div>
             <div class="flex flex-wrap gap-1.5">
                 @foreach($pick['reasons'] as $r)
                 <span class="text-xs px-2 py-1 rounded-md" style="background:#f8fafc;border:1px solid #f1f5f9;color:#475569;">{{ $r }}</span>

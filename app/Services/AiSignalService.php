@@ -112,7 +112,9 @@ screen. Using the indicators given, apply your own independent judgement to
 rank your genuine top picks from this shortlist — do not just copy the
 existing rule-based confidence score. You may select fewer than 10 if you
 don't believe 10 are genuinely attractive right now, and you may exclude any
-candidate you disagree with.
+candidate you disagree with. Always base entry_min/entry_max/target_price/
+stop_loss on each stock's LIVE current price given below, never on an older
+signal-date price even if one is mentioned alongside the rule reasons.
 
 Respond with STRICT JSON only, no markdown fences, no extra text, matching
 exactly this shape:
@@ -155,11 +157,19 @@ PROMPT;
 
     private function buildTopPicksPrompt(array $candidates): string
     {
-        $lines = ['Candidate shortlist (already passed a rule-based BUY screen, strongest rule-confidence first):', ''];
+        $signalDate = $candidates[0]['signal_date'] ?? null;
+
+        $lines = [
+            'Candidate shortlist (already passed a rule-based BUY screen, strongest rule-confidence first).',
+            "The \"price\" below is each stock's LIVE current price as of today — use THIS for your own "
+                . 'entry_min/entry_max/target_price/stop_loss calculations.'
+                . ($signalDate ? " The rule-based confidence/reasons were computed on {$signalDate} and may be stale if the price has since moved — weigh that staleness into your own judgement." : ''),
+            '',
+        ];
 
         foreach ($candidates as $c) {
             $lines[] = sprintf(
-                '- %s (%s, %s sector): price NPR %s, RSI(14) %s, MACD histogram %s, rule-based confidence %d%%, rule reasons: %s',
+                '- %s (%s, %s sector): LIVE price NPR %s, RSI(14) %s, MACD histogram %s, rule-based confidence %d%% (as of %s), rule reasons: %s',
                 $c['symbol'],
                 $c['name'],
                 $c['sector'] ?? 'Other',
@@ -167,6 +177,7 @@ PROMPT;
                 $c['rsi'] ?? 'n/a',
                 $c['macd_hist'] ?? 'n/a',
                 $c['confidence'] ?? 0,
+                $c['signal_date'] ?? 'n/a',
                 implode('; ', $c['reasons'] ?? []) ?: 'n/a'
             );
         }

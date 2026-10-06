@@ -7,6 +7,7 @@ use App\Models\Signal;
 use App\Models\Stock;
 use App\Models\StockPrice;
 use App\Services\AiSignalService;
+use App\Services\NepseScraperService;
 use App\Support\Activity;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -20,6 +21,8 @@ use Illuminate\Support\Facades\Cache;
  */
 class AiPickerController extends Controller
 {
+    public function __construct(private readonly NepseScraperService $scraper) {}
+
     public function index()
     {
         $picks = Cache::remember('ai_top_picks_v1', 3600, fn() => $this->computePicks());
@@ -82,20 +85,32 @@ class AiPickerController extends Controller
             return [];
         }
 
-        $candidates = $rows->map(fn($s) => [
-            'symbol'      => $s->symbol,
-            'name'        => $s->name,
-            'sector'      => $s->sector->name ?? 'Other',
-            'price'       => (float) $s->price,
-            'rsi'         => $s->rsi !== null ? round((float) $s->rsi, 1) : null,
-            'macd_hist'   => $s->macd_hist !== null ? round((float) $s->macd_hist, 2) : null,
-            'confidence'  => (int) $s->signal_confidence,
-            'reasons'     => is_array($s->signal_reasons) ? $s->signal_reasons : [],
-            'entry_min'   => $s->sig_entry_min !== null ? (float) $s->sig_entry_min : null,
-            'entry_max'   => $s->sig_entry_max !== null ? (float) $s->sig_entry_max : null,
-            'target_1'    => $s->sig_target_1 !== null ? (float) $s->sig_target_1 : null,
-            'stop_loss'   => $s->sig_stop_loss !== null ? (float) $s->sig_stop_loss : null,
-        ])->all();
+        // The signal/stock_prices sync can lag days to weeks behind — the
+        // stale 'price' column above is only a fallback. For every candidate
+        // we overwrite it with today's actual live quote (same source/cache
+        // StockController and PortfolioService use), so the AI reasons about
+        // what the stock costs right now, not what it cost when the signal
+        // was last computed.
+        $candidates = $rows->map(function ($s) use ($latestDate) {
+            $live = $this->liveQuote($s->symbol);
+
+            return [
+                'symbol'       => $s->symbol,
+                'name'         => $s->name,
+                'sector'       => $s->sector->name ?? 'Other',
+                'price'        => $live ?? (float) $s->price,
+                'price_is_live' => $live !== null,
+                'rsi'          => $s->rsi !== null ? round((float) $s->rsi, 1) : null,
+                'macd_hist'    => $s->macd_hist !== null ? round((float) $s->macd_hist, 2) : null,
+                'confidence'   => (int) $s->signal_confidence,
+                'reasons'      => is_array($s->signal_reasons) ? $s->signal_reasons : [],
+                'entry_min'    => $s->sig_entry_min !== null ? (float) $s->sig_entry_min : null,
+                'entry_max'    => $s->sig_entry_max !== null ? (float) $s->sig_entry_max : null,
+                'target_1'     => $s->sig_target_1 !== null ? (float) $s->sig_target_1 : null,
+                'stop_loss'    => $s->sig_stop_loss !== null ? (float) $s->sig_stop_loss : null,
+                'signal_date'  => $latestDate,
+            ];
+        })->all();
 
         $aiPicks = app(AiSignalService::class)->topPicks($candidates);
 
@@ -103,12 +118,21 @@ class AiPickerController extends Controller
 
         if ($aiPicks === null) {
             // AI unavailable — fall back to the top-confidence rule-based
-            // shortlist as-is, flagged so the view can say so.
-            return collect($candidates)->take(10)->map(fn($c) => $c + [
-                'ai_generated' => false,
-                'reason'       => null,
-                'target_price' => $c['target_1'],
-            ])->values()->all();
+            // shortlist as-is, flagged so the view can say so. The stored
+            // target_1/stop_loss were computed against the stale signal-date
+            // price, not the live price above — only reuse them if the stock
+            // hasn't moved enough since then to make them misleading.
+            return collect($candidates)->take(10)->map(function ($c) {
+                $staleTarget = $c['target_1'];
+                $priceMoved = $c['entry_max'] !== null && $c['price'] > 0
+                    && abs($c['price'] - $c['entry_max']) / $c['price'] > 0.15;
+
+                return $c + [
+                    'ai_generated' => false,
+                    'reason'       => null,
+                    'target_price' => $priceMoved ? null : $staleTarget,
+                ];
+            })->values()->all();
         }
 
         return collect($aiPicks)->map(function ($p) use ($bySymbol) {
@@ -118,5 +142,21 @@ class AiPickerController extends Controller
                 'ai_generated' => true,
             ]);
         })->values()->all();
+    }
+
+    /**
+     * Live LTP straight from Chukul, cached 5 min per symbol — same cache
+     * key/TTL PortfolioService and StockController use, so visiting any of
+     * those pages keeps this warm too. Returns null (never throws) if the
+     * live source has nothing, in which case the caller falls back to the
+     * stale local stock_prices snapshot.
+     */
+    private function liveQuote(string $symbol): ?float
+    {
+        $summary = Cache::remember("chukul_summary_{$symbol}", 300, fn() =>
+            $this->scraper->fetchMarketSummary($symbol)
+        );
+
+        return (!empty($summary) && isset($summary['close'])) ? (float) $summary['close'] : null;
     }
 }
