@@ -84,6 +84,201 @@ class AiSignalService
     }
 
     /**
+     * AI-curated "Top 10 to buy" — takes a shortlist that has already passed
+     * a rule-based BUY screen (SignalEngine) and asks the LLM to pick and
+     * rank its own top 10 from it, with independent reasoning, rather than
+     * just re-displaying the rule-based confidence order. One consolidated
+     * call for the whole shortlist (not one call per stock), so this stays
+     * cheap enough to refresh hourly.
+     *
+     * @param array $candidates each: symbol/name/sector/price/rsi/macd_hist/
+     *                          confidence/reasons/entry_min/entry_max/
+     *                          target_1/stop_loss
+     * @return array<int,array{symbol:string,confidence:int,reason:string,
+     *             entry_min:?float,entry_max:?float,target_price:?float,
+     *             stop_loss:?float}>|null
+     */
+    public function topPicks(array $candidates): ?array
+    {
+        if (empty($candidates)) {
+            return null;
+        }
+
+        $provider = strtolower((string) config('services.ai_provider', 'gemini'));
+        $system = <<<'PROMPT'
+You are a NEPSE (Nepal Stock Exchange) equity analyst. You are given a
+shortlist of stocks that have already passed a rule-based technical BUY
+screen. Using the indicators given, apply your own independent judgement to
+rank your genuine top picks from this shortlist — do not just copy the
+existing rule-based confidence score. You may select fewer than 10 if you
+don't believe 10 are genuinely attractive right now, and you may exclude any
+candidate you disagree with.
+
+Respond with STRICT JSON only, no markdown fences, no extra text, matching
+exactly this shape:
+{
+  "picks": [
+    {
+      "symbol": "<string, must exactly match one of the given candidate symbols>",
+      "confidence": <integer 0-100>,
+      "reason": "<1-2 plain-English sentences citing the actual data given>",
+      "entry_min": <number, sensible entry zone low>,
+      "entry_max": <number, sensible entry zone high>,
+      "target_price": <number, realistic take-profit target>,
+      "stop_loss": <number, a risk-management stop level>
+    }
+  ]
+}
+Order picks best-first. Return at most 10 entries.
+PROMPT;
+        $prompt = $this->buildTopPicksPrompt($candidates);
+
+        try {
+            $text = match ($provider) {
+                'anthropic' => $this->callAnthropicJson($prompt, $system, 2048),
+                default     => $this->callGeminiJson($prompt, $system, 2048),
+            };
+
+            if ($text === null) {
+                return null;
+            }
+
+            return $this->parseTopPicks($text, $candidates);
+        } catch (\Throwable $e) {
+            Log::warning('[ai-signal] top picks failed', [
+                'provider' => $provider,
+                'error'    => $e->getMessage(),
+            ]);
+            return null;
+        }
+    }
+
+    private function buildTopPicksPrompt(array $candidates): string
+    {
+        $lines = ['Candidate shortlist (already passed a rule-based BUY screen, strongest rule-confidence first):', ''];
+
+        foreach ($candidates as $c) {
+            $lines[] = sprintf(
+                '- %s (%s, %s sector): price NPR %s, RSI(14) %s, MACD histogram %s, rule-based confidence %d%%, rule reasons: %s',
+                $c['symbol'],
+                $c['name'],
+                $c['sector'] ?? 'Other',
+                $c['price'] ?? 'n/a',
+                $c['rsi'] ?? 'n/a',
+                $c['macd_hist'] ?? 'n/a',
+                $c['confidence'] ?? 0,
+                implode('; ', $c['reasons'] ?? []) ?: 'n/a'
+            );
+        }
+
+        return implode("\n", $lines);
+    }
+
+    private function parseTopPicks(string $text, array $candidates): ?array
+    {
+        $text = trim($text);
+        if (str_starts_with($text, '```')) {
+            $text = preg_replace('/^```[a-z]*\s*|\s*```$/i', '', $text);
+        }
+
+        $decoded = json_decode($text, true);
+        $picks = $decoded['picks'] ?? null;
+        if (!is_array($picks)) {
+            Log::warning('[ai-signal] top picks: non-JSON or missing picks', ['text' => $text]);
+            return null;
+        }
+
+        // Guard against the model inventing a symbol that wasn't in the
+        // shortlist it was given — only candidates we actually sent back out.
+        $validSymbols = collect($candidates)->pluck('symbol')->map(fn($s) => strtoupper($s))->flip();
+
+        $out = [];
+        foreach ($picks as $p) {
+            if (!is_array($p)) {
+                continue;
+            }
+            $symbol = strtoupper((string) ($p['symbol'] ?? ''));
+            if ($symbol === '' || !$validSymbols->has($symbol)) {
+                continue;
+            }
+
+            $out[] = [
+                'symbol'       => $symbol,
+                'confidence'   => max(0, min(100, (int) ($p['confidence'] ?? 0))),
+                'reason'       => (string) ($p['reason'] ?? ''),
+                'entry_min'    => isset($p['entry_min']) ? (float) $p['entry_min'] : null,
+                'entry_max'    => isset($p['entry_max']) ? (float) $p['entry_max'] : null,
+                'target_price' => isset($p['target_price']) ? (float) $p['target_price'] : null,
+                'stop_loss'    => isset($p['stop_loss']) ? (float) $p['stop_loss'] : null,
+            ];
+        }
+
+        return empty($out) ? null : array_slice($out, 0, 10);
+    }
+
+    private function callGeminiJson(string $prompt, string $system, int $maxTokens): ?string
+    {
+        $apiKey = config('services.gemini.key');
+        if (empty($apiKey)) {
+            return null;
+        }
+
+        $model = config('services.gemini.model', 'gemini-2.0-flash');
+        $url = sprintf(self::GEMINI_ENDPOINT, $model);
+
+        $response = $this->client->post($url, [
+            'query'   => ['key' => $apiKey],
+            'headers' => ['Content-Type' => 'application/json'],
+            'json'    => [
+                'systemInstruction' => ['parts' => [['text' => $system]]],
+                'contents' => [
+                    ['role' => 'user', 'parts' => [['text' => $prompt]]],
+                ],
+                'generationConfig' => [
+                    'temperature'      => 0.3,
+                    'maxOutputTokens'  => $maxTokens,
+                    'responseMimeType' => 'application/json',
+                ],
+            ],
+        ]);
+
+        $body = json_decode($response->getBody()->getContents(), true);
+        $text = $body['candidates'][0]['content']['parts'][0]['text'] ?? null;
+
+        return (is_string($text) && trim($text) !== '') ? $text : null;
+    }
+
+    private function callAnthropicJson(string $prompt, string $system, int $maxTokens): ?string
+    {
+        $apiKey = config('services.anthropic.key');
+        if (empty($apiKey)) {
+            return null;
+        }
+
+        $response = $this->client->post(self::ANTHROPIC_ENDPOINT, [
+            'headers' => [
+                'x-api-key'         => $apiKey,
+                'anthropic-version' => self::ANTHROPIC_API_VERSION,
+                'content-type'      => 'application/json',
+            ],
+            'json' => [
+                'model'       => config('services.anthropic.model', 'claude-haiku-4-5-20251001'),
+                'max_tokens'  => $maxTokens,
+                'temperature' => 0.3,
+                'system'      => $system,
+                'messages'    => [
+                    ['role' => 'user', 'content' => $prompt],
+                ],
+            ],
+        ]);
+
+        $body = json_decode($response->getBody()->getContents(), true);
+        $text = $body['content'][0]['text'] ?? null;
+
+        return (is_string($text) && trim($text) !== '') ? $text : null;
+    }
+
+    /**
      * Short plain-English take on a stock's oversold bounce setup — used by
      * the Oversold screener. Deliberately a separate, cheap call (plain text,
      * ~300 tokens) rather than the full analyze() JSON schema: the screener
